@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { calendarPlansTable, recurringTemplatesTable, type CalendarPlanData } from "@workspace/db";
+import { calendarPlansTable, recurringTemplatesTable, weeklyReflectionsTable, type CalendarPlanData } from "@workspace/db";
 import { asc, eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { generateDailyPlan } from "../lib/mock-ai.js";
@@ -224,6 +224,86 @@ router.put("/calendar/:date", async (req, res) => {
     await db.insert(calendarPlansTable).values({ date, data, userId });
   }
   res.json({ date, data });
+});
+
+// ── Weekly Review ────────────────────────────────────────────────────────────
+
+router.get("/calendar/weekly-review", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const { start } = req.query;
+  if (!start || !/^\d{4}-\d{2}-\d{2}$/.test(start as string)) {
+    res.status(400).json({ error: "Invalid start date. Use YYYY-MM-DD" });
+    return;
+  }
+  const dates: string[] = [];
+  const startDate = new Date(`${start as string}T00:00:00Z`);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startDate);
+    d.setUTCDate(startDate.getUTCDate() + i);
+    dates.push(d.toISOString().split("T")[0]);
+  }
+  const rows = await db
+    .select()
+    .from(calendarPlansTable)
+    .where(and(eq(calendarPlansTable.userId, userId), inArray(calendarPlansTable.date, dates)));
+  const plansByDate = new Map(rows.map((r) => [r.date, r.data as CalendarPlanData]));
+  const days = dates.map((date) => {
+    const d = plansByDate.get(date);
+    if (!d) return { date, planned: false, blocksTotal: 0, blocksCompleted: 0, momentumScore: null, tasksTotal: 0, tasksDone: 0, dayScore: null };
+    const blocks = d.timeBlocks ?? [];
+    const tasks = d.tasks ?? [];
+    const blocksTotal = blocks.length;
+    const blocksCompleted = blocks.filter((b) => b.status === "Complete").length;
+    const momentumScore = blocksTotal > 0 ? Math.round((blocksCompleted / blocksTotal) * 100) : null;
+    const tasksTotal = tasks.length;
+    const tasksDone = tasks.filter((t) => t.status === "Done").length;
+    const dayScore = d.review?.score ?? null;
+    const planned = !!(d.objective?.trim()) || blocksTotal > 0 || tasksTotal > 0;
+    return { date, planned, blocksTotal, blocksCompleted, momentumScore, tasksTotal, tasksDone, dayScore };
+  });
+  const scores = days.map((d) => d.dayScore).filter((s): s is number => s !== null);
+  const avgDayScore = scores.length > 0 ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10 : null;
+  const momentums = days.map((d) => d.momentumScore).filter((m): m is number => m !== null);
+  const avgMomentum = momentums.length > 0 ? Math.round(momentums.reduce((a, b) => a + b, 0) / momentums.length) : null;
+  const [reflection] = await db
+    .select()
+    .from(weeklyReflectionsTable)
+    .where(and(eq(weeklyReflectionsTable.userId, userId), eq(weeklyReflectionsTable.weekStart, start as string)));
+  res.json({
+    days,
+    summary: {
+      daysPlanned: days.filter((d) => d.planned).length,
+      avgDayScore,
+      avgMomentum,
+      totalBlocks: days.reduce((a, d) => a + d.blocksTotal, 0),
+      completedBlocks: days.reduce((a, d) => a + d.blocksCompleted, 0),
+      totalTasks: days.reduce((a, d) => a + d.tasksTotal, 0),
+      doneTasks: days.reduce((a, d) => a + d.tasksDone, 0),
+    },
+    reflection: reflection?.data ?? null,
+  });
+});
+
+router.put("/calendar/weekly-reflection", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const { weekStart, data } = req.body;
+  if (!weekStart || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart)) {
+    res.status(400).json({ error: "Invalid weekStart" });
+    return;
+  }
+  const [existing] = await db
+    .select({ id: weeklyReflectionsTable.id })
+    .from(weeklyReflectionsTable)
+    .where(and(eq(weeklyReflectionsTable.userId, userId), eq(weeklyReflectionsTable.weekStart, weekStart)));
+  if (existing) {
+    await db
+      .update(weeklyReflectionsTable)
+      .set({ data, updatedAt: new Date() })
+      .where(and(eq(weeklyReflectionsTable.userId, userId), eq(weeklyReflectionsTable.weekStart, weekStart)));
+  } else {
+    await db.insert(weeklyReflectionsTable).values({ userId, weekStart, data });
+  }
+  res.json({ ok: true });
 });
 
 // ── Recurring Templates ─────────────────────────────────────────────────────

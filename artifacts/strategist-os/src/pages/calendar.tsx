@@ -51,6 +51,39 @@ type RecurringTpl = {
   data: Partial<Omit<PlanData, "review">>;
 };
 
+type WeekDayData = {
+  date: string;
+  planned: boolean;
+  blocksTotal: number;
+  blocksCompleted: number;
+  momentumScore: number | null;
+  tasksTotal: number;
+  tasksDone: number;
+  dayScore: number | null;
+};
+
+type WeekReviewData = {
+  days: WeekDayData[];
+  summary: {
+    daysPlanned: number;
+    avgDayScore: number | null;
+    avgMomentum: number | null;
+    totalBlocks: number;
+    completedBlocks: number;
+    totalTasks: number;
+    doneTasks: number;
+  };
+  reflection: ReflectionForm | null;
+};
+
+type ReflectionForm = {
+  movedForward: string;
+  heldBack: string;
+  keyLesson: string;
+  nextWeekFocus: string;
+  weekScore: number | null;
+};
+
 const CAT_COLOR: Record<string, string> = {
   "Deep Work": "#3b82f6",
   Admin: "#6b7280",
@@ -94,6 +127,25 @@ function shiftDate(d: string, delta: number) {
   const dt = new Date(d + "T12:00:00");
   dt.setDate(dt.getDate() + delta);
   return dt.toISOString().split("T")[0];
+}
+
+function getMondayOfWeek(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().split("T")[0];
+}
+
+function formatWeekRange(start: string): string {
+  const s = new Date(start + "T12:00:00");
+  const e = new Date(start + "T12:00:00");
+  e.setDate(e.getDate() + 6);
+  return `${s.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${e.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+}
+
+function emptyReflection(): ReflectionForm {
+  return { movedForward: "", heldBack: "", keyLesson: "", nextWeekFocus: "", weekScore: null };
 }
 
 function emptyPlan(): PlanData {
@@ -263,6 +315,13 @@ export default function Calendar() {
   const [suggestedTemplate, setSuggestedTemplate] = useState<RecurringTpl | null>(null);
   const [bannerDismissedFor, setBannerDismissedFor] = useState<string | null>(null);
   const [showManageRecurring, setShowManageRecurring] = useState(false);
+  const [weekReviewOpen, setWeekReviewOpen] = useState(false);
+  const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(todayStr()));
+  const [weekData, setWeekData] = useState<WeekReviewData | null>(null);
+  const [weekLoading, setWeekLoading] = useState(false);
+  const [reflection, setReflection] = useState<ReflectionForm>(emptyReflection());
+  const [savingReflection, setSavingReflection] = useState(false);
+  const [reflectionSavedFlash, setReflectionSavedFlash] = useState(false);
   const { toast } = useToast();
   const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
 
@@ -362,6 +421,40 @@ export default function Calendar() {
   const deleteRecurringTemplate = async (id: number) => {
     await fetch(`${base}/api/calendar/recurring-templates/${id}`, { method: "DELETE" });
     setRecurringTemplates((ts) => ts.filter((t) => t.id !== id));
+  };
+
+  const fetchWeekReview = useCallback((start: string) => {
+    setWeekLoading(true);
+    setWeekData(null);
+    fetch(`${base}/api/calendar/weekly-review?start=${start}`)
+      .then((r) => r.json())
+      .then((data: WeekReviewData) => {
+        setWeekData(data);
+        setReflection(data.reflection ?? emptyReflection());
+      })
+      .catch(() => {})
+      .finally(() => setWeekLoading(false));
+  }, [base]);
+
+  useEffect(() => {
+    if (weekReviewOpen) fetchWeekReview(weekStart);
+  }, [weekReviewOpen, weekStart, fetchWeekReview]);
+
+  const saveWeekReflection = async () => {
+    setSavingReflection(true);
+    try {
+      await fetch(`${base}/api/calendar/weekly-reflection`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weekStart, data: reflection }),
+      });
+      setReflectionSavedFlash(true);
+      setTimeout(() => setReflectionSavedFlash(false), 2000);
+    } catch {
+      toast({ title: "Save failed", variant: "destructive" });
+    } finally {
+      setSavingReflection(false);
+    }
   };
 
   const handleSave = async () => {
@@ -560,6 +653,10 @@ export default function Calendar() {
               </div>
             )}
           </div>
+          <button onClick={() => { setWeekStart(getMondayOfWeek(selectedDate)); setWeekReviewOpen(true); }}
+            style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+            Week Review
+          </button>
           <button onClick={() => setAiOpen(true)}
             style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-blue)", background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
             AI Assist
@@ -1051,6 +1148,220 @@ export default function Calendar() {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Weekly Review Modal */}
+      {weekReviewOpen && (
+        <div className="fixed inset-0 flex items-start justify-center" style={{ background: "rgba(0,0,0,0.6)", zIndex: 110, overflowY: "auto", padding: "24px 16px" }}>
+          <div style={{ background: "var(--sos-bg)", border: "1px solid var(--sos-border)", width: "100%", maxWidth: 780 }}>
+
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif" }}>
+                  Week Review
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <button onClick={() => setWeekStart((s) => shiftDate(s, -7))}
+                    style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "3px 8px", cursor: "pointer" }}>
+                    Prev
+                  </button>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: "var(--sos-text-body)" }}>{formatWeekRange(weekStart)}</span>
+                  <button onClick={() => setWeekStart((s) => shiftDate(s, 7))}
+                    style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "3px 8px", cursor: "pointer" }}>
+                    Next
+                  </button>
+                  {weekStart !== getMondayOfWeek(todayStr()) && (
+                    <button onClick={() => setWeekStart(getMondayOfWeek(todayStr()))}
+                      style={{ fontSize: 10, color: "var(--sos-blue)", background: "none", border: "none", padding: "3px 6px", cursor: "pointer" }}>
+                      This Week
+                    </button>
+                  )}
+                </div>
+              </div>
+              <button onClick={() => setWeekReviewOpen(false)}
+                style={{ fontSize: 18, color: "var(--sos-text-dim)", background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: "4px 8px" }}>
+                ×
+              </button>
+            </div>
+
+            {weekLoading ? (
+              <div className="flex items-center justify-center" style={{ padding: "60px 0" }}>
+                <span style={{ fontSize: 12, color: "var(--sos-text-muted)", letterSpacing: "0.06em" }}>Loading week data...</span>
+              </div>
+            ) : weekData ? (
+              <div>
+                {/* Stats Row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 px-6 py-5" style={{ gap: 1, borderBottom: "1px solid var(--sos-border)", background: "var(--sos-border-s)" }}>
+                  {[
+                    { label: "Days Planned", value: `${weekData.summary.daysPlanned}/7` },
+                    { label: "Avg Momentum", value: weekData.summary.avgMomentum !== null ? `${weekData.summary.avgMomentum}%` : "—" },
+                    { label: "Avg Day Score", value: weekData.summary.avgDayScore !== null ? `${weekData.summary.avgDayScore}/10` : "—" },
+                    { label: "Blocks Done", value: `${weekData.summary.completedBlocks}/${weekData.summary.totalBlocks}` },
+                  ].map((stat) => (
+                    <div key={stat.label} className="flex flex-col" style={{ background: "var(--sos-surface)", padding: "14px 16px" }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 6 }}>
+                        {stat.label}
+                      </div>
+                      <div style={{ fontSize: 22, fontWeight: 700, color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+                        {stat.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 7-Day Momentum Chart */}
+                <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 12 }}>
+                    7-Day Momentum
+                  </div>
+                  <div className="flex items-end gap-2" style={{ height: 80 }}>
+                    {weekData.days.map((day) => {
+                      const score = day.momentumScore;
+                      const barH = score !== null ? Math.max(4, Math.round((score / 100) * 72)) : 4;
+                      const color = score === null ? "var(--sos-border)" : score >= 75 ? "var(--sos-emerald)" : score >= 40 ? "var(--sos-blue)" : "#f59e0b";
+                      const label = new Date(day.date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short" });
+                      const isToday = day.date === todayStr();
+                      return (
+                        <div key={day.date} className="flex flex-col items-center flex-1" style={{ gap: 4 }}>
+                          <div style={{ fontSize: 9, color: score !== null ? color : "var(--sos-text-dim)", fontWeight: 600 }}>
+                            {score !== null ? `${score}%` : ""}
+                          </div>
+                          <div style={{ width: "100%", height: barH, background: color, opacity: day.planned ? 1 : 0.3, position: "relative" }}>
+                            {isToday && <div style={{ position: "absolute", top: -4, left: "50%", transform: "translateX(-50%)", width: 5, height: 5, borderRadius: "50%", background: "var(--sos-emerald)" }} />}
+                          </div>
+                          <div style={{ fontSize: 9, color: isToday ? "var(--sos-text)" : "var(--sos-text-dim)", fontWeight: isToday ? 700 : 400 }}>{label}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Day Breakdown Table */}
+                <div className="px-6 py-5" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 10 }}>
+                    Day Breakdown
+                  </div>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid var(--sos-border-s)" }}>
+                          {["Day", "Blocks Done", "Tasks Done", "Momentum", "Score"].map((h) => (
+                            <th key={h} style={{ textAlign: "left", padding: "6px 8px", fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {weekData.days.map((day) => {
+                          const isToday = day.date === todayStr();
+                          const dayName = new Date(day.date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+                          return (
+                            <tr key={day.date} style={{ borderBottom: "1px solid var(--sos-border-s)", background: isToday ? "rgba(114,254,136,0.04)" : "transparent" }}>
+                              <td style={{ padding: "8px", color: isToday ? "var(--sos-emerald)" : day.planned ? "var(--sos-text-body)" : "var(--sos-text-dim)", fontWeight: isToday ? 700 : 400 }}>{dayName}</td>
+                              <td style={{ padding: "8px", color: "var(--sos-text-body)" }}>{day.blocksTotal > 0 ? `${day.blocksCompleted}/${day.blocksTotal}` : <span style={{ color: "var(--sos-text-dim)" }}>—</span>}</td>
+                              <td style={{ padding: "8px", color: "var(--sos-text-body)" }}>{day.tasksTotal > 0 ? `${day.tasksDone}/${day.tasksTotal}` : <span style={{ color: "var(--sos-text-dim)" }}>—</span>}</td>
+                              <td style={{ padding: "8px" }}>
+                                {day.momentumScore !== null ? (
+                                  <span style={{ color: day.momentumScore >= 75 ? "var(--sos-emerald)" : day.momentumScore >= 40 ? "var(--sos-blue)" : "#f59e0b", fontWeight: 600 }}>
+                                    {day.momentumScore}%
+                                  </span>
+                                ) : <span style={{ color: "var(--sos-text-dim)" }}>—</span>}
+                              </td>
+                              <td style={{ padding: "8px", color: "var(--sos-text-body)" }}>
+                                {day.dayScore !== null ? `${day.dayScore}/10` : <span style={{ color: "var(--sos-text-dim)" }}>—</span>}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Streak */}
+                {streak !== null && (
+                  <div className="flex items-center gap-4 px-6 py-4" style={{ borderBottom: "1px solid var(--sos-border)", background: "var(--sos-surface)" }}>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 3 }}>Current Streak</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>
+                        {streak.currentStreak > 0 ? "🔥" : "💤"} {streak.currentStreak} day{streak.currentStreak !== 1 ? "s" : ""}
+                      </div>
+                    </div>
+                    <div style={{ width: 1, height: 36, background: "var(--sos-border)" }} />
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 3 }}>Longest Ever</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif" }}>
+                        {streak.longestStreak} day{streak.longestStreak !== 1 ? "s" : ""}
+                      </div>
+                    </div>
+                    <div style={{ width: 1, height: 36, background: "var(--sos-border)" }} />
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 3 }}>Tasks This Week</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif" }}>
+                        {weekData.summary.doneTasks}/{weekData.summary.totalTasks}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reflection */}
+                <div className="px-6 py-5">
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 16 }}>
+                    Weekly Reflection
+                  </div>
+                  <div className="space-y-4">
+                    {([
+                      { key: "movedForward", label: "What moved forward this week?" },
+                      { key: "heldBack", label: "What held you back?" },
+                      { key: "keyLesson", label: "Key lesson learned?" },
+                      { key: "nextWeekFocus", label: "Primary focus for next week?" },
+                    ] as const).map(({ key, label }) => (
+                      <div key={key}>
+                        <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", marginBottom: 6 }}>{label}</div>
+                        <textarea
+                          value={reflection[key]}
+                          onChange={(e) => setReflection((r) => ({ ...r, [key]: e.target.value }))}
+                          rows={2}
+                          style={{ width: "100%", fontSize: 12, resize: "none", lineHeight: 1.6, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "8px 10px" }}
+                        />
+                      </div>
+                    ))}
+
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", marginBottom: 10 }}>
+                        Week Score: {reflection.weekScore !== null ? `${reflection.weekScore}/10` : "Not rated"}
+                      </div>
+                      <div className="flex gap-1 flex-wrap">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                          <button key={n}
+                            onClick={() => setReflection((r) => ({ ...r, weekScore: r.weekScore === n ? null : n }))}
+                            style={{ width: 32, height: 32, fontSize: 11, fontWeight: 600, cursor: "pointer", border: "1px solid", fontFamily: "Space Grotesk, sans-serif", borderColor: reflection.weekScore === n ? "var(--sos-emerald)" : "var(--sos-border-s)", background: reflection.weekScore === n ? "rgba(114,254,136,0.12)" : "var(--sos-surface)", color: reflection.weekScore === n ? "var(--sos-emerald)" : "var(--sos-text-muted)" }}>
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <button onClick={saveWeekReflection} disabled={savingReflection}
+                      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: savingReflection ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "11px 28px", cursor: savingReflection ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+                      {reflectionSavedFlash ? "Saved" : savingReflection ? "Saving..." : "Save Reflection"}
+                    </button>
+                    <button onClick={() => setWeekReviewOpen(false)}
+                      style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "11px 20px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center" style={{ padding: "60px 0" }}>
+                <span style={{ fontSize: 12, color: "var(--sos-text-muted)" }}>No data available for this week.</span>
+              </div>
+            )}
           </div>
         </div>
       )}
