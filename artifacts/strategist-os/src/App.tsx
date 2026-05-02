@@ -24,6 +24,7 @@ import Notes from "@/pages/notes";
 import CommandPalette from "@/components/command-palette";
 import ChangelogModal, { useChangelogBadge, WhatsNewBanner } from "@/components/changelog-modal";
 import QuickNote from "@/components/quick-note";
+import ShortcutsModal from "@/components/shortcuts-modal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -106,7 +107,7 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function Sidebar({ onSearchOpen, onClose, onChangelogOpen, hasChangelog }: { onSearchOpen: () => void; onClose?: () => void; onChangelogOpen: () => void; hasChangelog: boolean }) {
+function Sidebar({ onSearchOpen, onClose, onChangelogOpen, hasChangelog, onShortcutsOpen }: { onSearchOpen: () => void; onClose?: () => void; onChangelogOpen: () => void; hasChangelog: boolean; onShortcutsOpen: () => void }) {
   const [location, navigate] = useLocation();
   const { theme, setTheme } = useTheme();
   const { signOut } = useClerk();
@@ -286,6 +287,23 @@ function Sidebar({ onSearchOpen, onClose, onChangelogOpen, hasChangelog }: { onS
             )}
           </button>
           <button
+            onClick={() => { onClose?.(); onShortcutsOpen(); }}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 10, color: "var(--sos-text-dim)", background: "none",
+              border: "1px solid var(--sos-border)", padding: "6px 12px",
+              cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
+              fontFamily: "Space Grotesk, sans-serif", width: "100%",
+              transition: "border-color 0.15s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)"; }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>keyboard</span>
+            Shortcuts
+            <kbd style={{ marginLeft: "auto", fontSize: 9, color: "var(--sos-text-muted)", background: "var(--sos-surface-low)", border: "1px solid var(--sos-border)", padding: "1px 5px", fontFamily: "Inter, sans-serif", flexShrink: 0 }}>?</kbd>
+          </button>
+          <button
             onClick={() => setTheme(isDark ? "light" : "dark")}
             style={{
               display: "flex", alignItems: "center", gap: 8,
@@ -340,6 +358,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const [showChangelog, setShowChangelog] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
   const [showQuickNote, setShowQuickNote] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const { hasUnread, markSeen } = useChangelogBadge();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -382,8 +401,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       if (!inEditable) {
         if (e.key === "?") {
           e.preventDefault();
-          markSeen();
-          setShowChangelog((v) => !v);
+          setShowShortcuts((v) => !v);
         }
         if ((e.key === "n" || e.key === "N") && !e.metaKey && !e.ctrlKey) {
           e.preventDefault();
@@ -451,6 +469,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
           onClose={() => setSidebarOpen(false)}
           onChangelogOpen={openChangelog}
           hasChangelog={hasUnread}
+          onShortcutsOpen={() => { setSidebarOpen(false); setShowShortcuts(true); }}
         />
       </div>
 
@@ -466,6 +485,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
       {showBanner && <WhatsNewBanner onOpen={openChangelog} onDismiss={dismissBanner} />}
       {showQuickNote && <QuickNote onClose={() => setShowQuickNote(false)} />}
+      {showShortcuts && <ShortcutsModal onClose={() => setShowShortcuts(false)} />}
     </div>
   );
 }
