@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRunDiagnosis, useCreateSession, getListSessionsQueryKey } from "@workspace/api-client-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { ThinkingScreen } from "@/components/thinking-screen";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -382,6 +383,19 @@ function FormPanel({ onResult }: { onResult: (r: DiagnosisResult, goal: string) 
         </div>
       </div>
 
+      {runDiagnosis.isPending ? (
+        <ThinkingScreen
+          title="Running Strategic Diagnosis"
+          subtitle="GPT-5.1 is analysing your position"
+          stages={[
+            "Reading strategic context",
+            "Identifying true bottleneck",
+            "Mapping leverage opportunities",
+            "Calculating leverage score",
+            "Generating recommendations",
+          ]}
+        />
+      ) : (
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 py-7 max-w-2xl space-y-7">
           <div className="grid grid-cols-2 gap-6">
@@ -427,11 +441,12 @@ function FormPanel({ onResult }: { onResult: (r: DiagnosisResult, goal: string) 
 
           <div className="pt-2">
             <HudBtn onClick={handleSubmit} disabled={runDiagnosis.isPending} data-testid="button-run-diagnosis">
-              {runDiagnosis.isPending ? "Analysing..." : "Run Diagnosis"}
+              Run Diagnosis
             </HudBtn>
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

@@ -49,7 +49,7 @@ const navItems = [
   { path: "/workflows", label: "Workflows", icon: "account_tree" },
   { path: "/planner", label: "Planner", icon: "calendar_month" },
   { path: "/calendar", label: "Calendar", icon: "today" },
-  { path: "/portfolio", label: "Portfolio", icon: "web_asset" },
+  { path: "/portfolio", label: "Book a Meeting", icon: "event" },
   { path: "/settings", label: "Settings", icon: "manage_accounts" },
 ];
 

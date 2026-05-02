@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "@/components/theme-provider";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer, Tooltip } from "recharts";
+import { ThinkingScreen } from "@/components/thinking-screen";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -258,6 +259,19 @@ function FormPanel({ onResult }: { onResult: (r: ScorecardResult) => void }) {
         <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Score your position across 8 dimensions. Get a ranked improvement roadmap with timelines.</div>
       </div>
 
+      {runScorecard.isPending ? (
+        <ThinkingScreen
+          title="Running Optimisation Scorecard"
+          subtitle="GPT-5.1 is calibrating your 8-dimension profile"
+          stages={[
+            "Calibrating 8 dimensions",
+            "Analysing clarity & positioning",
+            "Scoring execution velocity",
+            "Evaluating distribution gaps",
+            "Synthesising strategic scorecard",
+          ]}
+        />
+      ) : (
       <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Goal *</div>
@@ -280,10 +294,11 @@ function FormPanel({ onResult }: { onResult: (r: ScorecardResult) => void }) {
         </div>
         <div className="pt-2">
           <HudBtn onClick={handleSubmit} disabled={runScorecard.isPending} data-testid="button-run-scorecard">
-            {runScorecard.isPending ? "Scoring..." : "Score Position"}
+            Score Position
           </HudBtn>
         </div>
       </div>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useBuildOpportunityStack } from "@workspace/api-client-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { ThinkingScreen } from "@/components/thinking-screen";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
@@ -239,6 +240,19 @@ function FormPanel({ onResult }: { onResult: (r: OpportunityResult) => void }) {
         <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Map your assets against demand. Get a positioning angle and a 30-day execution plan.</div>
       </div>
 
+      {build.isPending ? (
+        <ThinkingScreen
+          title="Building Opportunity Stack"
+          subtitle="GPT-5.1 is mapping your assets against demand"
+          stages={[
+            "Mapping skill–demand overlap",
+            "Identifying best-fit niche",
+            "Designing offer architecture",
+            "Building 30-day roadmap",
+            "Finalising opportunity stack",
+          ]}
+        />
+      ) : (
       <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Skills *</div>
@@ -268,10 +282,11 @@ function FormPanel({ onResult }: { onResult: (r: OpportunityResult) => void }) {
         </div>
         <div className="pt-2">
           <HudBtn onClick={handleSubmit} disabled={build.isPending} data-testid="button-build-opportunity-stack">
-            {build.isPending ? "Analysing..." : "Build Stack"}
+            Build Stack
           </HudBtn>
         </div>
       </div>
+      )}
     </div>
   );
 }
