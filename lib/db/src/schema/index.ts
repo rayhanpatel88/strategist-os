@@ -6,3 +6,4 @@ export * from "./portfolio";
 export * from "./enquiries";
 export * from "./calendar";
 export * from "./user-profiles";
+export * from "./opportunities";
