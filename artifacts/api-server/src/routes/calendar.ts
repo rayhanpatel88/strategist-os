@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { calendarPlansTable, type CalendarPlanData } from "@workspace/db";
-import { asc, eq, inArray } from "drizzle-orm";
+import { asc, eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { generateDailyPlan } from "../lib/mock-ai.js";
 
@@ -22,10 +22,12 @@ const emptyPlan = (): CalendarPlanData => ({
   },
 });
 
-router.get("/calendar/activity", async (_req, res) => {
+router.get("/calendar/activity", async (req, res) => {
+  const userId = (req as any).userId as string;
   const rows = await db
     .select({ date: calendarPlansTable.date, data: calendarPlansTable.data })
     .from(calendarPlansTable)
+    .where(eq(calendarPlansTable.userId, userId))
     .orderBy(asc(calendarPlansTable.date));
   const activity = rows.map((row) => {
     const d = row.data as CalendarPlanData;
@@ -42,6 +44,7 @@ router.get("/calendar/activity", async (_req, res) => {
 });
 
 router.get("/calendar/week-review", async (req, res) => {
+  const userId = (req as any).userId as string;
   const { start } = req.query;
   if (!start || !/^\d{4}-\d{2}-\d{2}$/.test(start as string)) {
     res.status(400).json({ error: "Invalid start date. Use YYYY-MM-DD" });
@@ -57,7 +60,7 @@ router.get("/calendar/week-review", async (req, res) => {
   const rows = await db
     .select()
     .from(calendarPlansTable)
-    .where(inArray(calendarPlansTable.date, dates));
+    .where(and(eq(calendarPlansTable.userId, userId), inArray(calendarPlansTable.date, dates)));
   const daysPlanned = rows.filter((r) => {
     const d = r.data as CalendarPlanData;
     return !!(d.objective?.trim()) || (d.timeBlocks?.length ?? 0) > 0 || (d.tasks?.length ?? 0) > 0;
@@ -69,19 +72,23 @@ router.get("/calendar/week-review", async (req, res) => {
     ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
     : null;
   const completedTasks = rows
-    .flatMap((r) => ((r.data as CalendarPlanData).tasks ?? []).filter((t) => t.done).map((t) => t.text))
+    .flatMap((r) => ((r.data as CalendarPlanData).tasks ?? []).filter((t: any) => t.done).map((t: any) => t.text))
     .filter(Boolean)
     .slice(0, 5);
   res.json({ daysPlanned, avgScore, completedTasks, totalDays: 7 });
 });
 
 router.get("/calendar/:date", async (req, res) => {
+  const userId = (req as any).userId as string;
   const { date } = req.params;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD" });
     return;
   }
-  const [row] = await db.select().from(calendarPlansTable).where(eq(calendarPlansTable.date, date));
+  const [row] = await db
+    .select()
+    .from(calendarPlansTable)
+    .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
   if (!row) {
     res.json({ date, data: emptyPlan() });
     return;
@@ -121,6 +128,7 @@ const CalendarPlanBody = z.object({
 });
 
 router.put("/calendar/:date", async (req, res) => {
+  const userId = (req as any).userId as string;
   const { date } = req.params;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD" });
@@ -132,11 +140,17 @@ router.put("/calendar/:date", async (req, res) => {
     return;
   }
   const data = parsed.data as CalendarPlanData;
-  const [existing] = await db.select({ id: calendarPlansTable.id }).from(calendarPlansTable).where(eq(calendarPlansTable.date, date));
+  const [existing] = await db
+    .select({ id: calendarPlansTable.id })
+    .from(calendarPlansTable)
+    .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
   if (existing) {
-    await db.update(calendarPlansTable).set({ data, updatedAt: new Date() }).where(eq(calendarPlansTable.date, date));
+    await db
+      .update(calendarPlansTable)
+      .set({ data, updatedAt: new Date() })
+      .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
   } else {
-    await db.insert(calendarPlansTable).values({ date, data });
+    await db.insert(calendarPlansTable).values({ date, data, userId });
   }
   res.json({ date, data });
 });

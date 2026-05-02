@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const savedPlansTable = pgTable("saved_plans", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   title: text("title").notNull(),
   plan: jsonb("plan").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

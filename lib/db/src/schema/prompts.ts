@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const savedPromptsTable = pgTable("saved_prompts", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   title: text("title").notNull(),
   category: text("category").notNull(),
   prompt: text("prompt").notNull(),

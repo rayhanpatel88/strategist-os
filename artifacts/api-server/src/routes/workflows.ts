@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { workflowsTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import {
   CreateWorkflowBody,
   DeleteWorkflowParams,
@@ -108,8 +108,13 @@ const TEMPLATES = [
 
 const router: IRouter = Router();
 
-router.get("/workflows", async (_req, res) => {
-  const workflows = await db.select().from(workflowsTable).where(eq(workflowsTable.isTemplate, false)).orderBy(desc(workflowsTable.createdAt));
+router.get("/workflows", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const workflows = await db
+    .select()
+    .from(workflowsTable)
+    .where(and(eq(workflowsTable.isTemplate, false), eq(workflowsTable.userId, userId)))
+    .orderBy(desc(workflowsTable.createdAt));
   res.json(workflows.map(w => ({
     ...w,
     createdAt: w.createdAt.toISOString(),
@@ -117,12 +122,13 @@ router.get("/workflows", async (_req, res) => {
 });
 
 router.post("/workflows", async (req, res) => {
+  const userId = (req as any).userId as string;
   const parsed = CreateWorkflowBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
     return;
   }
-  const [workflow] = await db.insert(workflowsTable).values({ ...parsed.data, isTemplate: false }).returning();
+  const [workflow] = await db.insert(workflowsTable).values({ ...parsed.data, isTemplate: false, userId }).returning();
   res.status(201).json({
     ...workflow,
     createdAt: workflow.createdAt.toISOString(),
@@ -142,12 +148,15 @@ router.get("/workflows/templates", async (_req, res) => {
 });
 
 router.delete("/workflows/:id", async (req, res) => {
+  const userId = (req as any).userId as string;
   const parsed = DeleteWorkflowParams.safeParse({ id: Number(req.params.id) });
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid ID" });
     return;
   }
-  await db.delete(workflowsTable).where(eq(workflowsTable.id, parsed.data.id));
+  await db.delete(workflowsTable).where(
+    and(eq(workflowsTable.id, parsed.data.id), eq(workflowsTable.userId, userId))
+  );
   res.status(204).send();
 });
 

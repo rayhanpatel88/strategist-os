@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, jsonb, unique } from "drizzle-orm/pg-core";
 
 export type CalendarTimeBlock = {
   id: string;
@@ -39,10 +39,13 @@ export type CalendarPlanData = {
 
 export const calendarPlansTable = pgTable("calendar_plans", {
   id: serial("id").primaryKey(),
-  date: text("date").notNull().unique(),
+  userId: text("user_id"),
+  date: text("date").notNull(),
   data: jsonb("data").$type<CalendarPlanData>().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  unique("calendar_plans_user_date_unique").on(table.userId, table.date),
+]);
 
 export type CalendarPlan = typeof calendarPlansTable.$inferSelect;

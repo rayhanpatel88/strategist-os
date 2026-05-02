@@ -4,6 +4,7 @@ import { z } from "zod/v4";
 
 export const workflowsTable = pgTable("workflows", {
   id: serial("id").primaryKey(),
+  userId: text("user_id"),
   name: text("name").notNull(),
   description: text("description").notNull(),
   trigger: text("trigger").notNull(),
