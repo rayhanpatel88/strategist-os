@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
+  RadarChart, PolarGrid, PolarAngleAxis, Radar,
 } from "recharts";
 
 const now = new Date();
@@ -489,6 +490,135 @@ function LeverageScoreTrend({ base }: { base: string }) {
   );
 }
 
+type ScorecardHistoryEntry = { id: number; goal: string; overallScore: number; result: { dimensions: { name: string; score: number }[] }; createdAt: string };
+
+function ScorecardRadar({ base }: { base: string }) {
+  const { data: history = [], isLoading } = useQuery<ScorecardHistoryEntry[]>({
+    queryKey: ["scorecard-history"],
+    queryFn: async () => {
+      const res = await fetch(`${base}/api/scorecard/history`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  const latest = history[0];
+  const prev = history[1];
+  const delta = latest && prev ? latest.overallScore - prev.overallScore : null;
+  const trend = delta === null ? null : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+
+  const radarData = latest?.result?.dimensions?.map((d) => ({
+    subject: d.name.split(" ")[0],
+    score: d.score,
+    fullMark: 100,
+  })) ?? [];
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload?.length) return null;
+    const score = payload[0]?.value as number;
+    const color = score >= 75 ? "#72fe88" : score >= 50 ? "#4b8cf5" : "#ffb4ab";
+    return (
+      <div style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", padding: "8px 12px", boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+        <div style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)", marginBottom: 3 }}>{label}</div>
+        <div style={{ fontSize: 18, fontWeight: 700, color, fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+          {score}<span style={{ fontSize: 11, color: "var(--sos-text-muted)", fontWeight: 400 }}>/100</span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="label-caps">Scorecard Profile</div>
+        {latest && (
+          <div className="flex items-center gap-2">
+            {delta !== null && (
+              <span style={{
+                fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+                color: trend === "up" ? "var(--sos-emerald)" : trend === "down" ? "var(--sos-error)" : "var(--sos-text-dim)",
+                fontFamily: "Space Grotesk, sans-serif",
+              }}>
+                {trend === "up" ? "▲" : trend === "down" ? "▼" : "—"} {Math.abs(delta!)} pts
+              </span>
+            )}
+            {delta !== null && <span style={{ width: 1, height: 12, background: "var(--sos-ghost-border)", display: "inline-block" }} />}
+            <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.04em" }}>{history.length} assessment{history.length !== 1 ? "s" : ""}</span>
+          </div>
+        )}
+      </div>
+
+      <div style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+        {isLoading ? (
+          <div style={{ height: 180, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontSize: 11, color: "var(--sos-text-muted)" }}>Loading...</div>
+          </div>
+        ) : !latest ? (
+          <div style={{ height: 180, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <div style={{ fontSize: 11, color: "var(--sos-text-muted)", textAlign: "center", lineHeight: 1.6, maxWidth: 320 }}>
+              Run a Scorecard to visualise your 8-dimension positioning profile here.
+            </div>
+            <Link href="/scorecard">
+              <span style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+                Go to Scorecard →
+              </span>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2">
+            {/* Left: radar */}
+            <div className="p-4" style={{ borderRight: "1px solid var(--sos-border)" }}>
+              <div style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-muted)", marginBottom: 4 }}>Latest run · {new Date(latest.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</div>
+              <ResponsiveContainer width="100%" height={200}>
+                <RadarChart data={radarData} margin={{ top: 8, right: 16, bottom: 8, left: 16 }}>
+                  <PolarGrid stroke="rgba(255,255,255,0.07)" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fill: "rgba(255,255,255,0.35)", fontFamily: "Space Grotesk, sans-serif" }} />
+                  <Radar name="Score" dataKey="score" stroke="#4b8eff" fill="#4b8eff" fillOpacity={0.12} />
+                  <Tooltip content={<CustomTooltip />} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Right: score + dimension bars */}
+            <div className="p-5 flex flex-col justify-center gap-3">
+              <div className="flex items-baseline gap-3 mb-1">
+                <span style={{ fontSize: 40, fontWeight: 700, color: latest.overallScore >= 75 ? "var(--sos-emerald)" : latest.overallScore >= 50 ? "var(--sos-blue)" : "var(--sos-error)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+                  {latest.overallScore}
+                </span>
+                <span style={{ fontSize: 11, color: "var(--sos-text-muted)" }}>/100</span>
+              </div>
+              {latest.goal && (
+                <div style={{ fontSize: 11, color: "var(--sos-text-dim)", lineHeight: 1.4, marginBottom: 6 }}>
+                  {latest.goal.slice(0, 64)}{latest.goal.length > 64 ? "…" : ""}
+                </div>
+              )}
+              <div className="space-y-2">
+                {radarData.map((d) => {
+                  const c = d.score >= 75 ? "var(--sos-emerald)" : d.score >= 50 ? "var(--sos-blue)" : "var(--sos-error)";
+                  return (
+                    <div key={d.subject} className="flex items-center gap-3">
+                      <div style={{ fontSize: 9, color: "var(--sos-text-muted)", width: 64, flexShrink: 0, letterSpacing: "0.04em", textTransform: "uppercase" }}>{d.subject}</div>
+                      <div style={{ flex: 1, height: 2, background: "var(--sos-track-bg)" }}>
+                        <div style={{ height: 2, width: `${d.score}%`, background: c, transition: "width 0.8s ease" }} />
+                      </div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: c, fontFamily: "Space Grotesk, sans-serif", width: 24, textAlign: "right" }}>{d.score}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <Link href="/scorecard">
+                <span style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", marginTop: 4, display: "inline-block" }}>
+                  View full scorecard →
+                </span>
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ExecutionHeatmap({ activity, loading, base, onScoreUpdate }: {
   activity: ActivityEntry[];
   loading: boolean;
@@ -802,8 +932,15 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Leverage Score Trend */}
-        <LeverageScoreTrend base={base} />
+        {/* Leverage Score Trend + Scorecard Profile — side by side */}
+        <div className="grid grid-cols-2 gap-6 mb-8">
+          <div className="mb-0">
+            <LeverageScoreTrend base={base} />
+          </div>
+          <div className="mb-0">
+            <ScorecardRadar base={base} />
+          </div>
+        </div>
 
         {/* Execution Heatmap */}
         <ExecutionHeatmap activity={activity} loading={activityLoading} base={base} onScoreUpdate={handleScoreUpdate} />
