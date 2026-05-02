@@ -78,6 +78,59 @@ router.get("/calendar/week-review", async (req, res) => {
   res.json({ daysPlanned, avgScore, completedTasks, totalDays: 7 });
 });
 
+router.get("/calendar/streak", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const rows = await db
+    .select({ date: calendarPlansTable.date, data: calendarPlansTable.data })
+    .from(calendarPlansTable)
+    .where(eq(calendarPlansTable.userId, userId))
+    .orderBy(asc(calendarPlansTable.date));
+
+  const hasContent = (d: CalendarPlanData) =>
+    !!(d.objective?.trim()) || (d.timeBlocks?.length ?? 0) > 0 || (d.tasks?.length ?? 0) > 0;
+
+  const activeDates = new Set(
+    rows.filter((row) => hasContent(row.data as CalendarPlanData)).map((row) => row.date)
+  );
+
+  // Current streak: walk backwards from today (skip today if not yet planned)
+  const todayDate = new Date();
+  let currentStreak = 0;
+  let check = new Date(todayDate);
+  let skippedToday = false;
+  while (true) {
+    const ds = check.toISOString().split("T")[0];
+    if (!activeDates.has(ds)) {
+      if (!skippedToday && ds === todayDate.toISOString().split("T")[0]) {
+        skippedToday = true;
+        check.setUTCDate(check.getUTCDate() - 1);
+        continue;
+      }
+      break;
+    }
+    currentStreak++;
+    check.setUTCDate(check.getUTCDate() - 1);
+  }
+
+  // Longest streak ever
+  const sorted = [...activeDates].sort();
+  let longestStreak = 0;
+  let run = 0;
+  for (let i = 0; i < sorted.length; i++) {
+    if (i === 0) {
+      run = 1;
+    } else {
+      const prev = new Date(`${sorted[i - 1]}T00:00:00Z`);
+      const curr = new Date(`${sorted[i]}T00:00:00Z`);
+      const diff = (curr.getTime() - prev.getTime()) / 86_400_000;
+      run = diff === 1 ? run + 1 : 1;
+    }
+    if (run > longestStreak) longestStreak = run;
+  }
+
+  res.json({ currentStreak, longestStreak });
+});
+
 router.get("/calendar/:date", async (req, res) => {
   const userId = (req as any).userId as string;
   const { date } = req.params;

@@ -930,7 +930,15 @@ export default function Dashboard() {
   const [activityLoading, setActivityLoading] = useState(true);
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   const [weekReviewStart, setWeekReviewStart] = useState("");
+  const [streak, setStreak] = useState<{ currentStreak: number; longestStreak: number } | null>(null);
   const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
+
+  useEffect(() => {
+    fetch(`${base}/api/calendar/streak`)
+      .then((r) => r.json())
+      .then((data) => setStreak(data))
+      .catch(() => setStreak(null));
+  }, [base]);
 
   useEffect(() => {
     fetch(`${base}/api/calendar/activity`)
@@ -998,9 +1006,9 @@ export default function Dashboard() {
 
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7">
         {/* Telemetry grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
           {summary.isLoading ? (
-            Array.from({ length: 4 }).map((_, i) => (
+            Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="p-5 animate-pulse" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", height: 110 }} />
             ))
           ) : (
@@ -1022,6 +1030,12 @@ export default function Dashboard() {
                 value={summary.data?.topIndustries?.[0]?.industry ?? "—"}
                 sub={summary.data?.topIndustries?.[0] ? `${summary.data.topIndustries[0].count} sessions` : "no data yet"}
                 accent="white"
+              />
+              <HudCard
+                label="Planning Streak"
+                value={streak !== null ? `${streak.currentStreak}d` : "—"}
+                sub={streak !== null && streak.longestStreak > 0 ? `best: ${streak.longestStreak}d` : "consecutive days planned"}
+                accent={streak !== null && streak.currentStreak >= 7 ? "emerald" : streak !== null && streak.currentStreak >= 3 ? "blue" : "white"}
               />
               <HudCard
                 label="System Status"
