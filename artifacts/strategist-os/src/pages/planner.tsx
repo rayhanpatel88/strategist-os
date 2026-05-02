@@ -177,7 +177,7 @@ export default function Planner() {
       {/* Header */}
       <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-          Execution_Planner
+          Execution Planner
         </span>
         <div className="flex items-center gap-3">
           {step === "result" && plan && (

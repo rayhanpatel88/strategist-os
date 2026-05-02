@@ -14,17 +14,8 @@ type OpportunityResult = {
 
 function HudBtn({ onClick, disabled, children, "data-testid": dt }: { onClick?: () => void; disabled?: boolean; children: React.ReactNode; "data-testid"?: string }) {
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      data-testid={dt}
-      style={{
-        fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
-        color: "var(--sos-btn-text)", background: disabled ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)",
-        border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer",
-        fontFamily: "Space Grotesk, sans-serif", width: "100%",
-      }}
-    >
+    <button onClick={onClick} disabled={disabled} data-testid={dt}
+      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: disabled ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", width: "100%" }}>
       {children}
     </button>
   );
@@ -40,92 +31,62 @@ export default function Opportunity() {
 
   const handleSubmit = () => {
     if (!form.skills || !form.targetAudience) {
-      toast({ title: "Please fill in at least your skills and target audience", variant: "destructive" });
+      toast({ title: "Skills and target audience are required", variant: "destructive" });
       return;
     }
-    build.mutate(
-      { data: form },
-      {
-        onSuccess: (data) => { setResult(data as OpportunityResult); setStep("result"); },
-        onError: () => toast({ title: "Analysis failed", variant: "destructive" }),
-      }
-    );
+    build.mutate({ data: form }, {
+      onSuccess: (data) => { setResult(data as OpportunityResult); setStep("result"); },
+      onError: () => toast({ title: "Analysis failed. Please try again.", variant: "destructive" }),
+    });
   };
 
   if (step === "result" && result) {
     return (
       <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
-        <div
-          className="flex items-center justify-between px-8 py-4 shrink-0"
-          style={{ borderBottom: "1px solid var(--sos-border)" }}
-        >
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-            Opportunity_Stack
-          </span>
-          <button
-            onClick={() => { setStep("form"); setResult(null); }}
-            data-testid="button-new-opportunity"
-            style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}
-          >
+        <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+          <div>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>Opportunity Stack</span>
+            <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Analysis complete</div>
+          </div>
+          <button onClick={() => { setStep("form"); setResult(null); }} data-testid="button-new-opportunity"
+            style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
             New Analysis
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-8 py-7 space-y-4">
-          {/* Key positioning cards */}
           <div className="grid grid-cols-2 gap-4">
             {[
               { label: "Positioning Angle", value: result.positioningAngle, highlight: true },
-              { label: "Best Niche", value: result.bestNiche, highlight: false },
-              { label: "Offer / Project Idea", value: result.offerIdea, highlight: false },
-              { label: "Content Angle", value: result.contentAngle, highlight: false },
+              { label: "Target Niche", value: result.bestNiche, highlight: false },
+              { label: "Offer Concept", value: result.offerIdea, highlight: false },
+              { label: "Content Direction", value: result.contentAngle, highlight: false },
             ].map((item, i) => (
-              <div
-                key={i}
-                className="p-6"
-                style={{
-                  background: item.highlight ? "var(--sos-emerald-tint)" : "var(--sos-surface)",
-                  border: item.highlight ? "1px solid var(--sos-emerald-border)" : "1px solid var(--sos-border)",
-                }}
-                data-testid={`card-opportunity-${i}`}
-              >
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: item.highlight ? "var(--sos-emerald)" : "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 10 }}>
-                  {item.label}
-                </div>
+              <div key={i} className="p-6"
+                style={{ background: item.highlight ? "var(--sos-emerald-tint)" : "var(--sos-surface)", border: item.highlight ? "1px solid var(--sos-emerald-border)" : "1px solid var(--sos-border)" }}
+                data-testid={`card-opportunity-${i}`}>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: item.highlight ? "var(--sos-emerald)" : "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 10 }}>{item.label}</div>
                 <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.6 }}>{item.value}</p>
               </div>
             ))}
           </div>
 
-          {/* Proof asset — full width */}
-          <div
-            className="p-6"
-            style={{ background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)" }}
-            data-testid="card-opportunity-4"
-          >
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-blue)", textTransform: "uppercase", marginBottom: 10 }}>
-              Proof Asset to Build
-            </div>
+          <div className="p-6" style={{ background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)" }} data-testid="card-opportunity-4">
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-blue)", textTransform: "uppercase", marginBottom: 10 }}>Proof Asset to Build</div>
             <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.6 }}>{result.proofAsset}</p>
           </div>
 
-          {/* 30-day roadmap */}
           <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 20 }}>
-              30-Day Execution Roadmap
-            </div>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 20 }}>30-Day Roadmap</div>
             <div className="grid grid-cols-4 gap-6">
               {result.roadmap30Day.map((week) => (
                 <div key={week.week} data-testid={`card-roadmap-week-${week.week}`}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--sos-blue)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, fontFamily: "Space Grotesk, sans-serif" }}>
-                    Week {week.week}
-                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--sos-blue)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, fontFamily: "Space Grotesk, sans-serif" }}>Week {week.week}</div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: "var(--sos-text)", marginBottom: 10, lineHeight: 1.4 }}>{week.focus}</div>
                   <ul className="space-y-2">
                     {week.actions.map((action, j) => (
                       <li key={j} className="flex gap-2" style={{ fontSize: 11, color: "var(--sos-text-secondary)", lineHeight: 1.5 }}>
-                        <span style={{ color: "var(--sos-blue)", flexShrink: 0 }}>→</span>
-                        {action}
+                        <span style={{ color: "var(--sos-blue)", flexShrink: 0 }}>→</span>{action}
                       </li>
                     ))}
                   </ul>
@@ -140,86 +101,38 @@ export default function Opportunity() {
 
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
-      <div
-        className="px-8 py-4 shrink-0"
-        style={{ borderBottom: "1px solid var(--sos-border)" }}
-      >
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-          Opportunity_Stack_Builder
-        </span>
-        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2, letterSpacing: "0.04em" }}>Map your assets. Get a clear positioning angle and a 30-day execution plan.</div>
+      <div className="px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>Opportunity Stack</span>
+        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Map your assets against demand. Get a positioning angle and a 30-day execution plan.</div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Skills *</div>
-          <textarea
-            value={form.skills}
-            onChange={(e) => setForm({ ...form, skills: e.target.value })}
-            placeholder="e.g. Machine learning, Python, LLM fine-tuning, data visualisation, strategic consulting"
-            rows={2}
-            data-testid="input-skills"
-            style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }}
-          />
+          <textarea value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Technical and strategic skills. Be specific: Python, LLM deployment, financial modelling, stakeholder management." rows={2} data-testid="input-skills" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
         </div>
-
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Experience</div>
-          <textarea
-            value={form.experience}
-            onChange={(e) => setForm({ ...form, experience: e.target.value })}
-            placeholder="e.g. MSc Data Science (ongoing), 2 years freelance web development, led university AI society"
-            rows={2}
-            data-testid="input-experience"
-            style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }}
-          />
+          <textarea value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} placeholder="Roles, projects, outcomes. Include credentials if relevant." rows={2} data-testid="input-experience" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
         </div>
-
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Tools You Know</div>
-            <input
-              value={form.tools}
-              onChange={(e) => setForm({ ...form, tools: e.target.value })}
-              placeholder="Python, Replit, LangChain, n8n..."
-              data-testid="input-tools"
-              style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
-            />
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Tools</div>
+            <input value={form.tools} onChange={(e) => setForm({ ...form, tools: e.target.value })} placeholder="e.g. Python, LangChain, n8n, Replit" data-testid="input-tools" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
           </div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Current Projects</div>
-            <input
-              value={form.projects}
-              onChange={(e) => setForm({ ...form, projects: e.target.value })}
-              placeholder="e.g. AI automation SaaS, dissertation on NLP"
-              data-testid="input-projects"
-              style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
-            />
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Active Projects</div>
+            <input value={form.projects} onChange={(e) => setForm({ ...form, projects: e.target.value })} placeholder="Current work, builds, or research" data-testid="input-projects" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
           </div>
         </div>
-
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Target Audience *</div>
-          <input
-            value={form.targetAudience}
-            onChange={(e) => setForm({ ...form, targetAudience: e.target.value })}
-            placeholder="e.g. Startup founders, enterprise innovation teams, MSc / PhD students"
-            data-testid="input-target-audience"
-            style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
-          />
+          <input value={form.targetAudience} onChange={(e) => setForm({ ...form, targetAudience: e.target.value })} placeholder="Who you are building for or selling to" data-testid="input-target-audience" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
         </div>
-
         <div>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Desired Income or Career Path</div>
-          <input
-            value={form.desiredPath}
-            onChange={(e) => setForm({ ...form, desiredPath: e.target.value })}
-            placeholder="e.g. £5k/month consulting, PhD offer, CTO role at AI startup"
-            data-testid="input-desired-path"
-            style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
-          />
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Desired Path</div>
+          <input value={form.desiredPath} onChange={(e) => setForm({ ...form, desiredPath: e.target.value })} placeholder="e.g. £5k/month consulting, PhD offer, CTO at AI startup" data-testid="input-desired-path" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
         </div>
-
         <div className="pt-2">
           <HudBtn onClick={handleSubmit} disabled={build.isPending} data-testid="button-build-opportunity-stack">
             {build.isPending ? "Analysing..." : "Build Stack"}

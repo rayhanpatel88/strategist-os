@@ -26,8 +26,42 @@ tags:
     description: Elite execution planner
   - name: portfolio
     description: Public portfolio
+  - name: enquiries
+    description: Portfolio contact enquiries
 
 paths:
+  /enquiries:
+    post:
+      operationId: submitEnquiry
+      tags: [enquiries]
+      summary: Submit a portfolio contact enquiry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitEnquiryBody"
+      responses:
+        "201":
+          description: Enquiry saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Enquiry"
+    get:
+      operationId: listEnquiries
+      tags: [enquiries]
+      summary: List all enquiries
+      responses:
+        "200":
+          description: List of enquiries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Enquiry"
+
   /healthz:
     get:
       operationId: healthCheck
@@ -1106,3 +1140,37 @@ components:
               - approach
               - result
               - industry
+
+    Enquiry:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - email
+        - message
+        - createdAt
+
+    SubmitEnquiryBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        message:
+          type: string
+      required:
+        - name
+        - email
+        - message

@@ -39,12 +39,12 @@ export default function Scorecard() {
 
   const handleSubmit = () => {
     if (!form.goal || !form.industry || !form.currentStatus) {
-      toast({ title: "Please fill in all fields", variant: "destructive" });
+      toast({ title: "All three fields are required", variant: "destructive" });
       return;
     }
     runScorecard.mutate({ data: form }, {
       onSuccess: (data) => { setResult(data as ScorecardResult); setStep("result"); },
-      onError: () => toast({ title: "Scorecard failed", variant: "destructive" }),
+      onError: () => toast({ title: "Scoring failed. Please try again.", variant: "destructive" }),
     });
   };
 
@@ -64,16 +64,18 @@ export default function Scorecard() {
     return (
       <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
         <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-            Optimisation_Scorecard
-          </span>
+          <div>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+              Optimisation Scorecard
+            </span>
+            <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Assessment complete</div>
+          </div>
           <HudBtn variant="ghost" onClick={() => { setStep("form"); setResult(null); }} data-testid="button-new-scorecard">
-            New Scorecard
+            New Assessment
           </HudBtn>
         </div>
 
         <div className="flex-1 overflow-y-auto px-8 py-7 space-y-4">
-          {/* Overview row */}
           <div className="grid grid-cols-2 gap-4">
             {/* Score */}
             <div className="p-6 flex flex-col items-center justify-center" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
@@ -116,7 +118,7 @@ export default function Scorecard() {
           {/* Summary + Priority */}
           <div className="grid grid-cols-2 gap-4">
             <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
-              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 12 }}>Strategic Summary</div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 12 }}>Summary</div>
               <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.7 }}>{result.strategicSummary}</p>
             </div>
             <div className="p-6" style={{ background: "var(--sos-emerald-tint)", border: "1px solid var(--sos-emerald-border)" }}>
@@ -127,23 +129,15 @@ export default function Scorecard() {
 
           {/* Dimension breakdown */}
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 14 }}>Dimension Breakdown</div>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 14 }}>8-Dimension Breakdown</div>
             <div className="space-y-2">
               {result.dimensions.map((dim, i) => (
-                <div
-                  key={dim.name}
-                  style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", overflow: "hidden" }}
-                  data-testid={`card-dimension-${i}`}
-                >
+                <div key={dim.name} style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", overflow: "hidden" }} data-testid={`card-dimension-${i}`}>
                   <button
                     onClick={() => setExpanded(expanded === i ? null : i)}
                     className="w-full"
                     data-testid={`button-expand-dimension-${i}`}
-                    style={{
-                      display: "flex", alignItems: "center", gap: 16, padding: "14px 20px",
-                      background: "none", border: "none", cursor: "pointer",
-                      transition: "background 0.1s",
-                    }}
+                    style={{ display: "flex", alignItems: "center", gap: 16, padding: "14px 20px", background: "none", border: "none", cursor: "pointer" }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sos-row-hover)"; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
                   >
@@ -170,7 +164,7 @@ export default function Scorecard() {
                         <p style={{ fontSize: 12, color: "var(--sos-text-secondary)", lineHeight: 1.7 }}>{dim.howToImprove}</p>
                       </div>
                       <div style={{ background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)", padding: 14 }}>
-                        <div style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-blue)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>Recommendation</div>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-blue)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>Recommended action</div>
                         <p style={{ fontSize: 12, color: "var(--sos-text-body)", lineHeight: 1.7 }}>{dim.eliteRecommendation}</p>
                       </div>
                     </div>
@@ -187,47 +181,28 @@ export default function Scorecard() {
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       <div className="px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-          Optimisation_Scorecard
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+          Optimisation Scorecard
         </span>
-        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Scored across 8 dimensions against your goal and current position.</div>
+        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Score your position across 8 dimensions. Get a ranked improvement roadmap with timelines.</div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
         <div>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Your Goal *</div>
-          <input
-            value={form.goal}
-            onChange={(e) => setForm({ ...form, goal: e.target.value })}
-            placeholder="e.g. Build a £5k/month consulting practice in AI"
-            data-testid="input-scorecard-goal"
-            style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
-          />
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Goal *</div>
+          <input value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })} placeholder="State the specific goal being assessed" data-testid="input-scorecard-goal" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
         </div>
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Industry / Domain *</div>
-          <input
-            value={form.industry}
-            onChange={(e) => setForm({ ...form, industry: e.target.value })}
-            placeholder="e.g. AI Consulting / Data Science"
-            data-testid="input-scorecard-industry"
-            style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
-          />
+          <input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="e.g. AI Consulting, SaaS, Academic Research" data-testid="input-scorecard-industry" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
         </div>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Current Status *</div>
-          <textarea
-            value={form.currentStatus}
-            onChange={(e) => setForm({ ...form, currentStatus: e.target.value })}
-            placeholder="Describe where you are now: what you have built, what you are doing, what is working and what is not."
-            rows={5}
-            data-testid="input-scorecard-status"
-            style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }}
-          />
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Current Position *</div>
+          <textarea value={form.currentStatus} onChange={(e) => setForm({ ...form, currentStatus: e.target.value })} placeholder="Describe where you are now. What you have built, what is working, what is not, and what you have already tried." rows={5} data-testid="input-scorecard-status" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
         </div>
         <div className="pt-2">
           <HudBtn onClick={handleSubmit} disabled={runScorecard.isPending} data-testid="button-run-scorecard">
-            {runScorecard.isPending ? "Scoring..." : "Run Scorecard"}
+            {runScorecard.isPending ? "Scoring..." : "Score Position"}
           </HudBtn>
         </div>
       </div>

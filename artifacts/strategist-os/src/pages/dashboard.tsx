@@ -62,11 +62,11 @@ export default function Dashboard() {
         style={{ borderBottom: "1px solid var(--sos-border)" }}
       >
         <div className="flex items-center gap-4">
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-            Command_Centre
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+            Command Centre
           </span>
           <span style={{ width: 1, height: 14, background: "var(--sos-ghost-border)", display: "inline-block" }} />
-          <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.08em" }}>{systemDate}</span>
+          <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.06em" }}>{systemDate}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="status-pip" style={{ background: "var(--sos-emerald)" }} />
@@ -114,7 +114,7 @@ export default function Dashboard() {
         {/* Telemetry bars */}
         {!summary.isLoading && avgScore !== null && (
           <div className="mb-8 p-5" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
-            <div className="label-caps mb-4">Performance Telemetry</div>
+            <div className="label-caps mb-4">Performance</div>
             <div className="space-y-4">
               {[
                 { label: "LEVERAGE SCORE", value: avgScore, color: avgScore >= 75 ? "var(--sos-emerald)" : "var(--sos-blue)" },
@@ -133,15 +133,15 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Quick actions */}
+        {/* Modules */}
         <div className="mb-8">
           <div className="label-caps mb-4">Modules</div>
           <div className="grid grid-cols-4 gap-3">
             {[
-              { href: "/diagnosis", label: "Strategic Diagnosis", desc: "Map your position, assets, and constraints.", icon: "biotech" },
-              { href: "/scorecard", label: "Optimisation Score", desc: "Score 8 decision-critical dimensions.", icon: "analytics" },
-              { href: "/opportunity", label: "Opportunity Stack", desc: "Find the strongest market angle.", icon: "trending_up" },
-              { href: "/planner", label: "Execution Plan", desc: "Build a structured sprint from any goal.", icon: "calendar_month" },
+              { href: "/diagnosis", label: "Strategic Diagnosis", desc: "Input your context. Get a structured breakdown of bottlenecks, priorities, and ranked next steps.", icon: "biotech" },
+              { href: "/scorecard", label: "Optimisation Scorecard", desc: "Assess your position across 8 dimensions. Get a ranked improvement roadmap with timelines.", icon: "analytics" },
+              { href: "/opportunity", label: "Opportunity Stack", desc: "Map your skills and assets against demand. Surface the highest-value positioning angle.", icon: "trending_up" },
+              { href: "/planner", label: "Execution Planner", desc: "Convert any goal into a 7-day sprint and 30-day roadmap with daily actions and risk flags.", icon: "calendar_month" },
             ].map((item) => (
               <Link key={item.href} href={item.href}>
                 <div
@@ -153,9 +153,9 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <span className="material-symbols-outlined" style={{ color: "var(--sos-blue)", fontSize: 16 }}>{item.icon}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.04em", fontFamily: "Space Grotesk, sans-serif" }}>{item.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.03em", fontFamily: "Space Grotesk, sans-serif" }}>{item.label}</span>
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--sos-text-dim)" }}>{item.desc}</div>
+                  <div style={{ fontSize: 11, color: "var(--sos-text-dim)", lineHeight: 1.55 }}>{item.desc}</div>
                   <div className="flex items-center gap-1 mt-3">
                     <span style={{ fontSize: 10, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Open</span>
                     <span className="material-symbols-outlined" style={{ color: "var(--sos-blue)", fontSize: 12 }}>arrow_forward</span>
@@ -169,11 +169,11 @@ export default function Dashboard() {
         {/* Sessions table */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <div className="label-caps">Recent Sessions</div>
+            <div className="label-caps">Session Record</div>
             <Link href="/diagnosis">
               <span
                 className="cursor-pointer transition-colors"
-                style={{ fontSize: 11, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}
+                style={{ fontSize: 11, color: "var(--sos-blue)", letterSpacing: "0.05em", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}
               >
                 + New Session
               </span>
@@ -181,7 +181,6 @@ export default function Dashboard() {
           </div>
 
           <div style={{ border: "1px solid var(--sos-border)" }}>
-            {/* Table header */}
             <div
               className="grid px-5 py-3"
               style={{ gridTemplateColumns: "1fr 120px 80px 100px", background: "var(--sos-row-hover)", borderBottom: "1px solid var(--sos-border)" }}
@@ -246,9 +245,9 @@ export default function Dashboard() {
               ))
             ) : (
               <div className="px-5 py-14 text-center">
-                <div style={{ fontSize: 12, color: "var(--sos-text-muted)", marginBottom: 8 }}>No sessions recorded.</div>
+                <div style={{ fontSize: 12, color: "var(--sos-text-muted)", marginBottom: 8 }}>No sessions yet.</div>
                 <Link href="/diagnosis">
-                  <span className="cursor-pointer" style={{ fontSize: 12, color: "var(--sos-blue)" }}>Run the first diagnosis.</span>
+                  <span className="cursor-pointer" style={{ fontSize: 12, color: "var(--sos-blue)" }}>Run a diagnosis to start building your strategy record.</span>
                 </Link>
               </div>
             )}

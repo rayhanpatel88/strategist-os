@@ -185,7 +185,7 @@ export default function Workflows() {
       {/* Header */}
       <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-          Workflow_Designer
+          Workflow Designer
         </span>
         <div className="flex items-center gap-3">
           <HudBtn variant="ghost" onClick={() => setTab("create")} data-testid="button-create-workflow">+ Create Workflow</HudBtn>

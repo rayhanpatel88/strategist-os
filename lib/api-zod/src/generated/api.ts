@@ -8,6 +8,27 @@
 import * as zod from "zod";
 
 /**
+ * @summary Submit a portfolio contact enquiry
+ */
+export const SubmitEnquiryBody = zod.object({
+  name: zod.string(),
+  email: zod.string(),
+  message: zod.string(),
+});
+
+/**
+ * @summary List all enquiries
+ */
+export const ListEnquiriesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  message: zod.string(),
+  createdAt: zod.string(),
+});
+export const ListEnquiriesResponse = zod.array(ListEnquiriesResponseItem);
+
+/**
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({

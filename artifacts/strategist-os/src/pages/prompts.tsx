@@ -15,10 +15,10 @@ const CATEGORIES = [
   { id: "ai-automation", label: "AI Automation" },
   { id: "content-creation", label: "Content Creation" },
   { id: "linkedin-positioning", label: "LinkedIn Positioning" },
-  { id: "offer-creation", label: "Offer Creation" },
-  { id: "replit-app-building", label: "Replit App Building" },
+  { id: "offer-creation", label: "Offer Design" },
+  { id: "replit-app-building", label: "Replit Development" },
   { id: "data-science", label: "Data Science" },
-  { id: "phd-research", label: "PhD / Research" },
+  { id: "phd-research", label: "PhD Research" },
 ] as const;
 
 type GeneratedPrompt = { title: string; category: string; prompt: string; usage: string; variables: string[] };
@@ -26,7 +26,7 @@ type GeneratedPrompt = { title: string; category: string; prompt: string; usage:
 function HudBtn({ onClick, disabled, children, variant = "primary", "data-testid": dt }: { onClick?: () => void; disabled?: boolean; children: React.ReactNode; variant?: "primary" | "ghost" | "dim"; "data-testid"?: string }) {
   const styles: React.CSSProperties =
     variant === "primary"
-      ? { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: disabled ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", width: "100%", transition: "background 0.1s" }
+      ? { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: disabled ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", width: "100%" }
       : variant === "ghost"
       ? { fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", opacity: disabled ? 0.4 : 1 }
       : { fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-blue)", background: "none", border: "1px solid var(--sos-blue-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" };
@@ -54,16 +54,13 @@ export default function Prompts() {
 
   const handleGenerate = () => {
     if (!context || !goal) {
-      toast({ title: "Fill in context and goal first", variant: "destructive" });
+      toast({ title: "Context and goal are required", variant: "destructive" });
       return;
     }
-    generate.mutate(
-      { data: { category, context, goal } },
-      {
-        onSuccess: (data) => setGenerated(data as GeneratedPrompt),
-        onError: () => toast({ title: "Generation failed", variant: "destructive" }),
-      }
-    );
+    generate.mutate({ data: { category, context, goal } }, {
+      onSuccess: (data) => setGenerated(data as GeneratedPrompt),
+      onError: () => toast({ title: "Generation failed. Please try again.", variant: "destructive" }),
+    });
   };
 
   const handleCopy = () => {
@@ -71,21 +68,18 @@ export default function Prompts() {
       navigator.clipboard.writeText(generated.prompt);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-      toast({ title: "Prompt copied to clipboard" });
+      toast({ title: "Copied to clipboard" });
     }
   };
 
   const handleSave = () => {
     if (!generated) return;
-    save.mutate(
-      { data: generated },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListSavedPromptsQueryKey() });
-          toast({ title: "Prompt saved to arsenal" });
-        },
-      }
-    );
+    save.mutate({ data: generated }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListSavedPromptsQueryKey() });
+        toast({ title: "Saved to arsenal" });
+      },
+    });
   };
 
   const handleDelete = (id: number) => {
@@ -99,31 +93,14 @@ export default function Prompts() {
 
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
-      {/* Header */}
-      <div
-        className="flex items-center justify-between px-8 py-4 shrink-0"
-        style={{ borderBottom: "1px solid var(--sos-border)" }}
-      >
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-          Prompt_Arsenal
+      <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+          Prompt Arsenal
         </span>
-        {/* Tab switcher */}
         <div className="flex" style={{ border: "1px solid var(--sos-ghost-border)" }}>
           {(["generate", "saved"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              data-testid={`tab-${t}`}
-              style={{
-                fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
-                padding: "7px 16px", cursor: "pointer", border: "none",
-                background: tab === t ? "var(--sos-tab-active-bg)" : "transparent",
-                color: tab === t ? "var(--sos-text)" : "var(--sos-text-dim)",
-                fontFamily: "Space Grotesk, sans-serif",
-                borderRight: t === "generate" ? "1px solid var(--sos-ghost-border)" : "none",
-                transition: "background 0.1s",
-              }}
-            >
+            <button key={t} onClick={() => setTab(t)} data-testid={`tab-${t}`}
+              style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", padding: "7px 16px", cursor: "pointer", border: "none", background: tab === t ? "var(--sos-tab-active-bg)" : "transparent", color: tab === t ? "var(--sos-text)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", borderRight: t === "generate" ? "1px solid var(--sos-ghost-border)" : "none" }}>
               {t === "generate" ? "Generate" : `Saved (${savedPrompts.data?.length ?? 0})`}
             </button>
           ))}
@@ -132,62 +109,29 @@ export default function Prompts() {
 
       {tab === "generate" ? (
         <div className="flex flex-1 overflow-hidden">
-          {/* Left — category selector */}
-          <div
-            className="flex flex-col shrink-0 overflow-y-auto py-6"
-            style={{ width: 200, borderRight: "1px solid var(--sos-border)", paddingLeft: 24, paddingRight: 16 }}
-          >
+          {/* Category selector */}
+          <div className="flex flex-col shrink-0 overflow-y-auto py-6" style={{ width: 200, borderRight: "1px solid var(--sos-border)", paddingLeft: 24, paddingRight: 16 }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-muted)", textTransform: "uppercase", marginBottom: 14 }}>Category</div>
             <div className="space-y-1">
               {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setCategory(cat.id)}
-                  data-testid={`button-category-${cat.id}`}
-                  style={{
-                    display: "block", width: "100%", textAlign: "left",
-                    fontSize: 12, padding: "8px 10px",
-                    background: category === cat.id ? "var(--sos-nav-active-bg)" : "transparent",
-                    color: category === cat.id ? "var(--sos-text)" : "var(--sos-text-dim)",
-                    fontWeight: category === cat.id ? 600 : 400,
-                    cursor: "pointer", border: "none",
-                    borderLeftWidth: 2,
-                    borderLeftStyle: "solid",
-                    borderLeftColor: category === cat.id ? "var(--sos-nav-active-border)" : "transparent",
-                    transition: "all 0.1s",
-                  }}
-                >
+                <button key={cat.id} onClick={() => setCategory(cat.id)} data-testid={`button-category-${cat.id}`}
+                  style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12, padding: "8px 10px", background: category === cat.id ? "var(--sos-nav-active-bg)" : "transparent", color: category === cat.id ? "var(--sos-text)" : "var(--sos-text-dim)", fontWeight: category === cat.id ? 600 : 400, cursor: "pointer", border: "none", borderLeftWidth: 2, borderLeftStyle: "solid", borderLeftColor: category === cat.id ? "var(--sos-nav-active-border)" : "transparent" }}>
                   {cat.label}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Right — form + output */}
+          {/* Form + output */}
           <div className="flex-1 overflow-y-auto px-8 py-7 space-y-6">
             <div className="space-y-5 max-w-2xl">
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Context</div>
-                <textarea
-                  id="prompt-context"
-                  value={context}
-                  onChange={(e) => setContext(e.target.value)}
-                  placeholder="Describe your specific situation, background, or problem..."
-                  rows={4}
-                  data-testid="input-prompt-context"
-                  style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }}
-                />
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Your Context</div>
+                <textarea value={context} onChange={(e) => setContext(e.target.value)} placeholder="Describe your situation, background, or specific problem. The more precise, the better the prompt." rows={4} data-testid="input-prompt-context" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Goal</div>
-                <input
-                  id="prompt-goal"
-                  value={goal}
-                  onChange={(e) => setGoal(e.target.value)}
-                  placeholder="What do you want this prompt to help you achieve?"
-                  data-testid="input-prompt-goal"
-                  style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
-                />
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>What you want this prompt to do</div>
+                <input value={goal} onChange={(e) => setGoal(e.target.value)} placeholder="e.g. Write a cold outreach message to a CTO at a Series A SaaS company" data-testid="input-prompt-goal" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
               </div>
               <HudBtn onClick={handleGenerate} disabled={generate.isPending} data-testid="button-generate-prompt">
                 {generate.isPending ? "Generating..." : "Generate Prompt"}
@@ -214,13 +158,13 @@ export default function Prompts() {
                 </div>
 
                 <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>Usage guidance</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>How to use this</div>
                   <p style={{ fontSize: 12, color: "var(--sos-text-secondary)", lineHeight: 1.6 }}>{generated.usage}</p>
                 </div>
 
                 {generated.variables.length > 0 && (
                   <div>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Variables to fill in</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Replace these variables</div>
                     <div className="flex flex-wrap gap-2">
                       {generated.variables.map((v) => (
                         <span key={v} style={{ background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)", color: "var(--sos-blue)", fontSize: 11, padding: "3px 8px", fontFamily: "Space Grotesk, monospace" }}>
@@ -251,11 +195,8 @@ export default function Prompts() {
                     </div>
                     <div className="flex gap-2">
                       <HudBtn variant="ghost" onClick={() => { navigator.clipboard.writeText(prompt.prompt); toast({ title: "Copied" }); }} data-testid={`button-copy-saved-prompt-${prompt.id}`}>Copy</HudBtn>
-                      <button
-                        onClick={() => handleDelete(prompt.id)}
-                        data-testid={`button-delete-saved-prompt-${prompt.id}`}
-                        style={{ fontSize: 10, color: "var(--sos-error-dim)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase" }}
-                      >
+                      <button onClick={() => handleDelete(prompt.id)} data-testid={`button-delete-saved-prompt-${prompt.id}`}
+                        style={{ fontSize: 10, color: "var(--sos-error-dim)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase" }}>
                         Delete
                       </button>
                     </div>
@@ -270,9 +211,9 @@ export default function Prompts() {
             </div>
           ) : (
             <div className="py-20 text-center">
-              <div style={{ fontSize: 12, color: "var(--sos-text-muted)", marginBottom: 10 }}>No prompts saved.</div>
+              <div style={{ fontSize: 12, color: "var(--sos-text-muted)", marginBottom: 10 }}>No prompts saved yet.</div>
               <button onClick={() => setTab("generate")} style={{ fontSize: 12, color: "var(--sos-blue)", background: "none", border: "none", cursor: "pointer" }}>
-                Generate a prompt to begin.
+                Generate and save your first prompt.
               </button>
             </div>
           )}

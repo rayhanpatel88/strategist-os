@@ -23,14 +23,14 @@ const queryClient = new QueryClient({
 });
 
 const navItems = [
-  { path: "/", label: "COMMAND_CENTRE", icon: "grid_view" },
-  { path: "/diagnosis", label: "DIAGNOSIS", icon: "biotech" },
-  { path: "/scorecard", label: "SCORECARD", icon: "analytics" },
-  { path: "/prompts", label: "ARSENAL", icon: "bolt" },
-  { path: "/opportunity", label: "OPPORTUNITIES", icon: "trending_up" },
-  { path: "/workflows", label: "WORKFLOWS", icon: "account_tree" },
-  { path: "/planner", label: "PLANNER", icon: "calendar_month" },
-  { path: "/portfolio", label: "PORTFOLIO", icon: "web_asset" },
+  { path: "/", label: "Command Centre", icon: "grid_view" },
+  { path: "/diagnosis", label: "Diagnosis", icon: "biotech" },
+  { path: "/scorecard", label: "Scorecard", icon: "analytics" },
+  { path: "/prompts", label: "Arsenal", icon: "bolt" },
+  { path: "/opportunity", label: "Opportunities", icon: "trending_up" },
+  { path: "/workflows", label: "Workflows", icon: "account_tree" },
+  { path: "/planner", label: "Planner", icon: "calendar_month" },
+  { path: "/portfolio", label: "Portfolio", icon: "web_asset" },
 ];
 
 function Sidebar() {
@@ -46,38 +46,28 @@ function Sidebar() {
     >
       {/* Logo */}
       <div
-        className="px-4 pt-4 pb-4 flex items-center"
+        className="px-5 pt-5 pb-4 flex items-center gap-3"
         style={{ borderBottom: "1px solid var(--sos-border)", minHeight: 68 }}
       >
-        {isDark ? (
-          <img
-            src={`${base}logos/logo-dark.png`}
-            alt="StrategistOS"
-            style={{ width: 148, height: "auto", mixBlendMode: "screen" }}
-          />
-        ) : (
-          <div className="flex items-center gap-3">
-            <img
-              src={`${base}logos/logo-light.png`}
-              alt="StrategistOS"
-              style={{ width: 34, height: "auto" }}
-            />
-            <div>
-              <div style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 13, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.02em" }}>
-                StrategistOS
-              </div>
-              <div style={{ fontSize: 9, letterSpacing: "0.12em", color: "var(--sos-text-muted)", textTransform: "uppercase", fontWeight: 500 }}>
-                Intelligence Command
-              </div>
-            </div>
+        <img
+          src={`${base}logos/${isDark ? "logo-s-light" : "logo-s-dark"}.svg`}
+          alt=""
+          style={{ width: 32, height: 32, flexShrink: 0 }}
+        />
+        <div>
+          <div style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 13, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.01em" }}>
+            StrategistOS
           </div>
-        )}
+          <div style={{ fontSize: 9, letterSpacing: "0.1em", color: "var(--sos-text-muted)", textTransform: "uppercase", fontWeight: 500 }}>
+            Strategy System
+          </div>
+        </div>
       </div>
 
       {/* System status bar */}
-      <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid var(--sos-border-s)" }}>
+      <div className="px-5 py-2.5 flex items-center gap-2" style={{ borderBottom: "1px solid var(--sos-border-s)" }}>
         <span className="status-pip" style={{ background: "var(--sos-emerald)" }} />
-        <span style={{ fontSize: 10, color: "var(--sos-text-dim)", letterSpacing: "0.08em", textTransform: "uppercase" }}>All systems operational</span>
+        <span style={{ fontSize: 10, color: "var(--sos-text-dim)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Systems ready</span>
       </div>
 
       {/* Nav */}
@@ -89,7 +79,7 @@ function Sidebar() {
               <div
                 className="flex items-center gap-3 cursor-pointer transition-all duration-100"
                 style={{
-                  padding: "10px 20px",
+                  padding: "9px 20px",
                   borderLeft: isActive ? "2px solid var(--sos-nav-active-border)" : "2px solid transparent",
                   background: isActive ? "var(--sos-nav-active-bg)" : "transparent",
                 }}
@@ -103,17 +93,16 @@ function Sidebar() {
               >
                 <span
                   className="material-symbols-outlined shrink-0"
-                  style={{ color: isActive ? "var(--sos-text)" : "var(--sos-text-dim)", fontSize: 16 }}
+                  style={{ color: isActive ? "var(--sos-text)" : "var(--sos-text-dim)", fontSize: 15 }}
                 >
                   {item.icon}
                 </span>
                 <span
                   style={{
                     fontSize: 11,
-                    fontWeight: isActive ? 700 : 500,
-                    letterSpacing: "0.08em",
+                    fontWeight: isActive ? 600 : 400,
+                    letterSpacing: "0.04em",
                     color: isActive ? "var(--sos-text)" : "var(--sos-text-dim)",
-                    textTransform: "uppercase",
                     fontFamily: "Space Grotesk, sans-serif",
                   }}
                 >
@@ -127,25 +116,25 @@ function Sidebar() {
 
       {/* Footer */}
       <div className="px-5 py-4" style={{ borderTop: "1px solid var(--sos-border)" }}>
-        <div style={{ fontSize: 12, color: "var(--sos-text-secondary)", fontWeight: 600, marginBottom: 2 }}>Rayhan Patel</div>
-        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.05em", marginBottom: 14 }}>MSc Data Science · AI Strategist</div>
+        <div style={{ fontSize: 12, color: "var(--sos-text-secondary)", fontWeight: 600, marginBottom: 1 }}>Rayhan Patel</div>
+        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.03em", marginBottom: 14 }}>MSc Data Science · AI Strategist</div>
         <button
           onClick={() => setTheme(isDark ? "light" : "dark")}
           style={{
             display: "flex", alignItems: "center", gap: 8,
             fontSize: 10, color: "var(--sos-text-dim)", background: "none",
             border: "1px solid var(--sos-border)", padding: "6px 12px",
-            cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase",
+            cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
             fontFamily: "Space Grotesk, sans-serif", width: "100%",
             transition: "border-color 0.15s",
           }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)"; }}
         >
-          <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
             {isDark ? "light_mode" : "dark_mode"}
           </span>
-          {isDark ? "Light Mode" : "Dark Mode"}
+          {isDark ? "Light mode" : "Dark mode"}
         </button>
       </div>
     </aside>

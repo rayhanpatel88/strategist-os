@@ -22,6 +22,7 @@ import type {
   CreateWorkflowBody,
   DiagnosisInput,
   DiagnosisResult,
+  Enquiry,
   ExecutionPlan,
   GeneratedPrompt,
   HealthStatus,
@@ -38,6 +39,7 @@ import type {
   ScorecardResult,
   Session,
   SessionsSummary,
+  SubmitEnquiryBody,
   UpdatePortfolioBody,
   WorkflowTemplate,
 } from "./api.schemas";
@@ -50,6 +52,167 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary Submit a portfolio contact enquiry
+ */
+export const getSubmitEnquiryUrl = () => {
+  return `/api/enquiries`;
+};
+
+export const submitEnquiry = async (
+  submitEnquiryBody: SubmitEnquiryBody,
+  options?: RequestInit,
+): Promise<Enquiry> => {
+  return customFetch<Enquiry>(getSubmitEnquiryUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(submitEnquiryBody),
+  });
+};
+
+export const getSubmitEnquiryMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitEnquiry>>,
+    TError,
+    { data: BodyType<SubmitEnquiryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof submitEnquiry>>,
+  TError,
+  { data: BodyType<SubmitEnquiryBody> },
+  TContext
+> => {
+  const mutationKey = ["submitEnquiry"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof submitEnquiry>>,
+    { data: BodyType<SubmitEnquiryBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return submitEnquiry(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubmitEnquiryMutationResult = NonNullable<
+  Awaited<ReturnType<typeof submitEnquiry>>
+>;
+export type SubmitEnquiryMutationBody = BodyType<SubmitEnquiryBody>;
+export type SubmitEnquiryMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Submit a portfolio contact enquiry
+ */
+export const useSubmitEnquiry = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof submitEnquiry>>,
+    TError,
+    { data: BodyType<SubmitEnquiryBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof submitEnquiry>>,
+  TError,
+  { data: BodyType<SubmitEnquiryBody> },
+  TContext
+> => {
+  return useMutation(getSubmitEnquiryMutationOptions(options));
+};
+
+/**
+ * @summary List all enquiries
+ */
+export const getListEnquiriesUrl = () => {
+  return `/api/enquiries`;
+};
+
+export const listEnquiries = async (
+  options?: RequestInit,
+): Promise<Enquiry[]> => {
+  return customFetch<Enquiry[]>(getListEnquiriesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEnquiriesQueryKey = () => {
+  return [`/api/enquiries`] as const;
+};
+
+export const getListEnquiriesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEnquiries>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listEnquiries>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEnquiriesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listEnquiries>>> = ({
+    signal,
+  }) => listEnquiries({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEnquiries>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEnquiriesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEnquiries>>
+>;
+export type ListEnquiriesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all enquiries
+ */
+
+export function useListEnquiries<
+  TData = Awaited<ReturnType<typeof listEnquiries>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listEnquiries>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEnquiriesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Health check

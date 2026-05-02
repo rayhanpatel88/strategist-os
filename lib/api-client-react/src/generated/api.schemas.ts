@@ -304,3 +304,17 @@ export interface UpdatePortfolioBody {
   systems?: UpdatePortfolioBodySystemsItem[];
   caseStudies?: UpdatePortfolioBodyCaseStudiesItem[];
 }
+
+export interface Enquiry {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface SubmitEnquiryBody {
+  name: string;
+  email: string;
+  message: string;
+}
