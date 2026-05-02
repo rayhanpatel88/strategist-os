@@ -21,6 +21,36 @@
       "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Run Diagnosis",
+      "short_name": "Diagnosis",
+      "description": "Identify bottlenecks and get ranked next steps.",
+      "url": "/diagnosis",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Scorecard",
+      "short_name": "Scorecard",
+      "description": "Score your position across 8 dimensions.",
+      "url": "/scorecard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Opportunities",
+      "short_name": "Opportunities",
+      "description": "Map your skills against demand and find your positioning angle.",
+      "url": "/opportunity",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Planner",
+      "short_name": "Planner",
+      "description": "Convert a goal into a 7-day sprint and 30-day roadmap.",
+      "url": "/planner",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "categories": ["productivity", "business"],
   "lang": "en"
 }
