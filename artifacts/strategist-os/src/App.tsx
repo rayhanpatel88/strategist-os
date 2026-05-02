@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
+import { useEffect, useState } from "react";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Diagnosis from "@/pages/diagnosis";
@@ -35,11 +36,39 @@ const navItems = [
   { path: "/portfolio", label: "Portfolio", icon: "web_asset" },
 ];
 
+function useWeeklyUnplanned(): number {
+  const [count, setCount] = useState(0);
+  const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
+
+  useEffect(() => {
+    fetch(`${base}/api/calendar/activity`)
+      .then((r) => r.json())
+      .then((data: { date: string; hasContent: boolean }[]) => {
+        if (!Array.isArray(data)) return;
+        const activityMap = new Map(data.map((a) => [a.date, a.hasContent]));
+        const today = new Date();
+        const dow = (today.getDay() + 6) % 7;
+        let unplanned = 0;
+        for (let i = 0; i <= dow; i++) {
+          const d = new Date(today);
+          d.setDate(today.getDate() - dow + i);
+          const ds = d.toISOString().split("T")[0];
+          if (!activityMap.get(ds)) unplanned++;
+        }
+        setCount(unplanned);
+      })
+      .catch(() => {});
+  }, [base]);
+
+  return count;
+}
+
 function Sidebar() {
   const [location] = useLocation();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
   const base = import.meta.env.BASE_URL;
+  const unplannedDays = useWeeklyUnplanned();
 
   return (
     <aside
@@ -106,10 +135,35 @@ function Sidebar() {
                     letterSpacing: "0.04em",
                     color: isActive ? "var(--sos-text)" : "var(--sos-text-dim)",
                     fontFamily: "Space Grotesk, sans-serif",
+                    flex: 1,
                   }}
                 >
                   {item.label}
                 </span>
+                {item.path === "/calendar" && unplannedDays > 0 && (
+                  <span
+                    title={`${unplannedDays} day${unplannedDays === 1 ? "" : "s"} unplanned this week`}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      minWidth: 16,
+                      height: 16,
+                      borderRadius: 8,
+                      background: unplannedDays >= 3 ? "var(--sos-error)" : "#f59e0b",
+                      color: "#fff",
+                      fontSize: 9,
+                      fontWeight: 700,
+                      fontFamily: "Space Grotesk, sans-serif",
+                      letterSpacing: 0,
+                      padding: "0 4px",
+                      lineHeight: 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {unplannedDays}
+                  </span>
+                )}
               </div>
             </Link>
           );
