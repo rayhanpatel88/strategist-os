@@ -160,7 +160,7 @@ export default function Scorecard() {
                         <p style={{ fontSize: 12, color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>{dim.howToImprove}</p>
                       </div>
                       <div style={{ background: "rgba(75,142,255,0.05)", border: "1px solid rgba(75,142,255,0.16)", padding: 14 }}>
-                        <div style={{ fontSize: 10, fontWeight: 600, color: "#4b8eff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>Elite recommendation</div>
+                        <div style={{ fontSize: 10, fontWeight: 600, color: "#4b8eff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>Recommendation</div>
                         <p style={{ fontSize: 12, color: "rgba(255,255,255,0.8)", lineHeight: 1.7 }}>{dim.eliteRecommendation}</p>
                       </div>
                     </div>
@@ -178,9 +178,9 @@ export default function Scorecard() {
     <div className="flex flex-col h-full" style={{ background: "#121317" }}>
       <div className="px-8 py-4 shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-          AI_Optimisation_Scorecard
+          Optimisation_Scorecard
         </span>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", marginTop: 2 }}>Get scored across 8 critical strategic dimensions.</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", marginTop: 2 }}>Scored across 8 dimensions against your goal and current position.</div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
@@ -209,7 +209,7 @@ export default function Scorecard() {
           <textarea
             value={form.currentStatus}
             onChange={(e) => setForm({ ...form, currentStatus: e.target.value })}
-            placeholder="Describe where you are right now — what you've built, what you're doing, what is working and what isn't..."
+            placeholder="Describe where you are now: what you have built, what you are doing, what is working and what is not."
             rows={5}
             data-testid="input-scorecard-status"
             style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }}
@@ -217,7 +217,7 @@ export default function Scorecard() {
         </div>
         <div className="pt-2">
           <HudBtn onClick={handleSubmit} disabled={runScorecard.isPending} data-testid="button-run-scorecard">
-            {runScorecard.isPending ? "Scoring..." : "Generate Optimisation Scorecard"}
+            {runScorecard.isPending ? "Scoring..." : "Run Scorecard"}
           </HudBtn>
         </div>
       </div>

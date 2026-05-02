@@ -147,7 +147,7 @@ export default function Opportunity() {
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
           Opportunity_Stack_Builder
         </span>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", marginTop: 2, letterSpacing: "0.04em" }}>Input your assets. Get your sharpest positioning and 30-day roadmap.</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", marginTop: 2, letterSpacing: "0.04em" }}>Map your assets. Get a clear positioning angle and a 30-day execution plan.</div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
@@ -222,7 +222,7 @@ export default function Opportunity() {
 
         <div className="pt-2">
           <HudBtn onClick={handleSubmit} disabled={build.isPending} data-testid="button-build-opportunity-stack">
-            {build.isPending ? "Building your stack..." : "Build Opportunity Stack"}
+            {build.isPending ? "Analysing..." : "Build Stack"}
           </HudBtn>
         </div>
       </div>

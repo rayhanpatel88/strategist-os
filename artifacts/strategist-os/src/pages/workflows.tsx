@@ -94,7 +94,7 @@ function WorkflowCard({ wf, onDelete }: { wf: Workflow; onDelete?: (id: number) 
           </div>
 
           <div style={{ background: "rgba(75,142,255,0.05)", border: "1px solid rgba(75,142,255,0.16)", padding: 14, marginTop: 14 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, color: "#4b8eff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Monetisation / Use Case</div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#4b8eff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Use Case</div>
             <p style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.65 }}>{wf.monetisationUseCase}</p>
           </div>
 
@@ -185,7 +185,7 @@ export default function Workflows() {
       {/* Header */}
       <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
-          AI_Agent_Workflow_Designer
+          Workflow_Designer
         </span>
         <div className="flex items-center gap-3">
           <HudBtn variant="ghost" onClick={() => setTab("create")} data-testid="button-create-workflow">+ Create Workflow</HudBtn>
@@ -237,9 +237,9 @@ export default function Workflows() {
                 ))
               : (
                   <div className="py-20 text-center">
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>No custom workflows yet.</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>No custom workflows saved.</div>
                     <button onClick={() => setTab("create")} style={{ fontSize: 12, color: "#4b8eff", background: "none", border: "none", cursor: "pointer" }}>
-                      Create your first workflow →
+                      Create a workflow to begin.
                     </button>
                   </div>
                 )}

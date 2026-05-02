@@ -68,7 +68,7 @@ export default function Portfolio() {
 
         <div className="max-w-5xl mx-auto relative">
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.16em", color: "#72fe88", textTransform: "uppercase", marginBottom: 20, fontFamily: "Space Grotesk, sans-serif" }}>
-            AI Leverage Command Centre
+            Strategic Operating System
           </div>
           <h1
             style={{ fontSize: 56, fontWeight: 700, color: "#ffffff", lineHeight: 1.05, letterSpacing: "-0.02em", marginBottom: 24, fontFamily: "Space Grotesk, sans-serif" }}
@@ -90,7 +90,7 @@ export default function Portfolio() {
                 style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#121317", background: "#ffffff", padding: "13px 28px", textDecoration: "none", fontFamily: "Space Grotesk, sans-serif" }}
                 data-testid="link-book-consultation-hero"
               >
-                Book a Consultation
+                Book a Strategy Call
               </a>
             )}
             <a
@@ -162,7 +162,7 @@ export default function Portfolio() {
       <div id="philosophy" className="px-8 py-16" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="max-w-4xl mx-auto">
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.14em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 16, fontFamily: "Space Grotesk, sans-serif" }}>
-            AI Optimisation Philosophy
+            Philosophy
           </div>
           <div className="p-8" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
             <p style={{ fontSize: 15, color: "rgba(255,255,255,0.75)", lineHeight: 1.75 }} data-testid="text-philosophy">
@@ -218,17 +218,17 @@ export default function Portfolio() {
             Ready to work together?
           </div>
           <h2 style={{ fontSize: 36, fontWeight: 700, color: "#ffffff", marginBottom: 14, fontFamily: "Space Grotesk, sans-serif", letterSpacing: "-0.02em" }}>
-            Let's build something that compounds.
+            Work that compounds.
           </h2>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.4)", marginBottom: 32, lineHeight: 1.7 }}>
-            Strategic intelligence, AI automation, and elite execution systems — purpose-built for ambitious operators.
+            Strategic intelligence and AI systems built for operators who prioritise execution over activity.
           </p>
           <a
             href={`mailto:${data.contactEmail}`}
             style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#121317", background: "#ffffff", padding: "14px 36px", textDecoration: "none", fontFamily: "Space Grotesk, sans-serif", display: "inline-block" }}
             data-testid="link-cta-contact"
           >
-            Start the Conversation
+            Send a Message
           </a>
         </div>
       </div>

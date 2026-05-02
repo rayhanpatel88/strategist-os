@@ -135,13 +135,13 @@ export default function Dashboard() {
 
         {/* Quick actions */}
         <div className="mb-8">
-          <div className="label-caps mb-4">Run Analysis</div>
+          <div className="label-caps mb-4">Modules</div>
           <div className="grid grid-cols-4 gap-3">
             {[
-              { href: "/diagnosis", label: "Strategic Diagnosis", desc: "Analyse your position", icon: "biotech" },
-              { href: "/scorecard", label: "Optimisation Score", desc: "Score 8 dimensions", icon: "analytics" },
-              { href: "/opportunity", label: "Opportunity Stack", desc: "Find your positioning", icon: "trending_up" },
-              { href: "/planner", label: "Execution Plan", desc: "Convert goals to action", icon: "calendar_month" },
+              { href: "/diagnosis", label: "Strategic Diagnosis", desc: "Map your position, assets, and constraints.", icon: "biotech" },
+              { href: "/scorecard", label: "Optimisation Score", desc: "Score 8 decision-critical dimensions.", icon: "analytics" },
+              { href: "/opportunity", label: "Opportunity Stack", desc: "Find the strongest market angle.", icon: "trending_up" },
+              { href: "/planner", label: "Execution Plan", desc: "Build a structured sprint from any goal.", icon: "calendar_month" },
             ].map((item) => (
               <Link key={item.href} href={item.href}>
                 <div
@@ -246,9 +246,9 @@ export default function Dashboard() {
               ))
             ) : (
               <div className="px-5 py-14 text-center">
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 8 }}>No strategy sessions yet.</div>
+                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 8 }}>No sessions recorded.</div>
                 <Link href="/diagnosis">
-                  <span className="cursor-pointer" style={{ fontSize: 12, color: "#4b8eff" }}>Run your first diagnosis →</span>
+                  <span className="cursor-pointer" style={{ fontSize: 12, color: "#4b8eff" }}>Run the first diagnosis.</span>
                 </Link>
               </div>
             )}

@@ -1,0 +1,80 @@
+Audit and rewrite all visible copy across the app.
+
+Goal:
+Remove AI fluff, hype, vague startup language, and over-polished generic wording. The tone should feel premium, strategic, credible, commercially sharp, and human.
+
+Style rules:
+- No em dashes.
+- No emojis.
+- No phrases like “unlock your potential”, “revolutionary”, “game-changing”, “supercharge”, “seamless”, “cutting-edge”, “empower”, “transform your journey”, “next-level”, “AI-powered future”, or “leverage AI to unlock”.
+- Avoid inflated claims unless the feature proves them.
+- Use short, direct sentences.
+- Make the copy sound like it was written by a serious strategy consultant, product strategist, or elite operator.
+- Prefer clarity over hype.
+- Prefer specificity over broad promises.
+- Make every sentence earn its place.
+- Keep the tone confident but not cringe.
+- Make it feel like McKinsey strategy, premium SaaS, and founder operating system combined.
+
+Rewrite priorities:
+1. Hero section
+2. Feature cards
+3. Dashboard labels
+4. CTA buttons
+5. Empty states
+6. Onboarding questions
+7. AI output headings
+8. Portfolio/public page copy
+9. Footer copy
+10. Any demo/sample copy
+
+Brand positioning:
+This app is not a productivity tool.
+It is a strategic operating system for people turning goals, skills, projects, and opportunities into clear execution plans.
+
+Tone examples:
+Instead of:
+“Unlock your true potential with our revolutionary AI-powered strategy engine.”
+
+Write:
+“Turn unclear goals into structured decisions, ranked priorities, and executable next steps.”
+
+Instead of:
+“Supercharge your workflow with cutting-edge automation.”
+
+Write:
+“Identify where automation saves time, reduces friction, or creates commercial leverage.”
+
+Instead of:
+“Your journey to success starts here.”
+
+Write:
+“Start with the bottleneck. Then build the system around it.”
+
+Rewrite the app using this voice:
+- Precise
+- Commercially aware
+- Strategic
+- Minimal
+- Mature
+- High-agency
+- Calm confidence
+- No motivational fluff
+
+Also improve microcopy:
+- Buttons should use action language.
+- Cards should describe outcomes, not features.
+- Headings should be sharp and specific.
+- Empty states should guide the user, not flatter them.
+- AI results should sound analytical, not inspirational.
+
+After rewriting, scan the entire codebase for:
+- em dashes
+- hype phrases
+- vague claims
+- robotic phrasing
+- repeated “AI-powered” wording
+- awkward corporate language
+
+Replace all weak copy with stronger professional wording.
+Do not change app functionality unless needed to support clearer copy.

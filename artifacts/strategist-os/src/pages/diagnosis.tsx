@@ -161,7 +161,7 @@ export default function Diagnosis() {
                 </div>
               </div>
               <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "right", maxWidth: 280 }}>
-                {result.leverageScore >= 75 ? "High leverage position" : result.leverageScore >= 50 ? "Moderate leverage — clear upside" : "Low leverage — significant improvement available"}
+                {result.leverageScore >= 75 ? "High leverage position" : result.leverageScore >= 50 ? "Moderate leverage. Clear upside." : "Low leverage. Significant improvement available."}
               </div>
             </div>
             <div style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
@@ -183,7 +183,7 @@ export default function Diagnosis() {
 
           {/* ROI Actions */}
           <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 16 }}>3 Highest ROI Actions</div>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 16 }}>Three Highest-Return Actions</div>
             <div className="space-y-5">
               {result.roiActions.map((action, i) => (
                 <div key={i} className="flex gap-4" data-testid={`card-roi-action-${i}`}>
@@ -227,7 +227,7 @@ export default function Diagnosis() {
           {/* Elite operator */}
           <div className="p-6" style={{ background: "rgba(114,254,136,0.05)", border: "1px solid rgba(114,254,136,0.18)" }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "#72fe88", textTransform: "uppercase", marginBottom: 12 }}>
-              What a Top 0.1% Operator Would Do Next
+              Recommended Next Step
             </div>
             <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>{result.eliteOperatorNextStep}</p>
           </div>
@@ -238,7 +238,7 @@ export default function Diagnosis() {
 
   return (
     <div className="flex flex-col h-full" style={{ background: "#121317" }}>
-      <PageHeader title="Strategic Diagnosis" sub="Describe your situation. Get a precise strategic analysis." />
+      <PageHeader title="Strategic Diagnosis" sub="Describe your position. Receive a structured diagnosis with ranked priorities and next steps." />
 
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 py-7 max-w-2xl space-y-7">
@@ -274,7 +274,7 @@ export default function Diagnosis() {
 
           <div className="pt-2">
             <HudBtn onClick={handleSubmit} disabled={runDiagnosis.isPending} data-testid="button-run-diagnosis">
-              {runDiagnosis.isPending ? "Analysing..." : "Run Strategic Diagnosis"}
+              {runDiagnosis.isPending ? "Analysing..." : "Run Diagnosis"}
             </HudBtn>
           </div>
         </div>

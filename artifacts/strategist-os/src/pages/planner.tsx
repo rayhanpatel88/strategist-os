@@ -47,7 +47,7 @@ function renderPlan(p: ExecutionPlan) {
       {/* Title */}
       <div className="p-5" style={{ background: "rgba(75,142,255,0.07)", border: "1px solid rgba(75,142,255,0.2)" }}>
         <div style={{ fontSize: 16, fontWeight: 700, color: "#ffffff", fontFamily: "Space Grotesk, sans-serif", marginBottom: 3 }}>{p.title}</div>
-        <div style={{ fontSize: 10, color: "#4b8eff", letterSpacing: "0.1em", textTransform: "uppercase" }}>Elite Execution Plan</div>
+        <div style={{ fontSize: 10, color: "#4b8eff", letterSpacing: "0.1em", textTransform: "uppercase" }}>Execution Plan</div>
       </div>
 
       {/* 7-Day Sprint */}
@@ -216,11 +216,11 @@ export default function Planner() {
               <div className="max-w-2xl space-y-6">
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Strategic Goal *</div>
-                  <textarea value={form.strategicGoal} onChange={(e) => setForm({ ...form, strategicGoal: e.target.value })} placeholder="What is the overarching goal?" rows={2} data-testid="input-planner-goal" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
+                  <textarea value={form.strategicGoal} onChange={(e) => setForm({ ...form, strategicGoal: e.target.value })} placeholder="State the goal clearly." rows={2} data-testid="input-planner-goal" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
                 </div>
                 <div>
                   <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Key Recommendation *</div>
-                  <textarea value={form.keyRecommendation} onChange={(e) => setForm({ ...form, keyRecommendation: e.target.value })} placeholder="The strategic recommendation to execute on" rows={3} data-testid="input-planner-recommendation" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
+                  <textarea value={form.keyRecommendation} onChange={(e) => setForm({ ...form, keyRecommendation: e.target.value })} placeholder="The key recommendation to execute." rows={3} data-testid="input-planner-recommendation" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
                 </div>
                 <div className="grid grid-cols-2 gap-6">
                   <div>
@@ -234,7 +234,7 @@ export default function Planner() {
                 </div>
                 <div className="pt-2">
                   <HudBtn onClick={handleCreate} disabled={createPlan.isPending} data-testid="button-create-plan">
-                    {createPlan.isPending ? "Generating Plan..." : "Generate Execution Plan"}
+                    {createPlan.isPending ? "Generating..." : "Generate Plan"}
                   </HudBtn>
                 </div>
               </div>

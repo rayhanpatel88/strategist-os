@@ -191,7 +191,7 @@ export default function Prompts() {
                 />
               </div>
               <HudBtn onClick={handleGenerate} disabled={generate.isPending} data-testid="button-generate-prompt">
-                {generate.isPending ? "Generating..." : "Generate Premium Prompt"}
+                {generate.isPending ? "Generating..." : "Generate Prompt"}
               </HudBtn>
             </div>
 
@@ -271,9 +271,9 @@ export default function Prompts() {
             </div>
           ) : (
             <div className="py-20 text-center">
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>No saved prompts yet.</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>No prompts saved.</div>
               <button onClick={() => setTab("generate")} style={{ fontSize: 12, color: "#4b8eff", background: "none", border: "none", cursor: "pointer" }}>
-                Generate your first prompt →
+                Generate a prompt to begin.
               </button>
             </div>
           )}
