@@ -669,10 +669,10 @@ export default function Calendar() {
               </span>
               {streak !== null && (
                 <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 4, background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)", border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`, padding: "3px 8px" }}>
+                  <button onClick={() => setShowMilestones(true)} title="View streak milestones" style={{ display: "flex", alignItems: "center", gap: 4, background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)", border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`, padding: "3px 8px", cursor: "pointer" }}>
                     <span style={{ fontSize: 12 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
                     <span style={{ fontSize: 10, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
-                  </div>
+                  </button>
                   <button onClick={() => setShowFreezeHistory(true)} title={`${streak.freezesAllowed - streak.freezesUsedThisMonth} freeze${streak.freezesAllowed - streak.freezesUsedThisMonth !== 1 ? "s" : ""} left — view history`} style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(147,197,253,0.08)", border: "1px solid rgba(147,197,253,0.18)", padding: "3px 7px", cursor: "pointer" }}>
                     <span style={{ fontSize: 10 }}>🧊</span>
                     <span style={{ fontSize: 9, fontWeight: 700, color: "var(--sos-blue)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.freezesAllowed - streak.freezesUsedThisMonth}</span>
@@ -769,14 +769,15 @@ export default function Calendar() {
             </span>
             {streak !== null && (
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                <div
-                  title={`Longest streak: ${streak.longestStreak} day${streak.longestStreak !== 1 ? "s" : ""}`}
-                  style={{ display: "flex", alignItems: "center", gap: 5, background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)", border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`, padding: "4px 10px", cursor: "default" }}
+                <button
+                  onClick={() => setShowMilestones(true)}
+                  title="View streak milestones"
+                  style={{ display: "flex", alignItems: "center", gap: 5, background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)", border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`, padding: "4px 10px", cursor: "pointer" }}
                 >
                   <span style={{ fontSize: 13 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
                   <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>day{streak.currentStreak !== 1 ? "s" : ""}</span>
-                </div>
+                </button>
                 <button
                   onClick={() => setShowFreezeHistory(true)}
                   title={`${streak.freezesAllowed - streak.freezesUsedThisMonth} of ${streak.freezesAllowed} freezes left — view history`}
@@ -1647,6 +1648,111 @@ export default function Calendar() {
           </div>
         </div>
       )}
+      {/* Milestones Panel */}
+      {showMilestones && streak && (() => {
+        const ALL_THRESHOLDS = [3, 7, 14, 21, 30, 60, 90, 100, 365];
+        const achievedSet = new Set(streak.milestones.map((m) => m.milestone));
+        const currentStreak = streak.currentStreak;
+
+        // Next milestone
+        const nextThreshold = ALL_THRESHOLDS.find((t) => !achievedSet.has(t));
+        const progressPct = nextThreshold
+          ? Math.min(100, Math.round((currentStreak / nextThreshold) * 100))
+          : 100;
+
+        return (
+          <div className="fixed inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.55)", zIndex: 100 }} onClick={() => setShowMilestones(false)}>
+            <div style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", width: 460, maxWidth: "92vw", maxHeight: "82vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
+
+              {/* Header */}
+              <div className="flex items-center justify-between" style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--sos-border)" }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif" }}>
+                    Streak Milestones
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--sos-text-dim)", marginTop: 2 }}>
+                    {streak.milestones.length} of {ALL_THRESHOLDS.length} unlocked
+                  </div>
+                </div>
+                <button onClick={() => setShowMilestones(false)} style={{ background: "none", border: "none", color: "var(--sos-text-dim)", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "2px 6px" }}>×</button>
+              </div>
+
+              {/* Current streak + next milestone progress */}
+              <div style={{ padding: "14px 20px", borderBottom: "1px solid var(--sos-border-s)", background: "rgba(114,254,136,0.03)" }}>
+                <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: 22 }}>{currentStreak > 0 ? "🔥" : "💤"}</span>
+                    <div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+                        {currentStreak} <span style={{ fontSize: 11, fontWeight: 400, color: "var(--sos-text-dim)" }}>day{currentStreak !== 1 ? "s" : ""} current</span>
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--sos-text-dim)", marginTop: 2 }}>
+                        Best: {streak.longestStreak} day{streak.longestStreak !== 1 ? "s" : ""}
+                      </div>
+                    </div>
+                  </div>
+                  {nextThreshold && (
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: 10, color: "var(--sos-text-dim)", marginBottom: 3 }}>
+                        Next: <span style={{ color: "var(--sos-text)", fontWeight: 600 }}>{MILESTONE_LABELS[nextThreshold]?.label ?? `${nextThreshold} days`}</span>
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--sos-text-dim)" }}>
+                        {nextThreshold - currentStreak} day{nextThreshold - currentStreak !== 1 ? "s" : ""} to go
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {nextThreshold && (
+                  <div style={{ width: "100%", height: 4, background: "var(--sos-border)", overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${progressPct}%`, background: "var(--sos-emerald)", transition: "width 0.4s ease" }} />
+                  </div>
+                )}
+              </div>
+
+              {/* Milestone list */}
+              <div style={{ overflowY: "auto", flex: 1 }}>
+                {ALL_THRESHOLDS.map((t, idx) => {
+                  const info = MILESTONE_LABELS[t] ?? { label: `${t} days`, icon: "🏅" };
+                  const record = streak.milestones.find((m) => m.milestone === t);
+                  const achieved = achievedSet.has(t);
+                  const isNext = !achieved && t === nextThreshold;
+                  return (
+                    <div key={t} className="flex items-center gap-4" style={{ padding: "12px 20px", borderBottom: idx < ALL_THRESHOLDS.length - 1 ? "1px solid var(--sos-border-s)" : "none", opacity: achieved ? 1 : 0.45 }}>
+                      {/* Icon + glow for achieved */}
+                      <div style={{ width: 38, height: 38, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 20, background: achieved ? "rgba(114,254,136,0.08)" : "transparent", border: `1px solid ${achieved ? "rgba(114,254,136,0.2)" : "var(--sos-border-s)"}`, ...(isNext ? { borderColor: "rgba(147,197,253,0.4)", background: "rgba(147,197,253,0.06)" } : {}) }}>
+                        {achieved ? info.icon : isNext ? "⏳" : "·"}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 12, fontWeight: 600, color: achieved ? "var(--sos-text)" : isNext ? "var(--sos-blue)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>
+                            {info.label}
+                          </span>
+                          {isNext && (
+                            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-blue)", background: "rgba(147,197,253,0.12)", border: "1px solid rgba(147,197,253,0.25)", padding: "1px 5px", fontFamily: "Space Grotesk, sans-serif" }}>
+                              Next
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>
+                          {achieved && record
+                            ? `Achieved on ${new Date(record.achievedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+                            : isNext
+                            ? `${nextThreshold - currentStreak} day${nextThreshold - currentStreak !== 1 ? "s" : ""} remaining`
+                            : `${t} consecutive days`}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: achieved ? "var(--sos-emerald)" : "var(--sos-text-muted)", fontFamily: "Space Grotesk, sans-serif", flexShrink: 0 }}>
+                        {t}d
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Freeze History Modal */}
       {showFreezeHistory && streak && (() => {
         const thisMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
