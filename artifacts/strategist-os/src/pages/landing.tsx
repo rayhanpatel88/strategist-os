@@ -13,7 +13,7 @@ const features = [
 ];
 
 export default function Landing() {
-  const { theme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
 
   return (
@@ -28,9 +28,9 @@ export default function Landing() {
       >
         <div className="flex items-center gap-3">
           <img
-            src={`${basePath}/logos/${isDark ? "logo-s-light" : "logo-s-dark"}.svg`}
+            src={isDark ? `${basePath}/logos/logo-s-light.png` : `${basePath}/logos/logo-s-dark.svg`}
             alt=""
-            style={{ width: 28, height: 28 }}
+            style={{ width: 28, height: 28, objectFit: "contain" }}
           />
           <span
             style={{
@@ -44,19 +44,16 @@ export default function Landing() {
             StrategistOS
           </span>
         </div>
-        <Link href="/sign-in">
+        <div className="flex items-center gap-2">
           <button
+            onClick={() => setTheme(isDark ? "light" : "dark")}
             style={{
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              fontFamily: "Space Grotesk, sans-serif",
-              color: "var(--sos-text-dim)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              width: 34, height: 34,
               background: "none",
               border: "1px solid var(--sos-border)",
-              padding: "7px 16px",
               cursor: "pointer",
+              color: "var(--sos-text-dim)",
               transition: "border-color 0.15s, color 0.15s",
             }}
             onMouseEnter={(e) => {
@@ -67,10 +64,40 @@ export default function Landing() {
               (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)";
               (e.currentTarget as HTMLElement).style.color = "var(--sos-text-dim)";
             }}
+            title={isDark ? "Switch to light mode" : "Switch to dark mode"}
           >
-            Sign in
+            <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+              {isDark ? "light_mode" : "dark_mode"}
+            </span>
           </button>
-        </Link>
+          <Link href="/sign-in">
+            <button
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                fontFamily: "Space Grotesk, sans-serif",
+                color: "var(--sos-text-dim)",
+                background: "none",
+                border: "1px solid var(--sos-border)",
+                padding: "7px 16px",
+                cursor: "pointer",
+                transition: "border-color 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)";
+                (e.currentTarget as HTMLElement).style.color = "var(--sos-text)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)";
+                (e.currentTarget as HTMLElement).style.color = "var(--sos-text-dim)";
+              }}
+            >
+              Sign in
+            </button>
+          </Link>
+        </div>
       </header>
 
       {/* Hero */}

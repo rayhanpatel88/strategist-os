@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/reac
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ClerkProvider, SignIn, SignUp, useAuth, useClerk, useUser } from "@clerk/react";
 import { shadcn } from "@clerk/themes";
 import NotFound from "@/pages/not-found";
@@ -331,143 +331,201 @@ function ProtectedPage({ component: Component }: { component: React.ComponentTyp
   );
 }
 
+function AuthPageShell({ children }: { children: React.ReactNode }) {
+  const { theme, setTheme } = useTheme();
+  const isDark = theme === "dark";
+  return (
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--sos-bg)" }}>
+      <header
+        className="flex items-center justify-between px-8 py-4 shrink-0"
+        style={{ borderBottom: "1px solid var(--sos-border)" }}
+      >
+        <Link href="/">
+          <div className="flex items-center gap-3 cursor-pointer">
+            <img
+              src={isDark ? `${basePath}/logos/logo-s-light.png` : `${basePath}/logos/logo-s-dark.svg`}
+              alt=""
+              style={{ width: 28, height: 28, objectFit: "contain" }}
+            />
+            <span style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 14, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.01em" }}>
+              StrategistOS
+            </span>
+          </div>
+        </Link>
+        <button
+          onClick={() => setTheme(isDark ? "light" : "dark")}
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: 34, height: 34,
+            background: "none",
+            border: "1px solid var(--sos-border)",
+            cursor: "pointer",
+            color: "var(--sos-text-dim)",
+            transition: "border-color 0.15s, color 0.15s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)";
+            (e.currentTarget as HTMLElement).style.color = "var(--sos-text)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)";
+            (e.currentTarget as HTMLElement).style.color = "var(--sos-text-dim)";
+          }}
+          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 15 }}>
+            {isDark ? "light_mode" : "dark_mode"}
+          </span>
+        </button>
+      </header>
+      <div className="flex-1 flex items-center justify-center px-4 py-10">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function SignInPage() {
   return (
-    <div
-      className="flex min-h-[100dvh] items-center justify-center px-4"
-      style={{ background: "var(--sos-bg)" }}
-    >
+    <AuthPageShell>
       <SignIn
         routing="path"
         path={`${basePath}/sign-in`}
         signUpUrl={`${basePath}/sign-up`}
       />
-    </div>
+    </AuthPageShell>
   );
 }
 
 function SignUpPage() {
   return (
-    <div
-      className="flex min-h-[100dvh] items-center justify-center px-4"
-      style={{ background: "var(--sos-bg)" }}
-    >
+    <AuthPageShell>
       <SignUp
         routing="path"
         path={`${basePath}/sign-up`}
         signInUrl={`${basePath}/sign-in`}
       />
-    </div>
+    </AuthPageShell>
   );
 }
 
-const clerkAppearance = {
-  theme: shadcn,
-  cssLayerName: "clerk",
-  options: {
-    logoPlacement: "inside" as const,
-    logoLinkUrl: `${window.location.origin}${basePath}/`,
-    logoImageUrl: `${window.location.origin}${basePath}/logos/logo-s-light.svg`,
-  },
-  variables: {
-    colorPrimary: "#72fe88",
-    colorForeground: "#e3e2e7",
-    colorMutedForeground: "#8e9192",
-    colorDanger: "#ffb4ab",
-    colorBackground: "#121317",
-    colorInput: "#0d0e12",
-    colorInputForeground: "#e3e2e7",
-    colorNeutral: "#444748",
-    fontFamily: "Inter, sans-serif",
-    borderRadius: "0px",
-  },
-  elements: {
-    rootBox: "w-full flex justify-center",
-    cardBox: {
-      background: "#1e1f23",
-      border: "1px solid rgba(255,255,255,0.1)",
-      borderRadius: "0",
-      width: "440px",
-      maxWidth: "100%",
-      overflow: "hidden",
+function getClerkAppearance(isDark: boolean) {
+  const logoImageUrl = isDark
+    ? `${window.location.origin}${basePath}/logos/logo-s-light.png`
+    : `${window.location.origin}${basePath}/logos/logo-s-dark.svg`;
+
+  return {
+    theme: shadcn,
+    cssLayerName: "clerk",
+    options: {
+      logoPlacement: "inside" as const,
+      logoLinkUrl: `${window.location.origin}${basePath}/`,
+      logoImageUrl,
     },
-    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    headerTitle: {
-      color: "#e3e2e7",
-      fontFamily: "Space Grotesk, sans-serif",
-      fontWeight: "700",
-      letterSpacing: "-0.01em",
-    },
-    headerSubtitle: { color: "#8e9192", fontFamily: "Inter, sans-serif" },
-    socialButtonsBlockButtonText: { color: "#e3e2e7", fontFamily: "Inter, sans-serif" },
-    formFieldLabel: {
-      color: "#8e9192",
-      fontSize: "11px",
-      letterSpacing: "0.1em",
-      textTransform: "uppercase" as const,
+    variables: isDark ? {
+      colorPrimary: "#72fe88",
+      colorForeground: "#e3e2e7",
+      colorMutedForeground: "#8e9192",
+      colorDanger: "#ffb4ab",
+      colorBackground: "#121317",
+      colorInput: "#0d0e12",
+      colorInputForeground: "#e3e2e7",
+      colorNeutral: "#444748",
       fontFamily: "Inter, sans-serif",
-      fontWeight: "700",
-    },
-    footerActionLink: { color: "#72fe88", fontFamily: "Inter, sans-serif" },
-    footerActionText: { color: "#8e9192", fontFamily: "Inter, sans-serif" },
-    dividerText: { color: "#444748", fontFamily: "Inter, sans-serif" },
-    identityPreviewEditButton: { color: "#72fe88" },
-    identityPreviewText: { color: "#e3e2e7" },
-    formFieldSuccessText: { color: "#72fe88" },
-    formFieldErrorText: { color: "#ffb4ab" },
-    alertText: { color: "#e3e2e7", fontFamily: "Inter, sans-serif" },
-    logoBox: { display: "flex", justifyContent: "center", padding: "8px 0 4px" },
-    logoImage: { height: "40px", width: "40px" },
-    socialButtonsBlockButton: {
-      borderColor: "rgba(255,255,255,0.1)",
-      background: "rgba(255,255,255,0.03)",
-      color: "#e3e2e7",
-      borderRadius: "0",
+      borderRadius: "0px",
+    } : {
+      colorPrimary: "#2aab40",
+      colorForeground: "#0d0e12",
+      colorMutedForeground: "#6b7280",
+      colorDanger: "#c0392b",
+      colorBackground: "#f5f6f8",
+      colorInput: "#ffffff",
+      colorInputForeground: "#0d0e12",
+      colorNeutral: "#9ca3af",
       fontFamily: "Inter, sans-serif",
+      borderRadius: "0px",
     },
-    formButtonPrimary: {
-      background: "#72fe88",
-      color: "#0d0e12",
-      fontWeight: "700",
-      fontFamily: "Inter, sans-serif",
-      letterSpacing: "0.1em",
-      textTransform: "uppercase" as const,
-      borderRadius: "0",
+    elements: isDark ? {
+      rootBox: "w-full flex justify-center",
+      cardBox: {
+        background: "#1e1f23",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: "0",
+        width: "440px",
+        maxWidth: "100%",
+        overflow: "hidden",
+      },
+      card: "!shadow-none !border-0 !bg-transparent !rounded-none",
+      footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
+      headerTitle: { color: "#e3e2e7", fontFamily: "Space Grotesk, sans-serif", fontWeight: "700", letterSpacing: "-0.01em" },
+      headerSubtitle: { color: "#8e9192", fontFamily: "Inter, sans-serif" },
+      socialButtonsBlockButtonText: { color: "#e3e2e7", fontFamily: "Inter, sans-serif" },
+      formFieldLabel: { color: "#8e9192", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase" as const, fontFamily: "Inter, sans-serif", fontWeight: "700" },
+      footerActionLink: { color: "#72fe88", fontFamily: "Inter, sans-serif" },
+      footerActionText: { color: "#8e9192", fontFamily: "Inter, sans-serif" },
+      dividerText: { color: "#444748", fontFamily: "Inter, sans-serif" },
+      identityPreviewEditButton: { color: "#72fe88" },
+      identityPreviewText: { color: "#e3e2e7" },
+      formFieldSuccessText: { color: "#72fe88" },
+      formFieldErrorText: { color: "#ffb4ab" },
+      alertText: { color: "#e3e2e7", fontFamily: "Inter, sans-serif" },
+      logoBox: { display: "flex", justifyContent: "center", padding: "8px 0 4px" },
+      logoImage: { height: "40px", width: "40px" },
+      socialButtonsBlockButton: { borderColor: "rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", color: "#e3e2e7", borderRadius: "0", fontFamily: "Inter, sans-serif" },
+      formButtonPrimary: { background: "#72fe88", color: "#0d0e12", fontWeight: "700", fontFamily: "Inter, sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" as const, borderRadius: "0" },
+      formFieldInput: { background: "#0d0e12", borderColor: "rgba(255,255,255,0.1)", color: "#e3e2e7", borderRadius: "0", fontFamily: "Inter, sans-serif" },
+      footerAction: { background: "rgba(255,255,255,0.02)", borderTop: "1px solid rgba(255,255,255,0.07)" },
+      dividerLine: { background: "rgba(255,255,255,0.07)" },
+      alert: { background: "rgba(255,180,171,0.05)", borderColor: "rgba(255,180,171,0.2)", borderRadius: "0" },
+      otpCodeFieldInput: { background: "#0d0e12", borderColor: "rgba(255,255,255,0.1)", color: "#e3e2e7", borderRadius: "0", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.15em" },
+    } : {
+      rootBox: "w-full flex justify-center",
+      cardBox: {
+        background: "#ffffff",
+        border: "1px solid rgba(0,0,0,0.1)",
+        borderRadius: "0",
+        width: "440px",
+        maxWidth: "100%",
+        overflow: "hidden",
+      },
+      card: "!shadow-none !border-0 !bg-transparent !rounded-none",
+      footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
+      headerTitle: { color: "#0d0e12", fontFamily: "Space Grotesk, sans-serif", fontWeight: "700", letterSpacing: "-0.01em" },
+      headerSubtitle: { color: "#6b7280", fontFamily: "Inter, sans-serif" },
+      socialButtonsBlockButtonText: { color: "#0d0e12", fontFamily: "Inter, sans-serif" },
+      formFieldLabel: { color: "#6b7280", fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase" as const, fontFamily: "Inter, sans-serif", fontWeight: "700" },
+      footerActionLink: { color: "#2aab40", fontFamily: "Inter, sans-serif" },
+      footerActionText: { color: "#6b7280", fontFamily: "Inter, sans-serif" },
+      dividerText: { color: "#9ca3af", fontFamily: "Inter, sans-serif" },
+      identityPreviewEditButton: { color: "#2aab40" },
+      identityPreviewText: { color: "#0d0e12" },
+      formFieldSuccessText: { color: "#2aab40" },
+      formFieldErrorText: { color: "#c0392b" },
+      alertText: { color: "#0d0e12", fontFamily: "Inter, sans-serif" },
+      logoBox: { display: "flex", justifyContent: "center", padding: "8px 0 4px" },
+      logoImage: { height: "40px", width: "40px" },
+      socialButtonsBlockButton: { borderColor: "rgba(0,0,0,0.12)", background: "#f8f9fa", color: "#0d0e12", borderRadius: "0", fontFamily: "Inter, sans-serif" },
+      formButtonPrimary: { background: "#2aab40", color: "#ffffff", fontWeight: "700", fontFamily: "Inter, sans-serif", letterSpacing: "0.1em", textTransform: "uppercase" as const, borderRadius: "0" },
+      formFieldInput: { background: "#f5f6f8", borderColor: "rgba(0,0,0,0.12)", color: "#0d0e12", borderRadius: "0", fontFamily: "Inter, sans-serif" },
+      footerAction: { background: "rgba(0,0,0,0.02)", borderTop: "1px solid rgba(0,0,0,0.07)" },
+      dividerLine: { background: "rgba(0,0,0,0.1)" },
+      alert: { background: "rgba(192,57,43,0.05)", borderColor: "rgba(192,57,43,0.2)", borderRadius: "0" },
+      otpCodeFieldInput: { background: "#f5f6f8", borderColor: "rgba(0,0,0,0.12)", color: "#0d0e12", borderRadius: "0", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.15em" },
     },
-    formFieldInput: {
-      background: "#0d0e12",
-      borderColor: "rgba(255,255,255,0.1)",
-      color: "#e3e2e7",
-      borderRadius: "0",
-      fontFamily: "Inter, sans-serif",
-    },
-    footerAction: { background: "rgba(255,255,255,0.02)", borderTop: "1px solid rgba(255,255,255,0.07)" },
-    dividerLine: { background: "rgba(255,255,255,0.07)" },
-    alert: {
-      background: "rgba(255,180,171,0.05)",
-      borderColor: "rgba(255,180,171,0.2)",
-      borderRadius: "0",
-    },
-    otpCodeFieldInput: {
-      background: "#0d0e12",
-      borderColor: "rgba(255,255,255,0.1)",
-      color: "#e3e2e7",
-      borderRadius: "0",
-      fontFamily: "Space Grotesk, sans-serif",
-      letterSpacing: "0.15em",
-    },
-  },
-};
+  };
+}
 
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const appearance = useMemo(() => getClerkAppearance(isDark), [isDark]);
 
   return (
     <ClerkProvider
       publishableKey={clerkPubKey!}
       proxyUrl={clerkProxyUrl}
-      appearance={clerkAppearance}
+      appearance={appearance}
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
       localization={{
