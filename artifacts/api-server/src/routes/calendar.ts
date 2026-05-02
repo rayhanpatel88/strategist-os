@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { calendarPlansTable, type CalendarPlanData } from "@workspace/db";
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { generateDailyPlan } from "../lib/mock-ai.js";
 
@@ -39,6 +39,40 @@ router.get("/calendar/activity", async (_req, res) => {
     };
   });
   res.json(activity);
+});
+
+router.get("/calendar/week-review", async (req, res) => {
+  const { start } = req.query;
+  if (!start || !/^\d{4}-\d{2}-\d{2}$/.test(start as string)) {
+    res.status(400).json({ error: "Invalid start date. Use YYYY-MM-DD" });
+    return;
+  }
+  const dates: string[] = [];
+  const startDate = new Date(`${start as string}T00:00:00Z`);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startDate);
+    d.setUTCDate(startDate.getUTCDate() + i);
+    dates.push(d.toISOString().split("T")[0]);
+  }
+  const rows = await db
+    .select()
+    .from(calendarPlansTable)
+    .where(inArray(calendarPlansTable.date, dates));
+  const daysPlanned = rows.filter((r) => {
+    const d = r.data as CalendarPlanData;
+    return !!(d.objective?.trim()) || (d.timeBlocks?.length ?? 0) > 0 || (d.tasks?.length ?? 0) > 0;
+  }).length;
+  const scores = rows
+    .map((r) => (r.data as CalendarPlanData).review?.score)
+    .filter((s): s is number => s !== null && s !== undefined);
+  const avgScore = scores.length > 0
+    ? Math.round((scores.reduce((a, b) => a + b, 0) / scores.length) * 10) / 10
+    : null;
+  const completedTasks = rows
+    .flatMap((r) => ((r.data as CalendarPlanData).tasks ?? []).filter((t) => t.done).map((t) => t.text))
+    .filter(Boolean)
+    .slice(0, 5);
+  res.json({ daysPlanned, avgScore, completedTasks, totalDays: 7 });
 });
 
 router.get("/calendar/:date", async (req, res) => {

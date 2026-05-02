@@ -38,6 +38,203 @@ function TelemetryBar({ value, max = 100, color = "var(--sos-emerald)" }: { valu
 }
 
 type ActivityEntry = { date: string; score: number | null; hasContent: boolean };
+type WeekReview = { daysPlanned: number; avgScore: number | null; completedTasks: string[]; totalDays: number };
+
+function getThisMondayStr(): string {
+  const today = new Date();
+  const dow = (today.getDay() + 6) % 7;
+  const mon = new Date(today);
+  mon.setDate(today.getDate() - dow);
+  return mon.toISOString().split("T")[0];
+}
+
+function getLastMondayStr(): string {
+  const today = new Date();
+  const dow = (today.getDay() + 6) % 7;
+  const lastMon = new Date(today);
+  lastMon.setDate(today.getDate() - dow - 7);
+  return lastMon.toISOString().split("T")[0];
+}
+
+function WeeklyReviewModal({ weekStart, base, onClose }: { weekStart: string; base: string; onClose: () => void }) {
+  const [review, setReview] = useState<WeekReview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [priorities, setPriorities] = useState(["", "", ""]);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetch(`${base}/api/calendar/week-review?start=${weekStart}`)
+      .then((r) => r.json())
+      .then((d) => setReview(d))
+      .catch(() => setReview(null))
+      .finally(() => setLoading(false));
+  }, [weekStart, base]);
+
+  const weekEndStr = (() => {
+    const end = new Date(`${weekStart}T00:00:00Z`);
+    end.setUTCDate(end.getUTCDate() + 6);
+    return end.toISOString().split("T")[0];
+  })();
+  const fmt = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+
+  const todayStr = new Date().toISOString().split("T")[0];
+
+  const handleSubmit = async () => {
+    setSaving(true);
+    try {
+      const filled = priorities.map((p) => p.trim());
+      if (filled.some((p) => p)) {
+        const res = await fetch(`${base}/api/calendar/${todayStr}`);
+        const json = await res.json();
+        const updated = { ...(json.data ?? {}), priorities: filled };
+        await fetch(`${base}/api/calendar/${todayStr}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: updated }),
+        });
+        toast({ title: "Priorities saved to today's plan" });
+      }
+    } catch {
+      // silent
+    }
+    setSaving(false);
+    onClose();
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.75)", backdropFilter: "blur(2px)" }}>
+      <div style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", width: "min(700px, 95vw)", maxHeight: "90vh", overflow: "auto", position: "relative" }}>
+        {/* Header */}
+        <div style={{ padding: "20px 24px 18px", borderBottom: "1px solid var(--sos-border)", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)", marginBottom: 5 }}>Weekly Planning Review</div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1.15 }}>New week. New leverage.</div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--sos-text-muted)", fontSize: 22, lineHeight: 1, padding: 0, marginTop: 2 }}>×</button>
+        </div>
+
+        {/* Body: two columns */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+          {/* Left: last week */}
+          <div style={{ padding: "24px", borderRight: "1px solid var(--sos-border)" }}>
+            <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)", marginBottom: 16 }}>
+              Last week · {fmt(weekStart)} – {fmt(weekEndStr)}
+            </div>
+            {loading ? (
+              <div style={{ fontSize: 11, color: "var(--sos-text-muted)" }}>Loading...</div>
+            ) : !review ? (
+              <div style={{ fontSize: 11, color: "var(--sos-text-muted)" }}>No data recorded for last week.</div>
+            ) : (
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
+                  <div style={{ background: "var(--sos-bg)", border: "1px solid var(--sos-border)", padding: "14px 16px" }}>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: "var(--sos-emerald)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+                      {review.daysPlanned}
+                      <span style={{ fontSize: 13, color: "var(--sos-text-dim)", fontWeight: 400 }}>/7</span>
+                    </div>
+                    <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--sos-text-dim)", marginTop: 5 }}>Days planned</div>
+                  </div>
+                  <div style={{ background: "var(--sos-bg)", border: "1px solid var(--sos-border)", padding: "14px 16px" }}>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: "var(--sos-blue)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+                      {review.avgScore !== null ? review.avgScore : "—"}
+                      {review.avgScore !== null && <span style={{ fontSize: 13, color: "var(--sos-text-dim)", fontWeight: 400 }}>/10</span>}
+                    </div>
+                    <div style={{ fontSize: 9, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--sos-text-dim)", marginTop: 5 }}>Avg day score</div>
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", marginBottom: 10 }}>Completed tasks</div>
+                  {review.completedTasks.length === 0 ? (
+                    <div style={{ fontSize: 11, color: "var(--sos-text-subtle)", fontStyle: "italic" }}>No completed tasks recorded last week.</div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+                      {review.completedTasks.map((task, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                          <span style={{ fontSize: 12, color: "var(--sos-emerald)", flexShrink: 0, marginTop: 1 }}>✓</span>
+                          <span style={{ fontSize: 12, color: "var(--sos-text-dim)", lineHeight: 1.45 }}>{task}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Right: this week's priorities */}
+          <div style={{ padding: "24px" }}>
+            <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)", marginBottom: 6 }}>This week's focus</div>
+            <div style={{ fontSize: 12, color: "var(--sos-text-dim)", marginBottom: 22, lineHeight: 1.55 }}>
+              Set your top 3 priorities. They'll be saved to today's daily plan in the Calendar.
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {[0, 1, 2].map((i) => (
+                <div key={i}>
+                  <div style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)", marginBottom: 5, fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}>
+                    0{i + 1}
+                  </div>
+                  <input
+                    value={priorities[i]}
+                    onChange={(e) => {
+                      const next = [...priorities];
+                      next[i] = e.target.value;
+                      setPriorities(next);
+                    }}
+                    placeholder={["Biggest outcome to achieve", "Key project to advance", "One habit to lock in"][i]}
+                    style={{
+                      width: "100%",
+                      background: "var(--sos-bg)",
+                      border: "1px solid var(--sos-border)",
+                      borderRadius: 2,
+                      padding: "10px 12px",
+                      fontSize: 12,
+                      color: "var(--sos-text)",
+                      outline: "none",
+                      fontFamily: "inherit",
+                      boxSizing: "border-box",
+                      transition: "border-color 0.1s",
+                    }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "var(--sos-blue)"; }}
+                    onBlur={(e) => { e.currentTarget.style.borderColor = "var(--sos-border)"; }}
+                  />
+                </div>
+              ))}
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 28 }}>
+              <button
+                onClick={onClose}
+                style={{ fontSize: 10, color: "var(--sos-text-muted)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.08em", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}
+              >
+                Skip
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={saving}
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  fontFamily: "Space Grotesk, sans-serif",
+                  background: "var(--sos-blue)",
+                  color: "#fff",
+                  border: "none",
+                  padding: "11px 22px",
+                  cursor: saving ? "not-allowed" : "pointer",
+                  opacity: saving ? 0.65 : 1,
+                  transition: "opacity 0.15s",
+                }}
+              >
+                {saving ? "Saving..." : "Set Priorities →"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function buildHeatmapGrid(): string[][] {
   const today = new Date();
@@ -193,15 +390,31 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [activity, setActivity] = useState<ActivityEntry[]>([]);
   const [activityLoading, setActivityLoading] = useState(true);
+  const [showWeeklyReview, setShowWeeklyReview] = useState(false);
+  const [weekReviewStart, setWeekReviewStart] = useState("");
   const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
 
   useEffect(() => {
     fetch(`${base}/api/calendar/activity`)
       .then((r) => r.json())
-      .then((data: ActivityEntry[]) => setActivity(data))
+      .then((data: ActivityEntry[]) => setActivity(Array.isArray(data) ? data : []))
       .catch(() => setActivity([]))
       .finally(() => setActivityLoading(false));
   }, [base]);
+
+  useEffect(() => {
+    const today = new Date();
+    if (today.getDay() !== 1) return;
+    const thisMondayKey = `sos_weekly_review_${getThisMondayStr()}`;
+    if (localStorage.getItem(thisMondayKey)) return;
+    setWeekReviewStart(getLastMondayStr());
+    setShowWeeklyReview(true);
+  }, []);
+
+  const handleWeeklyReviewClose = () => {
+    localStorage.setItem(`sos_weekly_review_${getThisMondayStr()}`, "1");
+    setShowWeeklyReview(false);
+  };
 
   const handleDelete = (id: number) => {
     deleteSession.mutate({ id }, {
@@ -216,6 +429,9 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
+      {showWeeklyReview && weekReviewStart && (
+        <WeeklyReviewModal weekStart={weekReviewStart} base={base} onClose={handleWeeklyReviewClose} />
+      )}
       {/* Page header */}
       <div
         className="flex items-center justify-between px-8 py-4 shrink-0"
