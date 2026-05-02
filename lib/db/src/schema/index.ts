@@ -14,3 +14,4 @@ export * from "./recurring-templates";
 export * from "./weekly-reflections";
 export * from "./goals";
 export * from "./notes";
+export * from "./streak-freezes";

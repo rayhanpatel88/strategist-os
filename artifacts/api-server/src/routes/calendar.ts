@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { calendarPlansTable, recurringTemplatesTable, weeklyReflectionsTable, type CalendarPlanData } from "@workspace/db";
-import { asc, eq, and, inArray } from "drizzle-orm";
+import { calendarPlansTable, recurringTemplatesTable, weeklyReflectionsTable, streakFreezesTable, type CalendarPlanData } from "@workspace/db";
+import { asc, eq, and, inArray, gte } from "drizzle-orm";
 import { z } from "zod";
 import { generateDailyPlan } from "../lib/mock-ai.js";
 
@@ -96,30 +96,46 @@ router.get("/calendar/week-review", async (req, res) => {
   res.json({ daysPlanned, avgScore, completedTasks, totalDays: 7 });
 });
 
+const FREEZES_PER_MONTH = 2;
+
+function monthStart(d: Date): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`;
+}
+
 router.get("/calendar/streak", async (req, res) => {
   const userId = (req as any).userId as string;
-  const rows = await db
-    .select({ date: calendarPlansTable.date, data: calendarPlansTable.data })
-    .from(calendarPlansTable)
-    .where(eq(calendarPlansTable.userId, userId))
-    .orderBy(asc(calendarPlansTable.date));
+
+  const [planRows, freezeRows] = await Promise.all([
+    db.select({ date: calendarPlansTable.date, data: calendarPlansTable.data })
+      .from(calendarPlansTable)
+      .where(eq(calendarPlansTable.userId, userId))
+      .orderBy(asc(calendarPlansTable.date)),
+    db.select({ date: streakFreezesTable.date, createdAt: streakFreezesTable.createdAt })
+      .from(streakFreezesTable)
+      .where(eq(streakFreezesTable.userId, userId)),
+  ]);
 
   const hasContent = (d: CalendarPlanData) =>
     !!(d.objective?.trim()) || (d.timeBlocks?.length ?? 0) > 0 || (d.tasks?.length ?? 0) > 0;
 
-  const activeDates = new Set(
-    rows.filter((row) => hasContent(row.data as CalendarPlanData)).map((row) => row.date)
+  const plannedDates = new Set(
+    planRows.filter((row) => hasContent(row.data as CalendarPlanData)).map((row) => row.date)
   );
+  const frozenDates = new Set(freezeRows.map((r) => r.date));
+
+  // Effective active dates = planned OR frozen
+  const effectiveDates = new Set([...plannedDates, ...frozenDates]);
 
   // Current streak: walk backwards from today (skip today if not yet planned)
   const todayDate = new Date();
+  const todayStr = todayDate.toISOString().split("T")[0];
   let currentStreak = 0;
-  let check = new Date(todayDate);
+  let check = new Date(Date.UTC(todayDate.getUTCFullYear(), todayDate.getUTCMonth(), todayDate.getUTCDate()));
   let skippedToday = false;
   while (true) {
     const ds = check.toISOString().split("T")[0];
-    if (!activeDates.has(ds)) {
-      if (!skippedToday && ds === todayDate.toISOString().split("T")[0]) {
+    if (!effectiveDates.has(ds)) {
+      if (!skippedToday && ds === todayStr) {
         skippedToday = true;
         check.setUTCDate(check.getUTCDate() - 1);
         continue;
@@ -131,7 +147,7 @@ router.get("/calendar/streak", async (req, res) => {
   }
 
   // Longest streak ever
-  const sorted = [...activeDates].sort();
+  const sorted = [...effectiveDates].sort();
   let longestStreak = 0;
   let run = 0;
   for (let i = 0; i < sorted.length; i++) {
@@ -146,7 +162,93 @@ router.get("/calendar/streak", async (req, res) => {
     if (run > longestStreak) longestStreak = run;
   }
 
-  res.json({ currentStreak, longestStreak });
+  // Freeze stats for current month
+  const nowMonthStart = monthStart(todayDate);
+  const freezesThisMonth = freezeRows.filter((r) => {
+    const m = monthStart(new Date(r.createdAt));
+    return m === nowMonthStart;
+  }).length;
+
+  res.json({
+    currentStreak,
+    longestStreak,
+    frozenDates: [...frozenDates],
+    freezesUsedThisMonth: freezesThisMonth,
+    freezesAllowed: FREEZES_PER_MONTH,
+  });
+});
+
+// ── Streak Freeze ─────────────────────────────────────────────────────────────
+
+const FreezeDateBody = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) });
+
+router.post("/calendar/streak/freeze", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const parsed = FreezeDateBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid date. Use YYYY-MM-DD" });
+    return;
+  }
+  const { date } = parsed.data;
+  const todayDate = new Date();
+  const todayStr = todayDate.toISOString().split("T")[0];
+
+  if (date >= todayStr) {
+    res.status(400).json({ error: "Can only freeze past dates" });
+    return;
+  }
+
+  // Must be within this calendar month or last (allow up to 35 days back)
+  const cutoff = new Date(todayDate);
+  cutoff.setUTCDate(cutoff.getUTCDate() - 35);
+  if (date < cutoff.toISOString().split("T")[0]) {
+    res.status(400).json({ error: "Can only freeze dates within the last 35 days" });
+    return;
+  }
+
+  // Check monthly freeze limit
+  const nowMonthStart = monthStart(todayDate);
+  const allFreezes = await db.select().from(streakFreezesTable).where(eq(streakFreezesTable.userId, userId));
+  const usedThisMonth = allFreezes.filter((r) => monthStart(new Date(r.createdAt)) === nowMonthStart).length;
+  if (usedThisMonth >= FREEZES_PER_MONTH) {
+    res.status(400).json({ error: `Monthly freeze limit of ${FREEZES_PER_MONTH} reached` });
+    return;
+  }
+
+  // Check already frozen
+  const alreadyFrozen = allFreezes.find((r) => r.date === date);
+  if (alreadyFrozen) {
+    res.status(400).json({ error: "Date is already frozen" });
+    return;
+  }
+
+  // Check if the day already has content (no need to freeze)
+  const [existing] = await db
+    .select({ data: calendarPlansTable.data })
+    .from(calendarPlansTable)
+    .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
+  if (existing) {
+    const d = existing.data as CalendarPlanData;
+    const hasContent = !!(d.objective?.trim()) || (d.timeBlocks?.length ?? 0) > 0 || (d.tasks?.length ?? 0) > 0;
+    if (hasContent) {
+      res.status(400).json({ error: "Date already has a plan — no freeze needed" });
+      return;
+    }
+  }
+
+  await db.insert(streakFreezesTable).values({ userId, date });
+  res.json({ ok: true, date, freezesUsedThisMonth: usedThisMonth + 1, freezesAllowed: FREEZES_PER_MONTH });
+});
+
+router.delete("/calendar/streak/freeze/:date", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const { date } = req.params;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    res.status(400).json({ error: "Invalid date" });
+    return;
+  }
+  await db.delete(streakFreezesTable).where(and(eq(streakFreezesTable.userId, userId), eq(streakFreezesTable.date, date)));
+  res.json({ ok: true });
 });
 
 // ── Weekly Review ────────────────────────────────────────────────────────────
