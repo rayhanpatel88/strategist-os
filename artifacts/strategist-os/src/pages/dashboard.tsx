@@ -1552,6 +1552,9 @@ export default function Dashboard() {
         {/* Execution Heatmap */}
         <ExecutionHeatmap activity={activity} loading={activityLoading} base={base} onScoreUpdate={handleScoreUpdate} />
 
+        {/* Goals Widget */}
+        <GoalsWidget base={base} />
+
         {/* Modules */}
         <div className="mb-8">
           <div className="label-caps mb-4">Modules</div>
