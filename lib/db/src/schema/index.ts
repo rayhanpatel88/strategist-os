@@ -12,3 +12,4 @@ export * from "./diagnoses";
 export * from "./scorecards";
 export * from "./recurring-templates";
 export * from "./weekly-reflections";
+export * from "./goals";
