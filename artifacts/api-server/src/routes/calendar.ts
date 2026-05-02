@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
 import { calendarPlansTable, type CalendarPlanData } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { generateDailyPlan } from "../lib/mock-ai.js";
 
@@ -20,6 +20,25 @@ const emptyPlan = (): CalendarPlanData => ({
     changes: "",
     score: null,
   },
+});
+
+router.get("/calendar/activity", async (_req, res) => {
+  const rows = await db
+    .select({ date: calendarPlansTable.date, data: calendarPlansTable.data })
+    .from(calendarPlansTable)
+    .orderBy(asc(calendarPlansTable.date));
+  const activity = rows.map((row) => {
+    const d = row.data as CalendarPlanData;
+    return {
+      date: row.date,
+      score: d.review?.score ?? null,
+      hasContent:
+        !!(d.objective?.trim()) ||
+        (d.timeBlocks?.length ?? 0) > 0 ||
+        (d.tasks?.length ?? 0) > 0,
+    };
+  });
+  res.json(activity);
 });
 
 router.get("/calendar/:date", async (req, res) => {

@@ -2,6 +2,7 @@ import { useGetSessionsSummary, useListSessions, useDeleteSession, getListSessio
 import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect, useState } from "react";
 
 const now = new Date();
 const systemDate = now.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).toUpperCase();
@@ -36,12 +37,168 @@ function TelemetryBar({ value, max = 100, color = "var(--sos-emerald)" }: { valu
   );
 }
 
+type ActivityEntry = { date: string; score: number | null; hasContent: boolean };
+
+function buildHeatmapGrid(): string[][] {
+  const today = new Date();
+  const todayDOW = (today.getDay() + 6) % 7;
+  const thisMonday = new Date(today);
+  thisMonday.setDate(today.getDate() - todayDOW);
+  const startMonday = new Date(thisMonday);
+  startMonday.setDate(thisMonday.getDate() - 21);
+  const rows: string[][] = [];
+  for (let week = 0; week < 4; week++) {
+    const row: string[] = [];
+    for (let day = 0; day < 7; day++) {
+      const d = new Date(startMonday);
+      d.setDate(startMonday.getDate() + week * 7 + day);
+      row.push(d.toISOString().split("T")[0]);
+    }
+    rows.push(row);
+  }
+  return rows;
+}
+
+function cellColor(date: string, todayStr: string, map: Map<string, ActivityEntry>) {
+  if (date > todayStr) return "transparent";
+  const entry = map.get(date);
+  if (!entry?.hasContent) return "var(--sos-track-bg)";
+  const s = entry.score;
+  if (s === null) return "var(--sos-blue-tint)";
+  if (s >= 8) return "var(--sos-emerald)";
+  if (s >= 6) return "var(--sos-blue)";
+  if (s >= 4) return "#f59e0b";
+  return "var(--sos-error)";
+}
+
+function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; loading: boolean }) {
+  const grid = buildHeatmapGrid();
+  const todayStr = new Date().toISOString().split("T")[0];
+  const map = new Map(activity.map((a) => [a.date, a]));
+
+  const allDates = grid.flat();
+  const pastDates = allDates.filter((d) => d <= todayStr);
+  const plannedCount = pastDates.filter((d) => map.get(d)?.hasContent).length;
+
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i <= 60; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const ds = d.toISOString().split("T")[0];
+    if (map.get(ds)?.hasContent) {
+      streak++;
+    } else if (i > 0) {
+      break;
+    }
+  }
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="label-caps">Execution Record</div>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: 22, fontWeight: 700, color: "var(--sos-emerald)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>{streak}</span>
+            <span style={{ fontSize: 10, color: "var(--sos-text-dim)", letterSpacing: "0.06em", textTransform: "uppercase" }}>day streak</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: 22, fontWeight: 700, color: "var(--sos-blue)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>{plannedCount}</span>
+            <span style={{ fontSize: 10, color: "var(--sos-text-dim)", letterSpacing: "0.06em", textTransform: "uppercase" }}>days planned</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-5" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+        {loading ? (
+          <div style={{ height: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontSize: 11, color: "var(--sos-text-muted)" }}>Loading activity...</div>
+          </div>
+        ) : (
+          <>
+            {/* Day headers */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
+                <div key={d} style={{ fontSize: 9, color: "var(--sos-text-dim)", textAlign: "center", letterSpacing: "0.06em", textTransform: "uppercase" }}>{d}</div>
+              ))}
+            </div>
+
+            {/* Grid */}
+            {grid.map((week, wi) => (
+              <div key={wi} style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, marginBottom: 4 }}>
+                {week.map((date) => {
+                  const entry = map.get(date);
+                  const isToday = date === todayStr;
+                  const isFuture = date > todayStr;
+                  const bg = cellColor(date, todayStr, map);
+                  return (
+                    <div
+                      key={date}
+                      title={`${date}${entry?.hasContent ? (entry.score !== null ? ` · Score ${entry.score}/10` : " · Planned") : ""}`}
+                      style={{
+                        height: 20,
+                        background: bg,
+                        border: isToday ? "1px solid var(--sos-blue)" : "1px solid transparent",
+                        borderRadius: 3,
+                        opacity: isFuture ? 0 : 1,
+                        cursor: entry?.hasContent ? "default" : "default",
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            ))}
+
+            {/* Legend + link */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <div style={{ width: 10, height: 10, background: "var(--sos-track-bg)", borderRadius: 2 }} />
+                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>No plan</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div style={{ width: 10, height: 10, background: "var(--sos-blue-tint)", borderRadius: 2 }} />
+                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Planned</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div style={{ width: 10, height: 10, background: "var(--sos-blue)", borderRadius: 2 }} />
+                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Score 6-7</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div style={{ width: 10, height: 10, background: "var(--sos-emerald)", borderRadius: 2 }} />
+                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Score 8+</span>
+                </div>
+              </div>
+              <Link href="/calendar">
+                <span style={{ fontSize: 10, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}>
+                  Open Calendar
+                </span>
+              </Link>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const summary = useGetSessionsSummary();
   const sessions = useListSessions();
   const deleteSession = useDeleteSession();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [activity, setActivity] = useState<ActivityEntry[]>([]);
+  const [activityLoading, setActivityLoading] = useState(true);
+  const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
+
+  useEffect(() => {
+    fetch(`${base}/api/calendar/activity`)
+      .then((r) => r.json())
+      .then((data: ActivityEntry[]) => setActivity(data))
+      .catch(() => setActivity([]))
+      .finally(() => setActivityLoading(false));
+  }, [base]);
 
   const handleDelete = (id: number) => {
     deleteSession.mutate({ id }, {
@@ -132,6 +289,9 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Execution Heatmap */}
+        <ExecutionHeatmap activity={activity} loading={activityLoading} />
 
         {/* Modules */}
         <div className="mb-8">
