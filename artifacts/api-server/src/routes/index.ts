@@ -16,6 +16,7 @@ import goalsRouter from "./goals";
 import notesRouter from "./notes";
 import settingsRouter from "./settings";
 import searchRouter from "./search";
+import planRouter from "./plan";
 
 const router: IRouter = Router();
 
@@ -38,5 +39,6 @@ router.use(goalsRouter);
 router.use(notesRouter);
 router.use(settingsRouter);
 router.use(searchRouter);
+router.use(planRouter);
 
 export default router;

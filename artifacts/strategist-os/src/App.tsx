@@ -21,10 +21,12 @@ import Settings from "@/pages/settings";
 import StrategyCard from "@/pages/strategy-card";
 import Goals from "@/pages/goals";
 import Notes from "@/pages/notes";
+import Pricing, { PlanBadge } from "@/pages/pricing";
 import CommandPalette from "@/components/command-palette";
 import ChangelogModal, { useChangelogBadge, WhatsNewBanner } from "@/components/changelog-modal";
 import QuickNote from "@/components/quick-note";
 import ShortcutsModal from "@/components/shortcuts-modal";
+import { PlanProvider, usePlan } from "@/lib/plan-context";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -114,6 +116,7 @@ function Sidebar({ onSearchOpen, onClose, onChangelogOpen, hasChangelog, onShort
   const { user, isLoaded } = useUser();
   const isDark = theme === "dark";
   const unplannedDays = useWeeklyUnplanned();
+  const { plan } = usePlan();
 
   const displayName = isLoaded
     ? user?.fullName ||
@@ -254,12 +257,29 @@ function Sidebar({ onSearchOpen, onClose, onChangelogOpen, hasChangelog, onShort
       <div className="px-5 py-4" style={{ borderTop: "1px solid var(--sos-border)" }}>
         {isLoaded && user && (
           <div style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 12, color: "var(--sos-text-secondary)", fontWeight: 600, marginBottom: 2 }}>
-              {displayName}
+            <div className="flex items-center gap-2 mb-0.5">
+              <div style={{ fontSize: 12, color: "var(--sos-text-secondary)", fontWeight: 600, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {displayName}
+              </div>
+              <PlanBadge plan={plan} />
             </div>
-            <div style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.03em" }}>
+            <div style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.03em", marginBottom: 8 }}>
               {displayEmail}
             </div>
+            <Link href="/pricing" onClick={onClose}>
+              <button style={{
+                width: "100%", padding: "5px 10px",
+                fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
+                fontFamily: "Space Grotesk, sans-serif", cursor: "pointer",
+                border: plan === "free" ? "1px solid rgba(114,254,136,0.4)" : "1px solid var(--sos-border)",
+                background: plan === "free" ? "rgba(114,254,136,0.06)" : "transparent",
+                color: plan === "free" ? "var(--sos-emerald)" : "var(--sos-text-dim)",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+              }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 11 }}>{plan === "free" ? "upgrade" : "manage_accounts"}</span>
+                {plan === "free" ? "Upgrade plan" : "Manage plan"}
+              </button>
+            </Link>
           </div>
         )}
         <div className="flex flex-col gap-2">
@@ -753,6 +773,7 @@ function ClerkProviderWithRoutes() {
       <QueryClientProvider client={queryClient}>
         <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
+          <PlanProvider>
           <Switch>
             <Route path="/" component={HomeRedirect} />
             <Route path="/sign-in/*?" component={SignInPage} />
@@ -769,9 +790,11 @@ function ClerkProviderWithRoutes() {
             <Route path="/notes" component={() => <ProtectedPage component={Notes} />} />
             <Route path="/portfolio" component={() => <ProtectedPage component={Portfolio} />} />
             <Route path="/settings" component={() => <ProtectedPage component={Settings} />} />
+            <Route path="/pricing" component={() => <ProtectedPage component={Pricing} />} />
             <Route path="/p/:userId" component={StrategyCard} />
             <Route component={NotFound} />
           </Switch>
+        </PlanProvider>
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>

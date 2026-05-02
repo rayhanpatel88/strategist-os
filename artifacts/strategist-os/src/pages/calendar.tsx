@@ -18,7 +18,16 @@ type CalTask = {
   estimatedDuration: string;
   dueTime: string;
   linkedGoal: string;
+  linkedGoalId: string;
   status: string;
+};
+
+type ActiveGoal = {
+  id: number;
+  title: string;
+  progress: number;
+  status: string;
+  category: string;
 };
 
 type Review = {
@@ -177,7 +186,7 @@ const TEMPLATES: Record<string, Partial<PlanData>> = {
     tasks: [
       { name: "Ship primary deliverable", priority: "High", estimatedDuration: "4 hours", dueTime: "15:00", linkedGoal: "", status: "Not Started" },
       { name: "Clear inbox and communications in one batch", priority: "Medium", estimatedDuration: "30 min", dueTime: "16:00", linkedGoal: "", status: "Not Started" },
-    ].map((t) => ({ ...t, id: uid() })),
+    ].map((t) => ({ ...t, id: uid(), linkedGoalId: "" })),
   },
   "University Study Day": {
     objective: "Make measurable progress on coursework through structured study blocks with active recall.",
@@ -196,7 +205,7 @@ const TEMPLATES: Record<string, Partial<PlanData>> = {
       { name: "Complete assigned readings", priority: "High", estimatedDuration: "1.5 hours", dueTime: "10:00", linkedGoal: "", status: "Not Started" },
       { name: "Submit outstanding assignment", priority: "High", estimatedDuration: "2 hours", dueTime: "16:30", linkedGoal: "", status: "Not Started" },
       { name: "Create active recall flashcards for today's material", priority: "Medium", estimatedDuration: "30 min", dueTime: "17:00", linkedGoal: "", status: "Not Started" },
-    ].map((t) => ({ ...t, id: uid() })),
+    ].map((t) => ({ ...t, id: uid(), linkedGoalId: "" })),
   },
   "Client Delivery Day": {
     objective: "Deliver client-facing work on time, with all communications resolved before end of day.",
@@ -215,7 +224,7 @@ const TEMPLATES: Record<string, Partial<PlanData>> = {
       { name: "Ship primary client deliverable", priority: "High", estimatedDuration: "3 hours", dueTime: "14:00", linkedGoal: "", status: "Not Started" },
       { name: "Respond to all outstanding client emails", priority: "High", estimatedDuration: "45 min", dueTime: "11:30", linkedGoal: "", status: "Not Started" },
       { name: "Document decisions and open questions", priority: "Medium", estimatedDuration: "20 min", dueTime: "16:30", linkedGoal: "", status: "Not Started" },
-    ].map((t) => ({ ...t, id: uid() })),
+    ].map((t) => ({ ...t, id: uid(), linkedGoalId: "" })),
   },
   "Content Creation Day": {
     objective: "Produce and distribute one substantial content piece with a clear audience and message.",
@@ -233,7 +242,7 @@ const TEMPLATES: Record<string, Partial<PlanData>> = {
     tasks: [
       { name: "Publish primary content piece", priority: "High", estimatedDuration: "4 hours", dueTime: "15:30", linkedGoal: "", status: "Not Started" },
       { name: "Repurpose into secondary format", priority: "Medium", estimatedDuration: "1 hour", dueTime: "14:30", linkedGoal: "", status: "Not Started" },
-    ].map((t) => ({ ...t, id: uid() })),
+    ].map((t) => ({ ...t, id: uid(), linkedGoalId: "" })),
   },
   "Admin Reset Day": {
     objective: "Clear the backlog, organise systems, and create a clean slate for the next productive period.",
@@ -252,7 +261,7 @@ const TEMPLATES: Record<string, Partial<PlanData>> = {
       { name: "Process inbox to zero", priority: "High", estimatedDuration: "1.5 hours", dueTime: "09:30", linkedGoal: "", status: "Not Started" },
       { name: "Triage all open tasks into calendar or cancel", priority: "High", estimatedDuration: "1 hour", dueTime: "11:00", linkedGoal: "", status: "Not Started" },
       { name: "Plan next two weeks at block level", priority: "High", estimatedDuration: "1.5 hours", dueTime: "15:00", linkedGoal: "", status: "Not Started" },
-    ].map((t) => ({ ...t, id: uid() })),
+    ].map((t) => ({ ...t, id: uid(), linkedGoalId: "" })),
   },
   "Balanced Day": {
     objective: "Make progress on strategic work while maintaining energy, health, and relationships.",
@@ -271,7 +280,7 @@ const TEMPLATES: Record<string, Partial<PlanData>> = {
       { name: "Complete strategic work output", priority: "High", estimatedDuration: "2.5 hours", dueTime: "10:30", linkedGoal: "", status: "Not Started" },
       { name: "Exercise or physical activity (30+ min)", priority: "High", estimatedDuration: "30 min", dueTime: "11:00", linkedGoal: "", status: "Not Started" },
       { name: "Handle all communications in one batch", priority: "Medium", estimatedDuration: "45 min", dueTime: "12:30", linkedGoal: "", status: "Not Started" },
-    ].map((t) => ({ ...t, id: uid() })),
+    ].map((t) => ({ ...t, id: uid(), linkedGoalId: "" })),
   },
 };
 
@@ -280,7 +289,7 @@ const blankBlock = (): Omit<TimeBlock, "id"> => ({
 });
 
 const blankTask = (): Omit<CalTask, "id"> => ({
-  name: "", priority: "High", estimatedDuration: "", dueTime: "", linkedGoal: "", status: "Not Started",
+  name: "", priority: "High", estimatedDuration: "", dueTime: "", linkedGoal: "", linkedGoalId: "", status: "Not Started",
 });
 
 function Sel({ value, options, onChange, style }: { value: string; options: string[]; onChange: (v: string) => void; style?: React.CSSProperties }) {
@@ -339,6 +348,8 @@ export default function Calendar() {
   const [weekData, setWeekData] = useState<WeekReviewData | null>(null);
   const [weekLoading, setWeekLoading] = useState(false);
   const [weeklyScores, setWeeklyScores] = useState<WeekScorePoint[]>([]);
+  const [activeGoals, setActiveGoals] = useState<ActiveGoal[]>([]);
+  const [goalsPanelOpen, setGoalsPanelOpen] = useState(true);
   const [reflection, setReflection] = useState<ReflectionForm>(emptyReflection());
   const [savingReflection, setSavingReflection] = useState(false);
   const [reflectionSavedFlash, setReflectionSavedFlash] = useState(false);
@@ -533,6 +544,18 @@ export default function Calendar() {
       .finally(() => setWeekLoading(false));
   }, [base]);
 
+  const fetchActiveGoals = useCallback(() => {
+    fetch(`${base}/api/goals`)
+      .then((r) => r.json())
+      .then((d: unknown) => {
+        const goals = (d as { goals: ActiveGoal[] }).goals ?? [];
+        setActiveGoals(goals.filter((g) => g.status !== "Complete").slice(0, 10));
+      })
+      .catch(() => {});
+  }, [base]);
+
+  useEffect(() => { fetchActiveGoals(); }, [fetchActiveGoals]);
+
   const fetchWeeklyScores = useCallback(() => {
     fetch(`${base}/api/calendar/weekly-scores?weeks=8`)
       .then((r) => r.json())
@@ -652,14 +675,29 @@ export default function Calendar() {
   };
 
   const cycleTaskStatus = (id: string) => {
-    setPlan((p) => ({
-      ...p,
-      tasks: p.tasks.map((t) => {
+    setPlan((p) => {
+      const updated = p.tasks.map((t) => {
         if (t.id !== id) return t;
         const idx = TASK_STATUSES.indexOf(t.status);
-        return { ...t, status: TASK_STATUSES[(idx + 1) % TASK_STATUSES.length] };
-      }),
-    }));
+        const next = TASK_STATUSES[(idx + 1) % TASK_STATUSES.length];
+        if (next === "Done" && t.linkedGoalId) {
+          const goalId = parseInt(t.linkedGoalId, 10);
+          if (!isNaN(goalId)) {
+            const goal = activeGoals.find((g) => g.id === goalId);
+            const newProgress = Math.min(100, (goal?.progress ?? 0) + 5);
+            fetch(`${base}/api/goals/${goalId}/progress`, {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ progress: newProgress }),
+            }).then(() => {
+              setActiveGoals((gs) => gs.map((g) => g.id === goalId ? { ...g, progress: newProgress } : g));
+            }).catch(() => {});
+          }
+        }
+        return { ...t, status: next };
+      });
+      return { ...p, tasks: updated };
+    });
   };
 
   const deleteTask = (id: string) => {
@@ -1197,8 +1235,20 @@ export default function Calendar() {
                     <div className="grid grid-cols-2 gap-2">
                       <input type="time" value={newTask.dueTime} onChange={(e) => setNewTask((t) => ({ ...t, dueTime: e.target.value }))}
                         style={{ width: "100%", fontSize: 11, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "4px 6px" }} />
-                      <input value={newTask.linkedGoal} onChange={(e) => setNewTask((t) => ({ ...t, linkedGoal: e.target.value }))} placeholder="Linked goal"
-                        style={{ width: "100%", fontSize: 11, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "4px 6px" }} />
+                      <select
+                        value={newTask.linkedGoalId}
+                        onChange={(e) => {
+                          const goalId = e.target.value;
+                          const goal = activeGoals.find((g) => String(g.id) === goalId);
+                          setNewTask((t) => ({ ...t, linkedGoalId: goalId, linkedGoal: goal?.title ?? "" }));
+                        }}
+                        style={{ width: "100%", fontSize: 11, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "4px 6px" }}
+                      >
+                        <option value="">No goal linked</option>
+                        {activeGoals.map((g) => (
+                          <option key={g.id} value={String(g.id)}>{g.title}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={addTask}
@@ -1235,9 +1285,17 @@ export default function Calendar() {
                         {task.dueTime && <span style={{ fontSize: 9, color: "var(--sos-text-dim)" }}>Due {task.dueTime}</span>}
                         <span style={{ fontSize: 9, color: STATUS_COLOR[task.status], textTransform: "uppercase", letterSpacing: "0.06em" }}>{task.status}</span>
                       </div>
-                      {task.linkedGoal && (
-                        <div style={{ fontSize: 9, color: "var(--sos-text-dim)", marginTop: 2, fontStyle: "italic" }}>{task.linkedGoal}</div>
-                      )}
+                      {(task.linkedGoalId || task.linkedGoal) && (() => {
+                        const goalTitle = task.linkedGoalId
+                          ? (activeGoals.find((g) => String(g.id) === task.linkedGoalId)?.title ?? task.linkedGoal)
+                          : task.linkedGoal;
+                        return goalTitle ? (
+                          <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 9, color: "var(--sos-emerald)" }}>flag</span>
+                            <span style={{ fontSize: 9, color: "var(--sos-emerald)", fontStyle: "italic", opacity: 0.8 }}>{goalTitle}</span>
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
                     <button onClick={() => deleteTask(task.id)}
                       style={{ fontSize: 10, color: "var(--sos-error)", background: "none", border: "none", cursor: "pointer", padding: "2px", flexShrink: 0, marginTop: 1 }}>
@@ -1247,6 +1305,74 @@ export default function Calendar() {
                 ))}
               </div>
             </div>
+
+            {/* Active Goals Panel */}
+            {activeGoals.length > 0 && (
+              <div style={{ borderTop: "1px solid var(--sos-border)", paddingTop: 16, marginTop: 4 }}>
+                <button onClick={() => setGoalsPanelOpen((v) => !v)} className="flex items-center justify-between w-full"
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, marginBottom: goalsPanelOpen ? 12 : 0 }}>
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined" style={{ fontSize: 13, color: "var(--sos-emerald)" }}>flag</span>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text-dim)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+                      Active Goals
+                    </div>
+                    <span style={{ fontSize: 9, color: "var(--sos-text-muted)", background: "var(--sos-surface-low)", border: "1px solid var(--sos-border-s)", padding: "1px 6px", fontFamily: "Space Grotesk, sans-serif" }}>
+                      {activeGoals.length}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: 10, color: "var(--sos-text-dim)" }}>{goalsPanelOpen ? "Collapse" : "Open"}</span>
+                </button>
+                {goalsPanelOpen && (
+                  <div className="space-y-2">
+                    {activeGoals.map((goal) => {
+                      const linkedTaskCount = plan.tasks.filter((t) => t.linkedGoalId === String(goal.id)).length;
+                      const doneCount = plan.tasks.filter((t) => t.linkedGoalId === String(goal.id) && t.status === "Done").length;
+                      const statusColor = goal.status === "On Track" || goal.status === "Complete"
+                        ? "var(--sos-emerald)"
+                        : goal.status === "At Risk"
+                        ? "#f59e0b"
+                        : goal.status === "In Progress"
+                        ? "var(--sos-blue)"
+                        : "var(--sos-text-dim)";
+                      return (
+                        <div key={goal.id} style={{ padding: "10px 12px", background: "var(--sos-surface)", border: "1px solid var(--sos-border-s)" }}>
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: "var(--sos-text-body)", lineHeight: 1.3, marginBottom: 2 }}>{goal.title}</div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {goal.category && <span style={{ fontSize: 8, color: "var(--sos-text-dim)", letterSpacing: "0.06em", textTransform: "uppercase" }}>{goal.category}</span>}
+                                <span style={{ fontSize: 8, color: statusColor, letterSpacing: "0.06em", textTransform: "uppercase" }}>{goal.status}</span>
+                                {linkedTaskCount > 0 && (
+                                  <span style={{ fontSize: 8, color: doneCount === linkedTaskCount ? "var(--sos-emerald)" : "var(--sos-text-dim)" }}>
+                                    {doneCount}/{linkedTaskCount} tasks done today
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div style={{ flexShrink: 0, textAlign: "right" }}>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: goal.progress >= 70 ? "var(--sos-emerald)" : goal.progress >= 40 ? "var(--sos-blue)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+                                {goal.progress}%
+                              </div>
+                            </div>
+                          </div>
+                          {/* Progress bar */}
+                          <div style={{ height: 3, background: "var(--sos-border)", position: "relative" }}>
+                            <div style={{ position: "absolute", left: 0, top: 0, height: "100%", width: `${goal.progress}%`, background: goal.progress >= 70 ? "var(--sos-emerald)" : goal.progress >= 40 ? "var(--sos-blue)" : "#f59e0b", transition: "width 0.3s ease" }} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div style={{ paddingTop: 4 }}>
+                      <a href={`${base}/goals`} style={{ fontSize: 10, color: "var(--sos-text-dim)", textDecoration: "none", letterSpacing: "0.06em", display: "inline-flex", alignItems: "center", gap: 4 }}
+                        onClick={(e) => { e.preventDefault(); window.location.href = `${(import.meta.env.BASE_URL as string).replace(/\/$/, "")}/goals`; }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: 11 }}>open_in_new</span>
+                        Manage goals
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* End-of-Day Review */}
             <div style={{ borderTop: "1px solid var(--sos-border)", paddingTop: 16 }}>
