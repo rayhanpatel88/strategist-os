@@ -23,6 +23,7 @@ import Goals from "@/pages/goals";
 import Notes from "@/pages/notes";
 import CommandPalette from "@/components/command-palette";
 import ChangelogModal, { useChangelogBadge, WhatsNewBanner } from "@/components/changelog-modal";
+import QuickNote from "@/components/quick-note";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -338,6 +339,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const [showSearch, setShowSearch] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
   const [showBanner, setShowBanner] = useState(false);
+  const [showQuickNote, setShowQuickNote] = useState(false);
   const { hasUnread, markSeen } = useChangelogBadge();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -375,15 +377,23 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         e.preventDefault();
         setShowSearch((v) => !v);
       }
-      if (e.key === "?" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) {
-        e.preventDefault();
-        markSeen();
-        setShowChangelog((v) => !v);
+      const target = e.target as HTMLElement;
+      const inEditable = ["INPUT", "TEXTAREA"].includes(target.tagName) || target.isContentEditable;
+      if (!inEditable) {
+        if (e.key === "?") {
+          e.preventDefault();
+          markSeen();
+          setShowChangelog((v) => !v);
+        }
+        if ((e.key === "n" || e.key === "N") && !e.metaKey && !e.ctrlKey) {
+          e.preventDefault();
+          setShowQuickNote((v) => !v);
+        }
       }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [markSeen]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -455,6 +465,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       {showSearch && <CommandPalette onClose={() => setShowSearch(false)} />}
       {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
       {showBanner && <WhatsNewBanner onOpen={openChangelog} onDismiss={dismissBanner} />}
+      {showQuickNote && <QuickNote onClose={() => setShowQuickNote(false)} />}
     </div>
   );
 }

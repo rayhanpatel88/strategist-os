@@ -335,7 +335,7 @@ export default function Calendar() {
   const fetchRecurringTemplates = useCallback(() => {
     fetch(`${base}/api/calendar/recurring-templates`)
       .then((r) => r.json())
-      .then((rows: RecurringTpl[]) => setRecurringTemplates(rows))
+      .then((rows: unknown) => { if (Array.isArray(rows)) setRecurringTemplates(rows as RecurringTpl[]); })
       .catch(() => {});
   }, [base]);
 
@@ -564,107 +564,195 @@ export default function Calendar() {
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       {/* Header */}
-      <div className="sos-cal-header flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
-        <div className="sos-cal-header-left flex items-center gap-3 md:gap-6 min-w-0">
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif", flexShrink: 0 }}>
-            Calendar
-          </span>
-          {streak !== null && (
-            <div
-              title={`Longest streak: ${streak.longestStreak} day${streak.longestStreak !== 1 ? "s" : ""}`}
-              style={{
-                display: "flex", alignItems: "center", gap: 5,
-                background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)",
-                border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`,
-                padding: "4px 10px", flexShrink: 0, cursor: "default",
-              }}
-            >
-              <span style={{ fontSize: 13 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>
-                {streak.currentStreak}
+      <div className="shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+
+        {/* ── Mobile header (two rows, hidden on md+) ─────────────────────── */}
+        <div className="md:hidden">
+          {/* Row 1: label + streak + Save */}
+          <div className="flex items-center justify-between px-4 pt-3 pb-2">
+            <div className="flex items-center gap-2">
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+                Calendar
               </span>
-              <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>
-                day{streak.currentStreak !== 1 ? "s" : ""}
-              </span>
+              {streak !== null && streak.currentStreak > 0 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(114,254,136,0.08)", border: "1px solid rgba(114,254,136,0.22)", padding: "3px 8px" }}>
+                  <span style={{ fontSize: 12 }}>🔥</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "var(--sos-emerald)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
+                </div>
+              )}
             </div>
-          )}
-          {/* Date navigation */}
-          <div className="flex items-center gap-1 md:gap-2">
+            <button onClick={handleSave} disabled={saving}
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: saving ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "7px 18px", cursor: saving ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+              {savedFlash ? "Saved" : saving ? "..." : "Save"}
+            </button>
+          </div>
+          {/* Row 2: date nav + icon action buttons */}
+          <div className="flex items-center gap-2 px-4 pb-2">
             <button onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
-              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer", flexShrink: 0 }}>
+              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "5px 9px", cursor: "pointer", flexShrink: 0 }}>
               Prev
             </button>
-            <span className="sos-cal-date-label" style={{ fontSize: 12, color: "var(--sos-text)", fontWeight: 600, minWidth: 0, textAlign: "center" }}>
+            <span style={{ fontSize: 12, color: "var(--sos-text)", fontWeight: 600, flex: 1, textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {formatDisplayDate(selectedDate)}
             </span>
             <button onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
-              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer", flexShrink: 0 }}>
+              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "5px 9px", cursor: "pointer", flexShrink: 0 }}>
               Next
             </button>
             {selectedDate !== todayStr() && (
               <button onClick={() => setSelectedDate(todayStr())}
-                style={{ fontSize: 10, color: "var(--sos-blue)", background: "none", border: "none", padding: "4px 6px", cursor: "pointer", letterSpacing: "0.06em", flexShrink: 0 }}>
+                style={{ fontSize: 10, color: "var(--sos-blue)", background: "none", border: "none", padding: "5px 4px", cursor: "pointer", flexShrink: 0 }}>
                 Today
               </button>
             )}
+            <div style={{ display: "flex", gap: 4 }}>
+              {/* Templates icon */}
+              <div style={{ position: "relative" }}>
+                <button onClick={() => setShowTemplates((v) => !v)} title="Templates"
+                  style={{ background: "none", border: "1px solid var(--sos-ghost-border)", padding: "5px 7px", cursor: "pointer", color: "var(--sos-text-dim)", display: "flex", alignItems: "center" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: 14 }}>content_copy</span>
+                </button>
+                {showTemplates && (
+                  <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "var(--sos-surface)", border: "1px solid var(--sos-border)", zIndex: 50, minWidth: 220, maxHeight: 340, overflowY: "auto" }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", padding: "8px 14px 4px", fontFamily: "Space Grotesk, sans-serif" }}>Daily Presets</div>
+                    {Object.keys(TEMPLATES).map((name) => (
+                      <button key={name} onClick={() => applyTemplate(name)}
+                        style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12, color: "var(--sos-text-body)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
+                        {name}
+                      </button>
+                    ))}
+                    {recurringTemplates.length > 0 && (
+                      <>
+                        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", padding: "10px 14px 4px", fontFamily: "Space Grotesk, sans-serif", borderTop: "1px solid var(--sos-border)" }}>Recurring</div>
+                        {recurringTemplates.map((t) => (
+                          <button key={t.id} onClick={() => { applyRecurringTemplate(t); setShowTemplates(false); }}
+                            style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
+                            <div style={{ fontSize: 12, color: "var(--sos-text-body)" }}>{t.name}</div>
+                            <div style={{ fontSize: 9, color: "var(--sos-text-dim)", marginTop: 2 }}>{t.days.map((d) => DAY_LABELS[d]).join(" / ")}</div>
+                          </button>
+                        ))}
+                      </>
+                    )}
+                    <div style={{ borderTop: "1px solid var(--sos-border)", padding: "4px 0" }}>
+                      <button onClick={() => { setShowSaveRecurring(true); setShowTemplates(false); setRecurringForm({ name: "", days: [] }); }}
+                        style={{ display: "block", width: "100%", textAlign: "left", fontSize: 11, color: "var(--sos-emerald)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.06em" }}>
+                        + Save current as recurring
+                      </button>
+                      {recurringTemplates.length > 0 && (
+                        <button onClick={() => { setShowManageRecurring(true); setShowTemplates(false); }}
+                          style={{ display: "block", width: "100%", textAlign: "left", fontSize: 11, color: "var(--sos-text-dim)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.06em" }}>
+                          Manage recurring templates
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {/* Week Review icon */}
+              <button onClick={() => { setWeekStart(getMondayOfWeek(selectedDate)); setWeekReviewOpen(true); }} title="Week Review"
+                style={{ background: "none", border: "1px solid var(--sos-ghost-border)", padding: "5px 7px", cursor: "pointer", color: "var(--sos-text-dim)", display: "flex", alignItems: "center" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>bar_chart</span>
+              </button>
+              {/* AI Assist icon */}
+              <button onClick={() => setAiOpen(true)} title="AI Assist"
+                style={{ background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)", padding: "5px 7px", cursor: "pointer", color: "var(--sos-blue)", display: "flex", alignItems: "center" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>auto_awesome</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <div className="sos-cal-header-right flex items-center gap-2 md:gap-3 shrink-0">
-          {/* Template selector */}
-          <div style={{ position: "relative" }}>
-            <button onClick={() => setShowTemplates((v) => !v)}
-              style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
-              Templates
-            </button>
-            {showTemplates && (
-              <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "var(--sos-surface)", border: "1px solid var(--sos-border)", zIndex: 50, minWidth: 220, maxHeight: 360, overflowY: "auto" }}>
-                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", padding: "8px 14px 4px", fontFamily: "Space Grotesk, sans-serif" }}>Daily Presets</div>
-                {Object.keys(TEMPLATES).map((name) => (
-                  <button key={name} onClick={() => applyTemplate(name)}
-                    style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12, color: "var(--sos-text-body)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
-                    {name}
-                  </button>
-                ))}
-                {recurringTemplates.length > 0 && (
-                  <>
-                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", padding: "10px 14px 4px", fontFamily: "Space Grotesk, sans-serif", borderTop: "1px solid var(--sos-border)" }}>Recurring</div>
-                    {recurringTemplates.map((t) => (
-                      <button key={t.id} onClick={() => { applyRecurringTemplate(t); setShowTemplates(false); }}
-                        style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
-                        <div style={{ fontSize: 12, color: "var(--sos-text-body)" }}>{t.name}</div>
-                        <div style={{ fontSize: 9, color: "var(--sos-text-dim)", marginTop: 2 }}>{t.days.map((d) => DAY_LABELS[d]).join(" / ")}</div>
-                      </button>
-                    ))}
-                  </>
-                )}
-                <div style={{ borderTop: "1px solid var(--sos-border)", padding: "4px 0" }}>
-                  <button onClick={() => { setShowSaveRecurring(true); setShowTemplates(false); setRecurringForm({ name: "", days: [] }); }}
-                    style={{ display: "block", width: "100%", textAlign: "left", fontSize: 11, color: "var(--sos-emerald)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.06em" }}>
-                    + Save current as recurring
-                  </button>
-                  {recurringTemplates.length > 0 && (
-                    <button onClick={() => { setShowManageRecurring(true); setShowTemplates(false); }}
-                      style={{ display: "block", width: "100%", textAlign: "left", fontSize: 11, color: "var(--sos-text-dim)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.06em" }}>
-                      Manage recurring templates
-                    </button>
-                  )}
-                </div>
+        {/* ── Desktop header (single row, hidden on mobile) ─────────────────── */}
+        <div className="hidden md:flex items-center justify-between px-8 py-4">
+          <div className="flex items-center gap-6 min-w-0">
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif", flexShrink: 0 }}>
+              Calendar
+            </span>
+            {streak !== null && (
+              <div
+                title={`Longest streak: ${streak.longestStreak} day${streak.longestStreak !== 1 ? "s" : ""}`}
+                style={{ display: "flex", alignItems: "center", gap: 5, background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)", border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`, padding: "4px 10px", flexShrink: 0, cursor: "default" }}
+              >
+                <span style={{ fontSize: 13 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
+                <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>day{streak.currentStreak !== 1 ? "s" : ""}</span>
               </div>
             )}
+            <div className="flex items-center gap-2">
+              <button onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
+                style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer", flexShrink: 0 }}>
+                Prev
+              </button>
+              <span style={{ fontSize: 12, color: "var(--sos-text)", fontWeight: 600, whiteSpace: "nowrap" }}>
+                {formatDisplayDate(selectedDate)}
+              </span>
+              <button onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
+                style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer", flexShrink: 0 }}>
+                Next
+              </button>
+              {selectedDate !== todayStr() && (
+                <button onClick={() => setSelectedDate(todayStr())}
+                  style={{ fontSize: 10, color: "var(--sos-blue)", background: "none", border: "none", padding: "4px 6px", cursor: "pointer", letterSpacing: "0.06em", flexShrink: 0 }}>
+                  Today
+                </button>
+              )}
+            </div>
           </div>
-          <button onClick={() => { setWeekStart(getMondayOfWeek(selectedDate)); setWeekReviewOpen(true); }}
-            style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
-            Week Review
-          </button>
-          <button onClick={() => setAiOpen(true)}
-            style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-blue)", background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
-            AI Assist
-          </button>
-          <button onClick={handleSave} disabled={saving}
-            style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: saving ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "8px 20px", cursor: saving ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
-            {savedFlash ? "Saved" : saving ? "Saving..." : "Save"}
-          </button>
+          <div className="flex items-center gap-3 shrink-0">
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setShowTemplates((v) => !v)}
+                style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+                Templates
+              </button>
+              {showTemplates && (
+                <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "var(--sos-surface)", border: "1px solid var(--sos-border)", zIndex: 50, minWidth: 220, maxHeight: 360, overflowY: "auto" }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", padding: "8px 14px 4px", fontFamily: "Space Grotesk, sans-serif" }}>Daily Presets</div>
+                  {Object.keys(TEMPLATES).map((name) => (
+                    <button key={name} onClick={() => applyTemplate(name)}
+                      style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12, color: "var(--sos-text-body)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
+                      {name}
+                    </button>
+                  ))}
+                  {recurringTemplates.length > 0 && (
+                    <>
+                      <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", padding: "10px 14px 4px", fontFamily: "Space Grotesk, sans-serif", borderTop: "1px solid var(--sos-border)" }}>Recurring</div>
+                      {recurringTemplates.map((t) => (
+                        <button key={t.id} onClick={() => { applyRecurringTemplate(t); setShowTemplates(false); }}
+                          style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
+                          <div style={{ fontSize: 12, color: "var(--sos-text-body)" }}>{t.name}</div>
+                          <div style={{ fontSize: 9, color: "var(--sos-text-dim)", marginTop: 2 }}>{t.days.map((d) => DAY_LABELS[d]).join(" / ")}</div>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  <div style={{ borderTop: "1px solid var(--sos-border)", padding: "4px 0" }}>
+                    <button onClick={() => { setShowSaveRecurring(true); setShowTemplates(false); setRecurringForm({ name: "", days: [] }); }}
+                      style={{ display: "block", width: "100%", textAlign: "left", fontSize: 11, color: "var(--sos-emerald)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.06em" }}>
+                      + Save current as recurring
+                    </button>
+                    {recurringTemplates.length > 0 && (
+                      <button onClick={() => { setShowManageRecurring(true); setShowTemplates(false); }}
+                        style={{ display: "block", width: "100%", textAlign: "left", fontSize: 11, color: "var(--sos-text-dim)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.06em" }}>
+                        Manage recurring templates
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            <button onClick={() => { setWeekStart(getMondayOfWeek(selectedDate)); setWeekReviewOpen(true); }}
+              style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+              Week Review
+            </button>
+            <button onClick={() => setAiOpen(true)}
+              style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-blue)", background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+              AI Assist
+            </button>
+            <button onClick={handleSave} disabled={saving}
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: saving ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "8px 20px", cursor: saving ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+              {savedFlash ? "Saved" : saving ? "Saving..." : "Save"}
+            </button>
+          </div>
         </div>
       </div>
 

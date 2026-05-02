@@ -149,83 +149,6 @@ router.get("/calendar/streak", async (req, res) => {
   res.json({ currentStreak, longestStreak });
 });
 
-router.get("/calendar/:date", async (req, res) => {
-  const userId = (req as any).userId as string;
-  const { date } = req.params;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD" });
-    return;
-  }
-  const [row] = await db
-    .select()
-    .from(calendarPlansTable)
-    .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
-  if (!row) {
-    res.json({ date, data: emptyPlan() });
-    return;
-  }
-  res.json({ date: row.date, data: row.data });
-});
-
-const CalendarPlanBody = z.object({
-  objective: z.string().default(""),
-  priorities: z.array(z.string()).default(["", "", ""]),
-  notes: z.string().default(""),
-  timeBlocks: z.array(z.object({
-    id: z.string(),
-    startTime: z.string(),
-    endTime: z.string(),
-    activity: z.string(),
-    category: z.string(),
-    priority: z.string(),
-    status: z.string(),
-  })).default([]),
-  tasks: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    priority: z.string(),
-    estimatedDuration: z.string(),
-    dueTime: z.string(),
-    linkedGoal: z.string(),
-    status: z.string(),
-  })).default([]),
-  review: z.object({
-    movedForward: z.string().default(""),
-    delayed: z.string().default(""),
-    friction: z.string().default(""),
-    changes: z.string().default(""),
-    score: z.number().nullable().default(null),
-  }).default({}),
-});
-
-router.put("/calendar/:date", async (req, res) => {
-  const userId = (req as any).userId as string;
-  const { date } = req.params;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD" });
-    return;
-  }
-  const parsed = CalendarPlanBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
-    return;
-  }
-  const data = parsed.data as CalendarPlanData;
-  const [existing] = await db
-    .select({ id: calendarPlansTable.id })
-    .from(calendarPlansTable)
-    .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
-  if (existing) {
-    await db
-      .update(calendarPlansTable)
-      .set({ data, updatedAt: new Date() })
-      .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
-  } else {
-    await db.insert(calendarPlansTable).values({ date, data, userId });
-  }
-  res.json({ date, data });
-});
-
 // ── Weekly Review ────────────────────────────────────────────────────────────
 
 router.get("/calendar/weekly-review", async (req, res) => {
@@ -364,6 +287,85 @@ router.post("/calendar/ai-plan", async (req, res) => {
   }
   const result = await generateDailyPlan(parsed.data);
   res.json(result);
+});
+
+// ── Calendar Day — MUST be last so specific paths above aren't swallowed ─────
+
+router.get("/calendar/:date", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const { date } = req.params;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD" });
+    return;
+  }
+  const [row] = await db
+    .select()
+    .from(calendarPlansTable)
+    .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
+  if (!row) {
+    res.json({ date, data: emptyPlan() });
+    return;
+  }
+  res.json({ date: row.date, data: row.data });
+});
+
+const CalendarPlanBody = z.object({
+  objective: z.string().default(""),
+  priorities: z.array(z.string()).default(["", "", ""]),
+  notes: z.string().default(""),
+  timeBlocks: z.array(z.object({
+    id: z.string(),
+    startTime: z.string(),
+    endTime: z.string(),
+    activity: z.string(),
+    category: z.string(),
+    priority: z.string(),
+    status: z.string(),
+  })).default([]),
+  tasks: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    priority: z.string(),
+    estimatedDuration: z.string(),
+    dueTime: z.string(),
+    linkedGoal: z.string(),
+    status: z.string(),
+  })).default([]),
+  review: z.object({
+    movedForward: z.string().default(""),
+    delayed: z.string().default(""),
+    friction: z.string().default(""),
+    changes: z.string().default(""),
+    score: z.number().nullable().default(null),
+  }).default({}),
+});
+
+router.put("/calendar/:date", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const { date } = req.params;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    res.status(400).json({ error: "Invalid date format. Use YYYY-MM-DD" });
+    return;
+  }
+  const parsed = CalendarPlanBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+  const data = parsed.data as CalendarPlanData;
+  const [existing] = await db
+    .select({ id: calendarPlansTable.id })
+    .from(calendarPlansTable)
+    .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
+  if (existing) {
+    await db
+      .update(calendarPlansTable)
+      .set({ data, updatedAt: new Date() })
+      .where(and(eq(calendarPlansTable.userId, userId), eq(calendarPlansTable.date, date)));
+  } else {
+    await db.insert(calendarPlansTable).values({ date, data, userId });
+  }
+  res.json({ date, data });
 });
 
 export default router;
