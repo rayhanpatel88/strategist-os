@@ -126,9 +126,9 @@ function Sidebar() {
         style={{ borderBottom: "1px solid var(--sos-border)", minHeight: 68 }}
       >
         <img
-          src={`${basePath}/logos/${isDark ? "logo-s-light" : "logo-s-dark"}.svg`}
+          src={isDark ? `${basePath}/logos/logo-s-light.png` : `${basePath}/logos/logo-s-dark.svg`}
           alt=""
-          style={{ width: 32, height: 32, flexShrink: 0 }}
+          style={{ width: 32, height: 32, flexShrink: 0, objectFit: "contain" }}
         />
         <div>
           <div style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 13, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.01em" }}>

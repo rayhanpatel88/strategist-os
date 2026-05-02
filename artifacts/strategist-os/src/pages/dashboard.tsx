@@ -2,7 +2,7 @@ import { useGetSessionsSummary, useListSessions, useDeleteSession, getListSessio
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
@@ -797,6 +797,129 @@ function ExecutionHeatmap({ activity, loading, base, onScoreUpdate }: {
   );
 }
 
+type FeedItem = {
+  id: string;
+  type: "diagnosis" | "scorecard";
+  goal: string;
+  insight: string;
+  score: number;
+  createdAt: string;
+};
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function IntelligenceFeed({ base }: { base: string }) {
+  const diagnoses = useQuery<{ id: number; goal: string; leverageScore: number; result: { strategicDiagnosis?: string }; createdAt: string }[]>({
+    queryKey: ["diagnosis-history"],
+    queryFn: () => fetch(`${base}/api/diagnosis/history`).then((r) => r.json()),
+  });
+
+  const scorecards = useQuery<{ id: number; goal: string; overallScore: number; result: { strategicSummary?: string }; createdAt: string }[]>({
+    queryKey: ["scorecard-history"],
+    queryFn: () => fetch(`${base}/api/scorecard/history`).then((r) => r.json()),
+  });
+
+  const items = useMemo<FeedItem[]>(() => {
+    const d: FeedItem[] = (diagnoses.data ?? []).slice(0, 6).map((x) => ({
+      id: `d-${x.id}`,
+      type: "diagnosis" as const,
+      goal: x.goal || "Strategic Diagnosis",
+      insight: x.result?.strategicDiagnosis?.slice(0, 140) ?? "",
+      score: x.leverageScore,
+      createdAt: x.createdAt,
+    }));
+    const s: FeedItem[] = (scorecards.data ?? []).slice(0, 6).map((x) => ({
+      id: `s-${x.id}`,
+      type: "scorecard" as const,
+      goal: x.goal || "Scorecard",
+      insight: x.result?.strategicSummary?.slice(0, 140) ?? "",
+      score: x.overallScore,
+      createdAt: x.createdAt,
+    }));
+    return [...d, ...s]
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 6);
+  }, [diagnoses.data, scorecards.data]);
+
+  const isLoading = diagnoses.isLoading && scorecards.isLoading;
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="label-caps">Recent Intelligence</div>
+        <div className="flex items-center gap-1.5">
+          <span className="status-pip" style={{ background: "var(--sos-emerald)" }} />
+          <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Live Feed</span>
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="animate-pulse p-4" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", height: 72 }} />
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <div className="p-8 text-center" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+          <span className="material-symbols-outlined" style={{ color: "var(--sos-text-dim)", fontSize: 24, display: "block", marginBottom: 8 }}>query_stats</span>
+          <div style={{ fontSize: 12, color: "var(--sos-text-muted)" }}>No intelligence yet. Run a Diagnosis or Scorecard to populate your feed.</div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {items.map((item) => {
+            const isDiag = item.type === "diagnosis";
+            const accentColor = isDiag ? "var(--sos-emerald)" : "var(--sos-blue)";
+            const href = isDiag ? "/diagnosis" : "/scorecard";
+            return (
+              <Link key={item.id} href={href}>
+                <div
+                  className="flex gap-4 px-5 py-4 cursor-pointer transition-all duration-100"
+                  style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", borderLeft: `2px solid ${accentColor}` }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sos-row-hover)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sos-surface)"; }}
+                >
+                  <div className="flex flex-col justify-center shrink-0" style={{ width: 72 }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: accentColor, textTransform: "uppercase", marginBottom: 4 }}>
+                      {isDiag ? "Diagnosis" : "Scorecard"}
+                    </div>
+                    <div style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 18, fontWeight: 700, color: accentColor, lineHeight: 1 }}>
+                      {item.score}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--sos-text)", marginBottom: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {item.goal}
+                    </div>
+                    {item.insight && (
+                      <div style={{ fontSize: 11, color: "var(--sos-text-dim)", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                        {item.insight}{item.insight.length >= 140 ? "…" : ""}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-end justify-between shrink-0">
+                    <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{timeAgo(item.createdAt)}</span>
+                    <span className="material-symbols-outlined" style={{ color: "var(--sos-text-dim)", fontSize: 13 }}>arrow_forward</span>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const summary = useGetSessionsSummary();
   const sessions = useListSessions();
@@ -977,6 +1100,9 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+
+        {/* Recent Intelligence Feed */}
+        <IntelligenceFeed base={base} />
 
         {/* Sessions table */}
         <div>
