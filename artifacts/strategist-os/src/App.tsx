@@ -1,9 +1,11 @@
-import { Switch, Route, Router as WouterRouter, Link, useLocation } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Switch, Route, Router as WouterRouter, Link, useLocation, Redirect } from "wouter";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ClerkProvider, SignIn, SignUp, useAuth, useClerk, useUser } from "@clerk/react";
+import { shadcn } from "@clerk/themes";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Diagnosis from "@/pages/diagnosis";
@@ -14,6 +16,7 @@ import Workflows from "@/pages/workflows";
 import Planner from "@/pages/planner";
 import Portfolio from "@/pages/portfolio";
 import Calendar from "@/pages/calendar";
+import Landing from "@/pages/landing";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,8 +27,20 @@ const queryClient = new QueryClient({
   },
 });
 
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string;
+
+const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
+
+function stripBase(path: string): string {
+  return basePath && path.startsWith(basePath)
+    ? path.slice(basePath.length) || "/"
+    : path;
+}
+
 const navItems = [
-  { path: "/", label: "Command Centre", icon: "grid_view" },
+  { path: "/dashboard", label: "Command Centre", icon: "grid_view" },
   { path: "/diagnosis", label: "Diagnosis", icon: "biotech" },
   { path: "/scorecard", label: "Scorecard", icon: "analytics" },
   { path: "/prompts", label: "Arsenal", icon: "bolt" },
@@ -38,10 +53,9 @@ const navItems = [
 
 function useWeeklyUnplanned(): number {
   const [count, setCount] = useState(0);
-  const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
 
   useEffect(() => {
-    fetch(`${base}/api/calendar/activity`)
+    fetch(`${basePath}/api/calendar/activity`)
       .then((r) => r.json())
       .then((data: { date: string; hasContent: boolean }[]) => {
         if (!Array.isArray(data)) return;
@@ -58,17 +72,46 @@ function useWeeklyUnplanned(): number {
         setCount(unplanned);
       })
       .catch(() => {});
-  }, [base]);
+  }, []);
 
   return count;
+}
+
+function ClerkQueryClientCacheInvalidator() {
+  const { addListener } = useClerk();
+  const qc = useQueryClient();
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    const unsubscribe = addListener(({ user }) => {
+      const userId = user?.id ?? null;
+      if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
+        qc.clear();
+      }
+      prevUserIdRef.current = userId;
+    });
+    return unsubscribe;
+  }, [addListener, qc]);
+
+  return null;
 }
 
 function Sidebar() {
   const [location, navigate] = useLocation();
   const { theme, setTheme } = useTheme();
+  const { signOut } = useClerk();
+  const { user, isLoaded } = useUser();
   const isDark = theme === "dark";
-  const base = import.meta.env.BASE_URL;
   const unplannedDays = useWeeklyUnplanned();
+
+  const displayName = isLoaded
+    ? user?.fullName ||
+      user?.primaryEmailAddress?.emailAddress?.split("@")[0] ||
+      "User"
+    : "";
+  const displayEmail = isLoaded
+    ? user?.primaryEmailAddress?.emailAddress || ""
+    : "";
 
   return (
     <aside
@@ -81,7 +124,7 @@ function Sidebar() {
         style={{ borderBottom: "1px solid var(--sos-border)", minHeight: 68 }}
       >
         <img
-          src={`${base}logos/${isDark ? "logo-s-light" : "logo-s-dark"}.svg`}
+          src={`${basePath}/logos/${isDark ? "logo-s-light" : "logo-s-dark"}.svg`}
           alt=""
           style={{ width: 32, height: 32, flexShrink: 0 }}
         />
@@ -178,26 +221,52 @@ function Sidebar() {
 
       {/* Footer */}
       <div className="px-5 py-4" style={{ borderTop: "1px solid var(--sos-border)" }}>
-        <div style={{ fontSize: 12, color: "var(--sos-text-secondary)", fontWeight: 600, marginBottom: 1 }}>Rayhan Patel</div>
-        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.03em", marginBottom: 14 }}>MSc Data Science · AI Strategist</div>
-        <button
-          onClick={() => setTheme(isDark ? "light" : "dark")}
-          style={{
-            display: "flex", alignItems: "center", gap: 8,
-            fontSize: 10, color: "var(--sos-text-dim)", background: "none",
-            border: "1px solid var(--sos-border)", padding: "6px 12px",
-            cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
-            fontFamily: "Space Grotesk, sans-serif", width: "100%",
-            transition: "border-color 0.15s",
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)"; }}
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
-            {isDark ? "light_mode" : "dark_mode"}
-          </span>
-          {isDark ? "Light mode" : "Dark mode"}
-        </button>
+        {isLoaded && user && (
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: "var(--sos-text-secondary)", fontWeight: 600, marginBottom: 2 }}>
+              {displayName}
+            </div>
+            <div style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.03em" }}>
+              {displayEmail}
+            </div>
+          </div>
+        )}
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => setTheme(isDark ? "light" : "dark")}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 10, color: "var(--sos-text-dim)", background: "none",
+              border: "1px solid var(--sos-border)", padding: "6px 12px",
+              cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
+              fontFamily: "Space Grotesk, sans-serif", width: "100%",
+              transition: "border-color 0.15s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)"; }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
+              {isDark ? "light_mode" : "dark_mode"}
+            </span>
+            {isDark ? "Light mode" : "Dark mode"}
+          </button>
+          <button
+            onClick={() => signOut({ redirectUrl: `${window.location.origin}${basePath}/` })}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 10, color: "var(--sos-text-dim)", background: "none",
+              border: "1px solid var(--sos-border)", padding: "6px 12px",
+              cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
+              fontFamily: "Space Grotesk, sans-serif", width: "100%",
+              transition: "border-color 0.15s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)"; }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>logout</span>
+            Sign out
+          </button>
+        </div>
       </div>
     </aside>
   );
@@ -214,36 +283,227 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Router() {
+function HomeRedirect() {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) return <Landing />;
+  if (isSignedIn) return <Redirect to="/dashboard" />;
+  return <Landing />;
+}
+
+function ProtectedPage({ component: Component }: { component: React.ComponentType }) {
+  const { isSignedIn, isLoaded } = useAuth();
+
+  if (!isLoaded) {
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "var(--sos-bg)",
+        }}
+      >
+        <span
+          style={{
+            fontSize: 10,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            color: "var(--sos-text-muted)",
+            fontFamily: "Space Grotesk, sans-serif",
+          }}
+        >
+          Loading...
+        </span>
+      </div>
+    );
+  }
+
+  if (!isSignedIn) return <Redirect to="/" />;
+
   return (
     <AppLayout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/diagnosis" component={Diagnosis} />
-        <Route path="/scorecard" component={Scorecard} />
-        <Route path="/prompts" component={Prompts} />
-        <Route path="/opportunity" component={Opportunity} />
-        <Route path="/workflows" component={Workflows} />
-        <Route path="/planner" component={Planner} />
-        <Route path="/calendar" component={Calendar} />
-        <Route path="/portfolio" component={Portfolio} />
-        <Route component={NotFound} />
-      </Switch>
+      <Component />
     </AppLayout>
+  );
+}
+
+function SignInPage() {
+  return (
+    <div
+      className="flex min-h-[100dvh] items-center justify-center px-4"
+      style={{ background: "var(--sos-bg)" }}
+    >
+      <SignIn
+        routing="path"
+        path={`${basePath}/sign-in`}
+        signUpUrl={`${basePath}/sign-up`}
+      />
+    </div>
+  );
+}
+
+function SignUpPage() {
+  return (
+    <div
+      className="flex min-h-[100dvh] items-center justify-center px-4"
+      style={{ background: "var(--sos-bg)" }}
+    >
+      <SignUp
+        routing="path"
+        path={`${basePath}/sign-up`}
+        signInUrl={`${basePath}/sign-in`}
+      />
+    </div>
+  );
+}
+
+const clerkAppearance = {
+  theme: shadcn,
+  cssLayerName: "clerk",
+  options: {
+    logoPlacement: "inside" as const,
+    logoLinkUrl: `${window.location.origin}${basePath}/`,
+    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+  },
+  variables: {
+    colorPrimary: "#72fe88",
+    colorForeground: "#ffffff",
+    colorMutedForeground: "rgba(255,255,255,0.42)",
+    colorDanger: "#ffb4ab",
+    colorBackground: "#1e1f23",
+    colorInput: "#292a2e",
+    colorInputForeground: "#ffffff",
+    colorNeutral: "#414148",
+    fontFamily: "Space Grotesk, sans-serif",
+    borderRadius: "2px",
+  },
+  elements: {
+    rootBox: "w-full flex justify-center",
+    cardBox: {
+      background: "#1e1f23",
+      border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: "4px",
+      width: "440px",
+      maxWidth: "100%",
+      overflow: "hidden",
+    },
+    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    headerTitle: {
+      color: "#ffffff",
+      fontFamily: "Space Grotesk, sans-serif",
+      fontWeight: "700",
+    },
+    headerSubtitle: { color: "rgba(255,255,255,0.42)" },
+    socialButtonsBlockButtonText: { color: "#ffffff" },
+    formFieldLabel: {
+      color: "rgba(255,255,255,0.65)",
+      fontSize: "10px",
+      letterSpacing: "0.06em",
+      textTransform: "uppercase" as const,
+    },
+    footerActionLink: { color: "#72fe88" },
+    footerActionText: { color: "rgba(255,255,255,0.42)" },
+    dividerText: { color: "rgba(255,255,255,0.28)" },
+    identityPreviewEditButton: { color: "#72fe88" },
+    formFieldSuccessText: { color: "#72fe88" },
+    alertText: { color: "#ffffff" },
+    logoBox: { display: "flex", justifyContent: "center", padding: "4px 0" },
+    logoImage: { height: "36px", width: "36px" },
+    socialButtonsBlockButton: {
+      borderColor: "rgba(255,255,255,0.1)",
+      background: "rgba(255,255,255,0.04)",
+      color: "#ffffff",
+    },
+    formButtonPrimary: {
+      background: "#72fe88",
+      color: "#0d0e12",
+      fontWeight: "700",
+      fontFamily: "Space Grotesk, sans-serif",
+      letterSpacing: "0.06em",
+      textTransform: "uppercase" as const,
+    },
+    formFieldInput: {
+      background: "#292a2e",
+      borderColor: "rgba(255,255,255,0.1)",
+      color: "#ffffff",
+    },
+    footerAction: { background: "transparent" },
+    dividerLine: { background: "rgba(255,255,255,0.08)" },
+    alert: {
+      background: "rgba(255,180,171,0.06)",
+      borderColor: "rgba(255,180,171,0.2)",
+    },
+    otpCodeFieldInput: {
+      background: "#292a2e",
+      borderColor: "rgba(255,255,255,0.1)",
+      color: "#ffffff",
+    },
+    formFieldRow: {},
+    main: {},
+  },
+};
+
+function ClerkProviderWithRoutes() {
+  const [, setLocation] = useLocation();
+
+  return (
+    <ClerkProvider
+      publishableKey={clerkPubKey!}
+      proxyUrl={clerkProxyUrl}
+      appearance={clerkAppearance}
+      signInUrl={`${basePath}/sign-in`}
+      signUpUrl={`${basePath}/sign-up`}
+      localization={{
+        signIn: {
+          start: {
+            title: "Welcome back",
+            subtitle: "Sign in to StrategistOS",
+          },
+        },
+        signUp: {
+          start: {
+            title: "Create your account",
+            subtitle: "Start building your strategy system",
+          },
+        },
+      }}
+      routerPush={(to) => setLocation(stripBase(to))}
+      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+    >
+      <QueryClientProvider client={queryClient}>
+        <ClerkQueryClientCacheInvalidator />
+        <TooltipProvider>
+          <Switch>
+            <Route path="/" component={HomeRedirect} />
+            <Route path="/sign-in/*?" component={SignInPage} />
+            <Route path="/sign-up/*?" component={SignUpPage} />
+            <Route path="/dashboard" component={() => <ProtectedPage component={Dashboard} />} />
+            <Route path="/diagnosis" component={() => <ProtectedPage component={Diagnosis} />} />
+            <Route path="/scorecard" component={() => <ProtectedPage component={Scorecard} />} />
+            <Route path="/prompts" component={() => <ProtectedPage component={Prompts} />} />
+            <Route path="/opportunity" component={() => <ProtectedPage component={Opportunity} />} />
+            <Route path="/workflows" component={() => <ProtectedPage component={Workflows} />} />
+            <Route path="/planner" component={() => <ProtectedPage component={Planner} />} />
+            <Route path="/calendar" component={() => <ProtectedPage component={Calendar} />} />
+            <Route path="/portfolio" component={() => <ProtectedPage component={Portfolio} />} />
+            <Route component={NotFound} />
+          </Switch>
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ClerkProvider>
   );
 }
 
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="strategist-os-theme">
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <WouterRouter base={basePath}>
+        <ClerkProviderWithRoutes />
+      </WouterRouter>
     </ThemeProvider>
   );
 }

@@ -16,14 +16,25 @@ A premium full-stack dark-mode SaaS web application built for Rayhan Patel (MSc 
 ### Tech stack
 - **Frontend**: React 18, Vite, wouter, TanStack Query, shadcn/ui, recharts, framer-motion, Tailwind v4
 - **Backend**: Express 5, Drizzle ORM, node-postgres, pino logging
+- **Auth**: Clerk (Replit-managed) — `@clerk/react` on frontend, `@clerk/express` on server
 - **Database**: PostgreSQL (Replit-provisioned, via `DATABASE_URL`)
 - **AI**: Mock AI with fallback to Anthropic Claude (`ANTHROPIC_API_KEY`) or OpenAI GPT-4o (`OPENAI_API_KEY`)
+
+## Authentication (Clerk)
+- Replit-managed Clerk tenant provisioned via `setupClerkWhitelabelAuth()`
+- `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `VITE_CLERK_PUBLISHABLE_KEY` auto-set as secrets
+- Server: `clerkMiddleware` + `clerkProxyMiddleware` in `app.ts`; `requireAuth` in `routes/index.ts` (protects all routes except `/api/healthz`)
+- Client: `ClerkProvider` wraps the entire app in `App.tsx`; `useAuth` guards every app route
+- Routes: `/` = landing/redirect, `/sign-in/*?` = Clerk SignIn, `/sign-up/*?` = Clerk SignUp, `/dashboard` = Command Centre (protected)
+- Custom dark appearance: Space Grotesk font, emerald `#72fe88` primary, `#1e1f23` card bg
+- Proxy path: `/api/__clerk` (production-only; dev uses standard Clerk CDN)
 
 ## Feature Modules
 
 | Route | Module | Description |
 |-------|---------|-------------|
-| `/` | Command Centre | Dashboard with session stats, quick actions, recent sessions |
+| `/` | Landing / redirect | Public landing page; auto-redirects signed-in users to `/dashboard` |
+| `/dashboard` | Command Centre | Dashboard with session stats, quick actions, recent sessions |
 | `/diagnosis` | Strategic Diagnosis Engine | 7-field form → AI leverage analysis + ROI actions |
 | `/scorecard` | Optimisation Scorecard | 8-dimension scoring with RadarChart visualisation |
 | `/prompts` | Prompt Arsenal | 9-category prompt generator + save/manage library |
@@ -50,7 +61,10 @@ A premium full-stack dark-mode SaaS web application built for Rayhan Patel (MSc 
 - `GET/PUT /portfolio`
 
 ## Key Files
-- `artifacts/strategist-os/src/App.tsx` — router, sidebar layout, ThemeProvider
+- `artifacts/strategist-os/src/App.tsx` — router, Clerk auth, sidebar layout, ThemeProvider
+- `artifacts/strategist-os/src/pages/landing.tsx` — public landing page
+- `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts` — Clerk proxy (prod only)
+- `artifacts/api-server/src/middlewares/requireAuth.ts` — `getAuth` middleware for protected routes
 - `artifacts/strategist-os/src/index.css` — dark theme (midnight navy palette, Inter font)
 - `artifacts/api-server/src/lib/mock-ai.ts` — AI caller with rich mock fallbacks
 - `artifacts/api-server/src/lib/ai-prompts.ts` — prompt builders for each module
