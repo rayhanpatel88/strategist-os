@@ -307,12 +307,15 @@ export default function Calendar() {
   const [newTask, setNewTask] = useState(blankTask());
   const [reviewOpen, setReviewOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<"plan" | "schedule" | "tasks">("schedule");
+  type MilestoneRecord = { milestone: number; achievedAt: string };
   type StreakData = {
     currentStreak: number;
     longestStreak: number;
     frozenDates: string[];
     freezesUsedThisMonth: number;
     freezesAllowed: number;
+    newMilestones: number[];
+    milestones: MilestoneRecord[];
   };
   const [streak, setStreak] = useState<StreakData | null>(null);
   const [freezePromptDate, setFreezePromptDate] = useState<string | null>(null);
@@ -320,6 +323,7 @@ export default function Calendar() {
   const [freezing, setFreezing] = useState(false);
   const [showFreezeHistory, setShowFreezeHistory] = useState(false);
   const [unfreezingDate, setUnfreezingDate] = useState<string | null>(null);
+  const [showMilestones, setShowMilestones] = useState(false);
   const [recurringTemplates, setRecurringTemplates] = useState<RecurringTpl[]>([]);
   const [showSaveRecurring, setShowSaveRecurring] = useState(false);
   const [recurringForm, setRecurringForm] = useState<{ name: string; days: number[] }>({ name: "", days: [] });
@@ -337,12 +341,34 @@ export default function Calendar() {
   const { toast } = useToast();
   const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
 
+  const MILESTONE_LABELS: Record<number, { label: string; icon: string }> = {
+    3:   { label: "First 3 days",   icon: "🌱" },
+    7:   { label: "One week",        icon: "🔥" },
+    14:  { label: "Two weeks",       icon: "⚡" },
+    21:  { label: "Three weeks",     icon: "💪" },
+    30:  { label: "One month",       icon: "🏆" },
+    60:  { label: "Two months",      icon: "🥇" },
+    90:  { label: "Three months",    icon: "💎" },
+    100: { label: "Century",         icon: "💯" },
+    365: { label: "One full year",   icon: "👑" },
+  };
+
   const fetchStreak = useCallback(() => {
     fetch(`${base}/api/calendar/streak`)
       .then((r) => r.json())
       .then((data) => {
         setStreak(data);
-        // Auto-detect freeze opportunity: streak is 0, freezes remain, yesterday has no content
+        // Show a toast for each newly unlocked milestone
+        if (Array.isArray(data.newMilestones) && data.newMilestones.length > 0) {
+          data.newMilestones.forEach((m: number) => {
+            const info = MILESTONE_LABELS[m] ?? { label: `${m}-day streak`, icon: "🏅" };
+            toast({
+              title: `${info.icon} Milestone unlocked — ${info.label}`,
+              description: `${m} consecutive days planned. Keep it going.`,
+            });
+          });
+        }
+        // Auto-detect freeze opportunity: streak is 0, freezes remain, yesterday unplanned
         if (
           data.currentStreak === 0 &&
           data.freezesUsedThisMonth < data.freezesAllowed
@@ -358,7 +384,8 @@ export default function Calendar() {
         }
       })
       .catch(() => {});
-  }, [base]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [base, toast]);
 
   const applyFreeze = useCallback((date: string) => {
     setFreezing(true);

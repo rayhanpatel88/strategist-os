@@ -15,3 +15,4 @@ export * from "./weekly-reflections";
 export * from "./goals";
 export * from "./notes";
 export * from "./streak-freezes";
+export * from "./streak-milestones";

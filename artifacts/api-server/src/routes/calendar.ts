@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { calendarPlansTable, recurringTemplatesTable, weeklyReflectionsTable, streakFreezesTable, type CalendarPlanData } from "@workspace/db";
+import { calendarPlansTable, recurringTemplatesTable, weeklyReflectionsTable, streakFreezesTable, streakMilestonesTable, type CalendarPlanData } from "@workspace/db";
 import { asc, eq, and, inArray, gte } from "drizzle-orm";
 import { z } from "zod";
 import { generateDailyPlan } from "../lib/mock-ai.js";
@@ -97,6 +97,7 @@ router.get("/calendar/week-review", async (req, res) => {
 });
 
 const FREEZES_PER_MONTH = 2;
+const MILESTONE_THRESHOLDS = [3, 7, 14, 21, 30, 60, 90, 100, 365];
 
 function monthStart(d: Date): string {
   return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-01`;
@@ -105,7 +106,7 @@ function monthStart(d: Date): string {
 router.get("/calendar/streak", async (req, res) => {
   const userId = (req as any).userId as string;
 
-  const [planRows, freezeRows] = await Promise.all([
+  const [planRows, freezeRows, existingMilestones] = await Promise.all([
     db.select({ date: calendarPlansTable.date, data: calendarPlansTable.data })
       .from(calendarPlansTable)
       .where(eq(calendarPlansTable.userId, userId))
@@ -113,6 +114,10 @@ router.get("/calendar/streak", async (req, res) => {
     db.select({ date: streakFreezesTable.date, createdAt: streakFreezesTable.createdAt })
       .from(streakFreezesTable)
       .where(eq(streakFreezesTable.userId, userId)),
+    db.select({ milestone: streakMilestonesTable.milestone, achievedAt: streakMilestonesTable.achievedAt })
+      .from(streakMilestonesTable)
+      .where(eq(streakMilestonesTable.userId, userId))
+      .orderBy(asc(streakMilestonesTable.milestone)),
   ]);
 
   const hasContent = (d: CalendarPlanData) =>
@@ -122,8 +127,6 @@ router.get("/calendar/streak", async (req, res) => {
     planRows.filter((row) => hasContent(row.data as CalendarPlanData)).map((row) => row.date)
   );
   const frozenDates = new Set(freezeRows.map((r) => r.date));
-
-  // Effective active dates = planned OR frozen
   const effectiveDates = new Set([...plannedDates, ...frozenDates]);
 
   // Current streak: walk backwards from today (skip today if not yet planned)
@@ -169,12 +172,34 @@ router.get("/calendar/streak", async (req, res) => {
     return m === nowMonthStart;
   }).length;
 
+  // Milestone detection: find thresholds crossed that aren't yet recorded
+  const existingSet = new Set(existingMilestones.map((m) => m.milestone));
+  const newThresholds = MILESTONE_THRESHOLDS.filter(
+    (t) => currentStreak >= t && !existingSet.has(t)
+  );
+  if (newThresholds.length > 0) {
+    await db.insert(streakMilestonesTable)
+      .values(newThresholds.map((t) => ({ userId, milestone: t })))
+      .onConflictDoNothing();
+  }
+
+  // Return full milestone list (existing + newly added)
+  const allMilestones = [
+    ...existingMilestones,
+    ...newThresholds.map((t) => ({ milestone: t, achievedAt: new Date() })),
+  ].sort((a, b) => a.milestone - b.milestone);
+
   res.json({
     currentStreak,
     longestStreak,
     frozenDates: [...frozenDates],
     freezesUsedThisMonth: freezesThisMonth,
     freezesAllowed: FREEZES_PER_MONTH,
+    newMilestones: newThresholds,
+    milestones: allMilestones.map((m) => ({
+      milestone: m.milestone,
+      achievedAt: m.achievedAt instanceof Date ? m.achievedAt.toISOString() : m.achievedAt,
+    })),
   });
 });
 
