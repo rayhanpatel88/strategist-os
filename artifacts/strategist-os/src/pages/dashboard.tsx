@@ -980,7 +980,7 @@ export default function Dashboard() {
       )}
       {/* Page header */}
       <div
-        className="flex items-center justify-between px-8 py-4 shrink-0"
+        className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0"
         style={{ borderBottom: "1px solid var(--sos-border)" }}
       >
         <div className="flex items-center gap-4">
@@ -996,9 +996,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-7">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7">
         {/* Telemetry grid */}
-        <div className="grid grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           {summary.isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="p-5 animate-pulse" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", height: 110 }} />
@@ -1056,7 +1056,7 @@ export default function Dashboard() {
         )}
 
         {/* Leverage Score Trend + Scorecard Profile — side by side */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="mb-0">
             <LeverageScoreTrend base={base} />
           </div>
@@ -1071,7 +1071,7 @@ export default function Dashboard() {
         {/* Modules */}
         <div className="mb-8">
           <div className="label-caps mb-4">Modules</div>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { href: "/diagnosis", label: "Strategic Diagnosis", desc: "Input your context. Get a structured breakdown of bottlenecks, priorities, and ranked next steps.", icon: "biotech" },
               { href: "/scorecard", label: "Optimisation Scorecard", desc: "Assess your position across 8 dimensions. Get a ranked improvement roadmap with timelines.", icon: "analytics" },

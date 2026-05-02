@@ -175,7 +175,7 @@ export default function Planner() {
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+      <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
           Execution Planner
         </span>
@@ -209,7 +209,7 @@ export default function Planner() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-7">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7">
         {tab === "create" && (
           <>
             {step === "form" ? (

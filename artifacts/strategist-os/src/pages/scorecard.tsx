@@ -53,7 +53,7 @@ function HistorySidebar({ history, activeId, onSelect, onDelete, onNew }: {
   onSelect: (e: HistoryEntry) => void; onDelete: (id: number) => void; onNew: () => void;
 }) {
   return (
-    <aside className="flex flex-col shrink-0 h-full overflow-hidden"
+    <aside className="sos-hist-panel flex flex-col shrink-0 h-full overflow-hidden"
       style={{ width: 264, borderRight: "1px solid var(--sos-border)", background: "var(--sos-sidebar-bg)" }}>
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>History</div>
@@ -136,7 +136,7 @@ function ResultPanel({ result, onNew }: { result: ScorecardResult; onNew: () => 
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+      <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <div>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>Optimisation Scorecard</span>
           <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Assessment complete</div>
@@ -144,7 +144,7 @@ function ResultPanel({ result, onNew }: { result: ScorecardResult; onNew: () => 
         <HudBtn variant="ghost" onClick={onNew} data-testid="button-new-scorecard">New Assessment</HudBtn>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-7 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="p-6 flex flex-col items-center justify-center" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 20 }}>Overall Score</div>
@@ -254,7 +254,7 @@ function FormPanel({ onResult }: { onResult: (r: ScorecardResult) => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+      <div className="px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>Optimisation Scorecard</span>
         <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Score your position across 8 dimensions. Get a ranked improvement roadmap with timelines.</div>
       </div>
@@ -272,7 +272,7 @@ function FormPanel({ onResult }: { onResult: (r: ScorecardResult) => void }) {
           ]}
         />
       ) : (
-      <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 max-w-2xl space-y-6">
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Goal *</div>
           <input value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })}

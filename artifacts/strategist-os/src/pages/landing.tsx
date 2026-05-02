@@ -101,7 +101,7 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-20">
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:py-20">
         <div className="flex flex-col items-center text-center" style={{ maxWidth: 560 }}>
           <div
             className="flex items-center gap-2 mb-8"
@@ -213,7 +213,7 @@ export default function Landing() {
 
         {/* Feature grid */}
         <div
-          className="grid grid-cols-3 gap-3 mt-20"
+          className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-16 sm:mt-20"
           style={{ maxWidth: 640, width: "100%" }}
         >
           {features.map((f) => (

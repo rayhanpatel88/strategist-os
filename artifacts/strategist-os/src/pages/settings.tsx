@@ -17,7 +17,7 @@ type UserProfile = {
 function PageHeader({ title, sub }: { title: string; sub?: string }) {
   return (
     <div
-      className="flex items-center justify-between px-8 py-4 shrink-0"
+      className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0"
       style={{ borderBottom: "1px solid var(--sos-border)" }}
     >
       <div>
@@ -150,7 +150,7 @@ export default function Settings() {
     <div className="flex flex-col h-full">
       <PageHeader title="Account Settings" sub="Manage your profile and Diagnosis defaults" />
 
-      <div className="flex-1 overflow-y-auto px-8 py-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-6">
         <div style={{ maxWidth: 600 }} className="space-y-10">
 
           {/* Account Info (read-only from Clerk) */}

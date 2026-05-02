@@ -403,3 +403,63 @@
   .no-default-hover-elevate {}
   .no-default-active-elevate {}
 }
+
+/* ===================== Mobile Responsive ===================== */
+@media (max-width: 767px) {
+  /* Hide history/context sidebars on feature pages — form takes full width */
+  .sos-hist-panel {
+    display: none !important;
+  }
+
+  /* Feature page split layouts — ensure full height scrollable on mobile */
+  .sos-page-split {
+    height: auto !important;
+    min-height: calc(100dvh - 52px) !important;
+  }
+
+  /* Content area padding */
+  .sos-page-content {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 1.25rem !important;
+  }
+
+  .sos-page-header {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Landing hero text scaling */
+  .sos-hero-title {
+    font-size: clamp(2.2rem, 9vw, 4rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  /* Settings / single-column pages */
+  .sos-settings-content {
+    max-width: 100% !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Command palette full-width on mobile */
+  .sos-cmd-palette {
+    max-width: calc(100vw - 2rem) !important;
+    margin: 0 1rem !important;
+  }
+
+  /* Table horizontal scroll */
+  .sos-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Heatmap mobile */
+  .sos-heatmap-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+}

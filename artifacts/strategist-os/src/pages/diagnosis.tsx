@@ -163,7 +163,7 @@ function HistorySidebar({
   onSelect: (e: HistoryEntry) => void; onDelete: (id: number) => void; onNew: () => void;
 }) {
   return (
-    <aside className="flex flex-col shrink-0 h-full overflow-hidden"
+    <aside className="sos-hist-panel flex flex-col shrink-0 h-full overflow-hidden"
       style={{ width: 264, borderRight: "1px solid var(--sos-border)", background: "var(--sos-sidebar-bg)" }}>
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>History</div>
@@ -235,7 +235,7 @@ function ResultPanel({ result, goal, onNew }: { result: DiagnosisResult; goal: s
   const scoreColor = result.leverageScore >= 75 ? "var(--sos-emerald)" : result.leverageScore >= 50 ? "var(--sos-blue)" : "var(--sos-error)";
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+      <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <div>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>Strategic Diagnosis</span>
           <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Analysis complete</div>
@@ -246,7 +246,7 @@ function ResultPanel({ result, goal, onNew }: { result: DiagnosisResult; goal: s
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-7 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 space-y-4">
         <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
           <div className="flex items-end justify-between mb-4">
             <div>
@@ -376,7 +376,7 @@ function FormPanel({ onResult }: { onResult: (r: DiagnosisResult, goal: string) 
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+      <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <div>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>Strategic Diagnosis</span>
           <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Describe your position. Receive a structured analysis with ranked priorities and a clear next step.</div>
@@ -397,7 +397,7 @@ function FormPanel({ onResult }: { onResult: (r: DiagnosisResult, goal: string) 
         />
       ) : (
       <div className="flex-1 overflow-y-auto">
-        <div className="px-8 py-7 max-w-2xl space-y-7">
+        <div className="px-4 md:px-8 py-5 md:py-7 max-w-2xl space-y-7">
           <div className="grid grid-cols-2 gap-6">
             <FieldGroup label="Current Goal *">
               <input id="goal" value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })}

@@ -93,7 +93,7 @@ export default function Prompts() {
 
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
-      <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+      <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
           Prompt Arsenal
         </span>
@@ -123,7 +123,7 @@ export default function Prompts() {
           </div>
 
           {/* Form + output */}
-          <div className="flex-1 overflow-y-auto px-8 py-7 space-y-6">
+          <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 space-y-6">
             <div className="space-y-5 max-w-2xl">
               <div>
                 <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Your Context</div>
@@ -179,7 +179,7 @@ export default function Prompts() {
           </div>
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto px-8 py-7">
+        <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7">
           {savedPrompts.isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="mb-3 p-5 animate-pulse" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", height: 90 }} />

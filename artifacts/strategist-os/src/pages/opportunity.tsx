@@ -159,7 +159,7 @@ function HistorySidebar({
 function ResultPanel({ result, onNew }: { result: OpportunityResult; onNew: () => void }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+      <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <div>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>Opportunity Stack</span>
           <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Analysis complete</div>
@@ -169,7 +169,7 @@ function ResultPanel({ result, onNew }: { result: OpportunityResult; onNew: () =
         </HudBtn>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-8 py-7 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           {[
             { label: "Positioning Angle", value: result.positioningAngle, highlight: true },
@@ -235,7 +235,7 @@ function FormPanel({ onResult }: { onResult: (r: OpportunityResult) => void }) {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-8 py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+      <div className="px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
         <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>Opportunity Stack</span>
         <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>Map your assets against demand. Get a positioning angle and a 30-day execution plan.</div>
       </div>
@@ -253,7 +253,7 @@ function FormPanel({ onResult }: { onResult: (r: OpportunityResult) => void }) {
           ]}
         />
       ) : (
-      <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 max-w-2xl space-y-6">
         <div>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Skills *</div>
           <textarea value={form.skills} onChange={(e) => setForm({ ...form, skills: e.target.value })} placeholder="Technical and strategic skills. Be specific: Python, LLM deployment, financial modelling, stakeholder management." rows={2} data-testid="input-skills" style={textareaCls} />

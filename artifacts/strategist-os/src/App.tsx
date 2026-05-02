@@ -100,7 +100,7 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function Sidebar({ onSearchOpen }: { onSearchOpen: () => void }) {
+function Sidebar({ onSearchOpen, onClose }: { onSearchOpen: () => void; onClose?: () => void }) {
   const [location, navigate] = useLocation();
   const { theme, setTheme } = useTheme();
   const { signOut } = useClerk();
@@ -150,7 +150,7 @@ function Sidebar({ onSearchOpen }: { onSearchOpen: () => void }) {
 
       {/* Search trigger */}
       <button
-        onClick={onSearchOpen}
+        onClick={() => { onClose?.(); onSearchOpen(); }}
         className="flex items-center gap-3 w-full transition-all duration-100"
         style={{
           padding: "9px 20px",
@@ -173,7 +173,7 @@ function Sidebar({ onSearchOpen }: { onSearchOpen: () => void }) {
         {navItems.map((item) => {
           const isActive = location === item.path;
           return (
-            <Link key={item.path} href={item.path}>
+            <Link key={item.path} href={item.path} onClick={onClose}>
               <div
                 className="flex items-center gap-3 cursor-pointer transition-all duration-100"
                 style={{
@@ -296,8 +296,27 @@ function Sidebar({ onSearchOpen }: { onSearchOpen: () => void }) {
   );
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  return isMobile;
+}
+
 function AppLayout({ children }: { children: React.ReactNode }) {
   const [showSearch, setShowSearch] = useState(false);
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [location] = useLocation();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
+  useEffect(() => {
+    if (isMobile) setSidebarOpen(false);
+  }, [location, isMobile]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -312,10 +331,69 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar onSearchOpen={() => setShowSearch(true)} />
-      <main className="flex-1 overflow-y-auto">
+      {/* Mobile top bar */}
+      {isMobile && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 40, height: 52,
+          background: "var(--sos-sidebar-bg)", borderBottom: "1px solid var(--sos-border)",
+          display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 16px",
+          flexShrink: 0,
+        }}>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", color: "var(--sos-text-secondary)" }}
+              aria-label="Open menu"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 22 }}>menu</span>
+            </button>
+            <img
+              src={isDark ? `${basePath}/logos/logo-s-light.png` : `${basePath}/logos/logo-s-dark.svg`}
+              alt="" style={{ width: 26, height: 26, objectFit: "contain" }}
+            />
+            <span style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 13, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.01em" }}>
+              StrategistOS
+            </span>
+          </div>
+          <button
+            onClick={() => setShowSearch(true)}
+            style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", alignItems: "center", color: "var(--sos-text-secondary)" }}
+            aria-label="Search"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>search</span>
+          </button>
+        </div>
+      )}
+
+      {/* Overlay backdrop for mobile sidebar */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 45 }}
+        />
+      )}
+
+      {/* Sidebar — fixed drawer on mobile, static on desktop */}
+      <div style={isMobile ? {
+        position: "fixed", top: 0, bottom: 0, left: 0, zIndex: 50,
+        transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 0.25s ease",
+        overflowY: "auto",
+      } : { display: "flex", flexShrink: 0 }}>
+        <Sidebar
+          onSearchOpen={() => { setSidebarOpen(false); setShowSearch(true); }}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
+
+      {/* Main content */}
+      <main
+        className="flex-1 overflow-y-auto"
+        style={isMobile ? { paddingTop: 52, width: "100%", minWidth: 0 } : {}}
+      >
         {children}
       </main>
+
       {showSearch && <CommandPalette onClose={() => setShowSearch(false)} />}
     </div>
   );

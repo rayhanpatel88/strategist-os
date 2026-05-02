@@ -65,8 +65,9 @@ export default function CommandPalette({ onClose }: { onClose: () => void }) {
     >
       <div
         style={{
-          width: "100%",
+          width: "calc(100% - 2rem)",
           maxWidth: 580,
+          margin: "0 1rem",
           background: "var(--sos-surface)",
           border: "1px solid var(--sos-border)",
           boxShadow: "0 24px 64px rgba(0,0,0,0.5)",

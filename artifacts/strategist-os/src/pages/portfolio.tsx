@@ -22,7 +22,7 @@ export default function BookMeeting() {
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       {/* Header */}
       <div
-        className="flex items-center justify-between px-8 py-4 shrink-0"
+        className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0"
         style={{ borderBottom: "1px solid var(--sos-border)" }}
       >
         <div>
