@@ -256,23 +256,104 @@ function buildHeatmapGrid(): string[][] {
   return rows;
 }
 
+function scoreColor(s: number | null): string {
+  if (s === null) return "var(--sos-blue-tint)";
+  if (s >= 9) return "var(--sos-emerald)";
+  if (s >= 7) return "var(--sos-blue)";
+  if (s >= 5) return "#f59e0b";
+  return "var(--sos-error)";
+}
+
 function cellColor(date: string, todayStr: string, map: Map<string, ActivityEntry>) {
   if (date > todayStr) return "transparent";
   const entry = map.get(date);
   if (!entry?.hasContent) return "var(--sos-track-bg)";
-  const s = entry.score;
-  if (s === null) return "var(--sos-blue-tint)";
-  if (s >= 8) return "var(--sos-emerald)";
-  if (s >= 6) return "var(--sos-blue)";
-  if (s >= 4) return "#f59e0b";
-  return "var(--sos-error)";
+  return scoreColor(entry.score);
 }
 
-function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; loading: boolean }) {
+type Popover = { date: string; x: number; y: number; currentScore: number | null };
+
+function ScorePopover({ popover, saving, onScore, onClose }: {
+  popover: Popover;
+  saving: boolean;
+  onScore: (date: string, score: number) => void;
+  onClose: () => void;
+}) {
+  const label = new Date(popover.date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 90 }} />
+      <div
+        style={{
+          position: "fixed",
+          left: popover.x,
+          top: popover.y - 10,
+          transform: "translate(-50%, -100%)",
+          zIndex: 100,
+          background: "var(--sos-surface)",
+          border: "1px solid var(--sos-border)",
+          padding: "12px 14px",
+          width: 240,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+          <div>
+            <div style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)" }}>Rate this day</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif", marginTop: 2 }}>{label}</div>
+          </div>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--sos-text-muted)", fontSize: 16, lineHeight: 1, padding: 0 }}>×</button>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(10, 1fr)", gap: 3 }}>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => {
+            const isCurrent = popover.currentScore === n;
+            const bg = n >= 9 ? "var(--sos-emerald)" : n >= 7 ? "var(--sos-blue)" : n >= 5 ? "#f59e0b" : "var(--sos-error)";
+            return (
+              <button
+                key={n}
+                disabled={saving}
+                onClick={() => onScore(popover.date, n)}
+                style={{
+                  height: 22,
+                  background: isCurrent ? bg : "var(--sos-bg)",
+                  border: isCurrent ? `2px solid ${bg}` : "1px solid var(--sos-border)",
+                  borderRadius: 2,
+                  fontSize: 9,
+                  fontWeight: 700,
+                  color: isCurrent ? "#fff" : "var(--sos-text-dim)",
+                  cursor: saving ? "not-allowed" : "pointer",
+                  fontFamily: "Space Grotesk, sans-serif",
+                  transition: "all 0.1s",
+                  padding: 0,
+                }}
+                onMouseEnter={(e) => { if (!isCurrent) { (e.currentTarget as HTMLElement).style.background = bg; (e.currentTarget as HTMLElement).style.color = "#fff"; } }}
+                onMouseLeave={(e) => { if (!isCurrent) { (e.currentTarget as HTMLElement).style.background = "var(--sos-bg)"; (e.currentTarget as HTMLElement).style.color = "var(--sos-text-dim)"; } }}
+              >
+                {n}
+              </button>
+            );
+          })}
+        </div>
+        {saving && (
+          <div style={{ fontSize: 9, color: "var(--sos-text-muted)", marginTop: 8, textAlign: "center", letterSpacing: "0.06em" }}>Saving...</div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function ExecutionHeatmap({ activity, loading, base, onScoreUpdate }: {
+  activity: ActivityEntry[];
+  loading: boolean;
+  base: string;
+  onScoreUpdate: (date: string, score: number) => void;
+}) {
   const grid = buildHeatmapGrid();
   const todayStr = new Date().toISOString().split("T")[0];
   const safeActivity = Array.isArray(activity) ? activity : [];
   const map = new Map(safeActivity.map((a) => [a.date, a]));
+  const [popover, setPopover] = useState<Popover | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const allDates = grid.flat();
   const pastDates = allDates.filter((d) => d <= todayStr);
@@ -286,12 +367,39 @@ function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; lo
     const ds = d.toISOString().split("T")[0];
     if (map.get(ds)?.hasContent) {
       streak++;
-    } else if (i > 0) {
-      break;
     } else {
-      break;
+      if (i > 0) break;
+      else break;
     }
   }
+
+  const handleCellClick = (e: React.MouseEvent<HTMLDivElement>, date: string) => {
+    if (date > todayStr) return;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const entry = map.get(date);
+    setPopover({ date, x: rect.left + rect.width / 2, y: rect.top, currentScore: entry?.score ?? null });
+  };
+
+  const handleScore = async (date: string, score: number) => {
+    setSaving(true);
+    onScoreUpdate(date, score);
+    try {
+      const r = await fetch(`${base}/api/calendar/${date}`);
+      const json = await r.json();
+      const existing = json.data ?? {};
+      const updated = { ...existing, review: { ...(existing.review ?? {}), score } };
+      await fetch(`${base}/api/calendar/${date}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: updated }),
+      });
+    } catch {
+      // silent — optimistic update already applied
+    } finally {
+      setSaving(false);
+      setPopover(null);
+    }
+  };
 
   return (
     <div className="mb-8">
@@ -309,7 +417,7 @@ function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; lo
         </div>
       </div>
 
-      <div className="p-5" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+      <div className="p-5" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", position: "relative" }}>
         {loading ? (
           <div style={{ height: 100, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <div style={{ fontSize: 11, color: "var(--sos-text-muted)" }}>Loading activity...</div>
@@ -330,18 +438,34 @@ function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; lo
                   const entry = map.get(date);
                   const isToday = date === todayStr;
                   const isFuture = date > todayStr;
+                  const isPast = !isFuture;
                   const bg = cellColor(date, todayStr, map);
+                  const isActive = popover?.date === date;
                   return (
                     <div
                       key={date}
-                      title={`${date}${entry?.hasContent ? (entry.score !== null ? ` · Score ${entry.score}/10` : " · Planned") : ""}`}
+                      onClick={isPast ? (e) => handleCellClick(e, date) : undefined}
+                      title={isFuture ? "" : entry?.hasContent
+                        ? (entry.score !== null ? `${date} · Score ${entry.score}/10 — click to update` : `${date} · Planned — click to rate`)
+                        : `${date} — click to rate`}
                       style={{
                         height: 20,
                         background: bg,
-                        border: isToday ? "1px solid var(--sos-blue)" : "1px solid transparent",
+                        border: isActive
+                          ? "2px solid var(--sos-text)"
+                          : isToday
+                          ? "1px solid var(--sos-blue)"
+                          : "1px solid transparent",
                         borderRadius: 3,
                         opacity: isFuture ? 0 : 1,
-                        cursor: entry?.hasContent ? "default" : "default",
+                        cursor: isPast ? "pointer" : "default",
+                        transition: "opacity 0.1s, border-color 0.1s",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (isPast) (e.currentTarget as HTMLElement).style.opacity = "0.8";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (isPast) (e.currentTarget as HTMLElement).style.opacity = "1";
                       }}
                     />
                   );
@@ -349,8 +473,13 @@ function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; lo
               </div>
             ))}
 
+            {/* Hint */}
+            <div style={{ fontSize: 9, color: "var(--sos-text-subtle)", letterSpacing: "0.04em", marginTop: 4, marginBottom: 4 }}>
+              Click any past day to add or update its score.
+            </div>
+
             {/* Legend + link */}
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1.5">
                   <div style={{ width: 10, height: 10, background: "var(--sos-track-bg)", borderRadius: 2 }} />
@@ -362,11 +491,11 @@ function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; lo
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div style={{ width: 10, height: 10, background: "var(--sos-blue)", borderRadius: 2 }} />
-                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Score 6-7</span>
+                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Score 7-8</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div style={{ width: 10, height: 10, background: "var(--sos-emerald)", borderRadius: 2 }} />
-                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Score 8+</span>
+                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Score 9-10</span>
                 </div>
               </div>
               <Link href="/calendar">
@@ -378,6 +507,15 @@ function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; lo
           </>
         )}
       </div>
+
+      {popover && (
+        <ScorePopover
+          popover={popover}
+          saving={saving}
+          onScore={handleScore}
+          onClose={() => setPopover(null)}
+        />
+      )}
     </div>
   );
 }
@@ -414,6 +552,14 @@ export default function Dashboard() {
   const handleWeeklyReviewClose = () => {
     localStorage.setItem(`sos_weekly_review_${getThisMondayStr()}`, "1");
     setShowWeeklyReview(false);
+  };
+
+  const handleScoreUpdate = (date: string, score: number) => {
+    setActivity((prev) =>
+      prev.some((a) => a.date === date)
+        ? prev.map((a) => a.date === date ? { ...a, score, hasContent: true } : a)
+        : [...prev, { date, score, hasContent: true }]
+    );
   };
 
   const handleDelete = (id: number) => {
@@ -510,7 +656,7 @@ export default function Dashboard() {
         )}
 
         {/* Execution Heatmap */}
-        <ExecutionHeatmap activity={activity} loading={activityLoading} />
+        <ExecutionHeatmap activity={activity} loading={activityLoading} base={base} onScoreUpdate={handleScoreUpdate} />
 
         {/* Modules */}
         <div className="mb-8">

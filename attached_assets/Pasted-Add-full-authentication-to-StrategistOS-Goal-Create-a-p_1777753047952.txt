@@ -1,0 +1,105 @@
+Add full authentication to StrategistOS.
+
+Goal:
+Create a professional sign up and sign in experience so users can create an account, log in, and access their private workspace.
+
+Core requirements:
+
+1. Authentication pages
+Create:
+- Sign Up page
+- Sign In page
+- Forgot Password page if feasible
+- Auth-protected dashboard route
+
+2. Sign Up page fields
+Include:
+- Full name
+- Email address
+- Password
+- Confirm password
+- Optional role selector: Founder, Student, Consultant, Creator, Operator, Other
+
+3. Sign In page fields
+Include:
+- Email address
+- Password
+- Remember me checkbox
+- Forgot password link
+
+4. Auth behaviour
+- Users must sign in before accessing the dashboard, planner, strategy tools, or saved sessions
+- Redirect logged-out users to Sign In
+- Redirect logged-in users to Dashboard
+- Store user-specific planner data and strategy sessions separately
+- Add a log out button in the app sidebar or account menu
+
+5. Security basics
+- Passwords must be hashed
+- Do not store plain text passwords
+- Validate email format
+- Validate password strength
+- Show clear error messages
+- Do not expose secret keys in frontend code
+- Use environment variables for auth secrets
+
+6. UI style
+Make the auth pages feel premium and consistent with StrategistOS:
+- Dark mode compatible
+- Clean card-based layout
+- Strong typography
+- Minimal copy
+- No emojis
+- No em dashes
+- No hype language
+- Mobile responsive
+
+7. Copy tone
+Use mature, professional wording.
+
+Examples:
+Headline for Sign In:
+“Access your strategy workspace.”
+
+Subtext:
+“Sign in to continue your planning, optimisation, and execution work.”
+
+Headline for Sign Up:
+“Create your strategy workspace.”
+
+Subtext:
+“Set up a private account for your plans, scorecards, workflows, and saved strategy sessions.”
+
+Button copy:
+- Create account
+- Sign in
+- Continue
+- Send reset link
+- Log out
+
+8. Implementation
+Use the best authentication method for the current stack.
+If the project already has a backend and database, connect auth to it.
+If using Supabase, Firebase, Clerk, Auth.js, or another auth provider is faster and more secure, implement that cleanly.
+If external auth setup requires API keys, create the structure and add clear `.env.example` instructions.
+
+9. Account area
+Add a simple account menu with:
+- User name
+- Email
+- Role
+- Log out button
+
+10. Testing
+After implementation:
+- Test sign up
+- Test sign in
+- Test log out
+- Test protected routes
+- Test invalid password
+- Test duplicate email
+- Test refresh while logged in
+- Test mobile layout
+
+Do not change the existing app design or functionality unless required for authentication.
+Keep the tone sharp, premium, and professional.
