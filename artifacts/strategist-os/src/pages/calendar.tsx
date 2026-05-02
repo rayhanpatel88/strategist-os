@@ -318,6 +318,8 @@ export default function Calendar() {
   const [freezePromptDate, setFreezePromptDate] = useState<string | null>(null);
   const [freezePromptDismissed, setFreezePromptDismissed] = useState(false);
   const [freezing, setFreezing] = useState(false);
+  const [showFreezeHistory, setShowFreezeHistory] = useState(false);
+  const [unfreezingDate, setUnfreezingDate] = useState<string | null>(null);
   const [recurringTemplates, setRecurringTemplates] = useState<RecurringTpl[]>([]);
   const [showSaveRecurring, setShowSaveRecurring] = useState(false);
   const [recurringForm, setRecurringForm] = useState<{ name: string; days: number[] }>({ name: "", days: [] });
@@ -378,6 +380,22 @@ export default function Calendar() {
       })
       .catch(() => toast({ title: "Network error", variant: "destructive" }))
       .finally(() => setFreezing(false));
+  }, [base, fetchStreak, toast]);
+
+  const unfreezeDate = useCallback((date: string) => {
+    setUnfreezingDate(date);
+    fetch(`${base}/api/calendar/streak/freeze/${date}`, { method: "DELETE" })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.ok) {
+          toast({ title: "Freeze removed", description: `${date} unfrozen. Token restored.` });
+          fetchStreak();
+        } else {
+          toast({ title: "Could not remove freeze", variant: "destructive" });
+        }
+      })
+      .catch(() => toast({ title: "Network error", variant: "destructive" }))
+      .finally(() => setUnfreezingDate(null));
   }, [base, fetchStreak, toast]);
 
   const fetchRecurringTemplates = useCallback(() => {
@@ -628,10 +646,10 @@ export default function Calendar() {
                     <span style={{ fontSize: 12 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
                     <span style={{ fontSize: 10, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
                   </div>
-                  <div title={`${streak.freezesAllowed - streak.freezesUsedThisMonth} freeze${streak.freezesAllowed - streak.freezesUsedThisMonth !== 1 ? "s" : ""} left this month`} style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(147,197,253,0.08)", border: "1px solid rgba(147,197,253,0.18)", padding: "3px 7px" }}>
+                  <button onClick={() => setShowFreezeHistory(true)} title={`${streak.freezesAllowed - streak.freezesUsedThisMonth} freeze${streak.freezesAllowed - streak.freezesUsedThisMonth !== 1 ? "s" : ""} left — view history`} style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(147,197,253,0.08)", border: "1px solid rgba(147,197,253,0.18)", padding: "3px 7px", cursor: "pointer" }}>
                     <span style={{ fontSize: 10 }}>🧊</span>
                     <span style={{ fontSize: 9, fontWeight: 700, color: "var(--sos-blue)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.freezesAllowed - streak.freezesUsedThisMonth}</span>
-                  </div>
+                  </button>
                 </div>
               )}
             </div>
@@ -732,14 +750,15 @@ export default function Calendar() {
                   <span style={{ fontSize: 11, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
                   <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>day{streak.currentStreak !== 1 ? "s" : ""}</span>
                 </div>
-                <div
-                  title={`${streak.freezesAllowed - streak.freezesUsedThisMonth} of ${streak.freezesAllowed} freezes left this month`}
-                  style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(147,197,253,0.07)", border: "1px solid rgba(147,197,253,0.18)", padding: "4px 10px", cursor: "default" }}
+                <button
+                  onClick={() => setShowFreezeHistory(true)}
+                  title={`${streak.freezesAllowed - streak.freezesUsedThisMonth} of ${streak.freezesAllowed} freezes left — view history`}
+                  style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(147,197,253,0.07)", border: "1px solid rgba(147,197,253,0.18)", padding: "4px 10px", cursor: "pointer" }}
                 >
                   <span style={{ fontSize: 13 }}>🧊</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: "var(--sos-blue)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.freezesAllowed - streak.freezesUsedThisMonth}</span>
                   <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>left</span>
-                </div>
+                </button>
               </div>
             )}
             <div className="flex items-center gap-2">
@@ -1601,6 +1620,94 @@ export default function Calendar() {
           </div>
         </div>
       )}
+      {/* Freeze History Modal */}
+      {showFreezeHistory && streak && (() => {
+        const thisMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+        const monthLabel = new Date().toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+        const monthFreezes = streak.frozenDates
+          .filter((d) => d.startsWith(thisMonth))
+          .sort()
+          .reverse();
+        const remaining = streak.freezesAllowed - streak.freezesUsedThisMonth;
+        return (
+          <div className="fixed inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.55)", zIndex: 100 }} onClick={() => setShowFreezeHistory(false)}>
+            <div style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", width: 420, maxWidth: "92vw", maxHeight: "80vh", display: "flex", flexDirection: "column" }} onClick={(e) => e.stopPropagation()}>
+
+              {/* Header */}
+              <div className="flex items-center justify-between" style={{ padding: "16px 20px 12px", borderBottom: "1px solid var(--sos-border)" }}>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif" }}>
+                    Freeze History
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--sos-text-dim)", marginTop: 2 }}>{monthLabel}</div>
+                </div>
+                <button onClick={() => setShowFreezeHistory(false)} style={{ background: "none", border: "none", color: "var(--sos-text-dim)", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "2px 6px" }}>
+                  ×
+                </button>
+              </div>
+
+              {/* Token summary bar */}
+              <div className="flex items-center gap-4" style={{ padding: "12px 20px", borderBottom: "1px solid var(--sos-border-s)", background: "rgba(147,197,253,0.04)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {Array.from({ length: streak.freezesAllowed }).map((_, i) => (
+                    <div key={i} style={{ width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${i < remaining ? "rgba(147,197,253,0.4)" : "var(--sos-border-s)"}`, background: i < remaining ? "rgba(147,197,253,0.1)" : "transparent", fontSize: 14 }}>
+                      {i < remaining ? "🧊" : "·"}
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "var(--sos-blue)", fontFamily: "Space Grotesk, sans-serif" }}>
+                    {remaining} of {streak.freezesAllowed} remaining
+                  </div>
+                  <div style={{ fontSize: 10, color: "var(--sos-text-dim)" }}>
+                    Resets on the 1st of next month
+                  </div>
+                </div>
+              </div>
+
+              {/* Frozen dates list */}
+              <div style={{ overflowY: "auto", flex: 1 }}>
+                {monthFreezes.length === 0 ? (
+                  <div style={{ padding: "40px 20px", textAlign: "center" }}>
+                    <div style={{ fontSize: 28, marginBottom: 10 }}>🧊</div>
+                    <div style={{ fontSize: 12, color: "var(--sos-text-dim)" }}>No freezes used this month.</div>
+                    <div style={{ fontSize: 11, color: "var(--sos-text-muted)", marginTop: 4 }}>Use them to protect your streak on missed days.</div>
+                  </div>
+                ) : (
+                  monthFreezes.map((date) => {
+                    const label = new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" });
+                    const isUnfreezing = unfreezingDate === date;
+                    return (
+                      <div key={date} className="flex items-center justify-between" style={{ padding: "12px 20px", borderBottom: "1px solid var(--sos-border-s)" }}>
+                        <div className="flex items-center gap-3">
+                          <span style={{ fontSize: 16 }}>🧊</span>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--sos-text)" }}>{label}</div>
+                            <div style={{ fontSize: 10, color: "var(--sos-text-dim)", marginTop: 1 }}>Streak protected</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => unfreezeDate(date)}
+                          disabled={isUnfreezing}
+                          style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 10px", cursor: isUnfreezing ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", opacity: isUnfreezing ? 0.5 : 1 }}>
+                          {isUnfreezing ? "..." : "Unfreeze"}
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer */}
+              <div style={{ padding: "12px 20px", borderTop: "1px solid var(--sos-border-s)" }}>
+                <div style={{ fontSize: 10, color: "var(--sos-text-muted)" }}>
+                  Unfreezing a date restores the token to your monthly allowance. It also removes streak protection for that day.
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
