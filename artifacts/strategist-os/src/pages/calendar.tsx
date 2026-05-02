@@ -499,7 +499,7 @@ export default function Calendar() {
           </div>
 
           {/* Center column: Time Blocks */}
-          <div className="flex flex-col flex-1 overflow-y-auto py-6 px-6">
+          <div className="sos-cal-center flex flex-col flex-1 overflow-y-auto py-6 px-6">
             <div className="flex items-center justify-between mb-4">
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text-dim)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
                 Schedule
@@ -532,7 +532,7 @@ export default function Calendar() {
                     <input value={newBlock.activity} onChange={(e) => setNewBlock((b) => ({ ...b, activity: e.target.value }))} placeholder="What are you doing?"
                       style={{ width: "100%", fontSize: 12, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "6px 8px" }} />
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <div style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 4 }}>Category</div>
                       <Sel value={newBlock.category} options={CATEGORIES} onChange={(v) => setNewBlock((b) => ({ ...b, category: v }))} style={{ width: "100%" }} />
@@ -588,7 +588,7 @@ export default function Calendar() {
                         </div>
                         <input value={editBlock.activity} onChange={(e) => setEditBlock((b) => b && ({ ...b, activity: e.target.value }))}
                           style={{ width: "100%", fontSize: 12, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "6px 8px" }} />
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <Sel value={editBlock.category} options={CATEGORIES} onChange={(v) => setEditBlock((b) => b && ({ ...b, category: v }))} style={{ width: "100%" }} />
                           <Sel value={editBlock.priority} options={PRIORITIES} onChange={(v) => setEditBlock((b) => b && ({ ...b, priority: v }))} style={{ width: "100%" }} />
                           <Sel value={editBlock.status} options={BLOCK_STATUSES} onChange={(v) => setEditBlock((b) => b && ({ ...b, status: v }))} style={{ width: "100%" }} />

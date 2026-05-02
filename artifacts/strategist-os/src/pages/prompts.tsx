@@ -108,22 +108,37 @@ export default function Prompts() {
       </div>
 
       {tab === "generate" ? (
-        <div className="flex flex-1 overflow-hidden">
-          {/* Category selector */}
-          <div className="sos-cat-sidebar flex flex-col shrink-0 overflow-y-auto py-6" style={{ width: 200, borderRight: "1px solid var(--sos-border)", paddingLeft: 24, paddingRight: 16 }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-muted)", textTransform: "uppercase", marginBottom: 14 }}>Category</div>
-            <div className="space-y-1">
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {/* Mobile: category as select bar */}
+          <div className="md:hidden shrink-0 flex items-center gap-3 px-4 py-2" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+            <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)", whiteSpace: "nowrap" }}>Category</span>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as typeof category)}
+              style={{ flex: 1, fontSize: 12, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "5px 8px" }}
+            >
               {CATEGORIES.map((cat) => (
-                <button key={cat.id} onClick={() => setCategory(cat.id)} data-testid={`button-category-${cat.id}`}
-                  style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12, padding: "8px 10px", background: category === cat.id ? "var(--sos-nav-active-bg)" : "transparent", color: category === cat.id ? "var(--sos-text)" : "var(--sos-text-dim)", fontWeight: category === cat.id ? 600 : 400, cursor: "pointer", border: "none", borderLeftWidth: 2, borderLeftStyle: "solid", borderLeftColor: category === cat.id ? "var(--sos-nav-active-border)" : "transparent" }}>
-                  {cat.label}
-                </button>
+                <option key={cat.id} value={cat.id}>{cat.label}</option>
               ))}
-            </div>
+            </select>
           </div>
 
-          {/* Form + output */}
-          <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 space-y-6">
+          <div className="flex flex-1 overflow-hidden">
+            {/* Category sidebar — desktop only */}
+            <div className="hidden md:flex flex-col shrink-0 overflow-y-auto py-6" style={{ width: 200, borderRight: "1px solid var(--sos-border)", paddingLeft: 24, paddingRight: 16 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-muted)", textTransform: "uppercase", marginBottom: 14 }}>Category</div>
+              <div className="space-y-1">
+                {CATEGORIES.map((cat) => (
+                  <button key={cat.id} onClick={() => setCategory(cat.id)} data-testid={`button-category-${cat.id}`}
+                    style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12, padding: "8px 10px", background: category === cat.id ? "var(--sos-nav-active-bg)" : "transparent", color: category === cat.id ? "var(--sos-text)" : "var(--sos-text-dim)", fontWeight: category === cat.id ? 600 : 400, cursor: "pointer", border: "none", borderLeftWidth: 2, borderLeftStyle: "solid", borderLeftColor: category === cat.id ? "var(--sos-nav-active-border)" : "transparent" }}>
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Form + output */}
+            <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 space-y-6">
             <div className="space-y-5 max-w-2xl">
               <div>
                 <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Your Context</div>
@@ -177,6 +192,7 @@ export default function Prompts() {
               </div>
             )}
           </div>
+        </div>
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7">

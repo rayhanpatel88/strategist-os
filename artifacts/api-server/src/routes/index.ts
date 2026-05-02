@@ -12,6 +12,7 @@ import plannerRouter from "./planner";
 import portfolioRouter from "./portfolio";
 import enquiriesRouter from "./enquiries";
 import calendarRouter from "./calendar";
+import goalsRouter from "./goals";
 import settingsRouter from "./settings";
 import searchRouter from "./search";
 
@@ -32,6 +33,7 @@ router.use(plannerRouter);
 router.use(portfolioRouter);
 router.use(enquiriesRouter);
 router.use(calendarRouter);
+router.use(goalsRouter);
 router.use(settingsRouter);
 router.use(searchRouter);
 

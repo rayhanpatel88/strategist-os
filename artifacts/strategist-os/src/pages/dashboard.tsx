@@ -920,6 +920,99 @@ function IntelligenceFeed({ base }: { base: string }) {
   );
 }
 
+function WeeklyFocusWidget({ base }: { base: string }) {
+  const weekStart = getThisMondayStr();
+  const weekStartFmt = new Date(`${weekStart}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const weekEndFmt = (() => {
+    const d = new Date(`${weekStart}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 6);
+    return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  })();
+
+  const [goal, setGoal] = useState("");
+  const [savedGoal, setSavedGoal] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    fetch(`${base}/api/goals/weekly?weekStart=${weekStart}`)
+      .then((r) => r.json())
+      .then((data: { goal?: string }) => {
+        setGoal(data.goal ?? "");
+        setSavedGoal(data.goal ?? "");
+      })
+      .catch(() => {});
+  }, [base, weekStart]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await fetch(`${base}/api/goals/weekly`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weekStart, goal }),
+      });
+      setSavedGoal(goal);
+      setEditing(false);
+      setFlash(true);
+      setTimeout(() => setFlash(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="mb-8 p-5" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="label-caps">This Week's Focus</div>
+        <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.05em" }}>{weekStartFmt} – {weekEndFmt}</span>
+      </div>
+      {editing ? (
+        <div className="flex flex-col sm:flex-row gap-2 items-start">
+          <input
+            value={goal}
+            onChange={(e) => setGoal(e.target.value)}
+            placeholder="Set your primary focus for this week..."
+            autoFocus
+            maxLength={500}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSave();
+              if (e.key === "Escape") { setGoal(savedGoal); setEditing(false); }
+            }}
+            style={{ flex: 1, width: "100%", fontSize: 13, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "7px 10px" }}
+          />
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: "var(--sos-btn-bg)", border: "none", padding: "7px 18px", cursor: saving ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", opacity: saving ? 0.6 : 1 }}>
+              {saving ? "..." : "Save"}
+            </button>
+            <button
+              onClick={() => { setGoal(savedGoal); setEditing(false); }}
+              style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="flex items-start justify-between gap-4 cursor-pointer"
+          onClick={() => setEditing(true)}
+        >
+          <div style={{ fontSize: 13, color: savedGoal ? "var(--sos-text-body)" : "var(--sos-text-subtle)", fontStyle: savedGoal ? "normal" : "italic", lineHeight: 1.5, flex: 1 }}>
+            {flash ? "Focus saved." : savedGoal || "Click to set your focus for this week"}
+          </div>
+          <span style={{ fontSize: 10, color: "var(--sos-text-dim)", letterSpacing: "0.06em", textTransform: "uppercase", flexShrink: 0, paddingTop: 2 }}>
+            {savedGoal ? "Edit" : "Set"}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const summary = useGetSessionsSummary();
   const sessions = useListSessions();
@@ -1046,6 +1139,9 @@ export default function Dashboard() {
             </>
           )}
         </div>
+
+        {/* Weekly Focus */}
+        <WeeklyFocusWidget base={base} />
 
         {/* Telemetry bars */}
         {!summary.isLoading && avgScore !== null && (

@@ -474,12 +474,21 @@
     border-right: none !important;
     border-bottom: 1px solid var(--sos-border) !important;
     max-height: none !important;
+    overflow-y: visible !important;
+    flex-shrink: 0 !important;
+  }
+  .sos-cal-center {
+    flex: none !important;
+    overflow-y: visible !important;
+    min-height: 280px;
   }
   .sos-cal-right {
     width: 100% !important;
     border-left: none !important;
     border-top: 1px solid var(--sos-border) !important;
     max-height: none !important;
+    overflow-y: visible !important;
+    flex-shrink: 0 !important;
   }
   .sos-cal-date-label {
     min-width: 0 !important;
@@ -498,37 +507,6 @@
   .sos-cal-header-right {
     flex-wrap: wrap !important;
     gap: 6px !important;
-  }
-
-  /* Prompts category sidebar → horizontal scroll bar */
-  .sos-cat-sidebar {
-    width: 100% !important;
-    border-right: none !important;
-    border-bottom: 1px solid var(--sos-border) !important;
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    padding: 8px 12px !important;
-    flex-shrink: 0 !important;
-    min-height: 0 !important;
-    max-height: 50px !important;
-    align-items: center !important;
-  }
-  .sos-cat-sidebar .space-y-1 {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 4px !important;
-    white-space: nowrap !important;
-    margin-bottom: 0 !important;
-  }
-  .sos-cat-sidebar .space-y-1 button {
-    border-left: none !important;
-    border-bottom: 2px solid transparent !important;
-    padding: 4px 10px !important;
-    white-space: nowrap !important;
-  }
-  .sos-cat-sidebar > div:first-child {
-    display: none !important;
   }
 
   /* Weekly review modal two-col → single col */
