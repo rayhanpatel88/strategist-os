@@ -59,6 +59,7 @@ A premium full-stack dark-mode SaaS web application built for Rayhan Patel (MSc 
 - `GET/POST /workflows`, `GET /workflows/templates`, `DELETE /workflows/:id`
 - `POST /planner`, `GET/POST /planner/saved`
 - `GET/PUT /portfolio`
+- `GET/PUT /settings` — user profile (display name, preferred industry, strategic focus, default assets/constraints)
 
 ## Key Files
 - `artifacts/strategist-os/src/App.tsx` — router, Clerk auth, sidebar layout, ThemeProvider

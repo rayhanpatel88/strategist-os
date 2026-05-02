@@ -11,6 +11,7 @@ import plannerRouter from "./planner";
 import portfolioRouter from "./portfolio";
 import enquiriesRouter from "./enquiries";
 import calendarRouter from "./calendar";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(plannerRouter);
 router.use(portfolioRouter);
 router.use(enquiriesRouter);
 router.use(calendarRouter);
+router.use(settingsRouter);
 
 export default router;

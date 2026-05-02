@@ -17,6 +17,7 @@ import Planner from "@/pages/planner";
 import Portfolio from "@/pages/portfolio";
 import Calendar from "@/pages/calendar";
 import Landing from "@/pages/landing";
+import Settings from "@/pages/settings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,6 +50,7 @@ const navItems = [
   { path: "/planner", label: "Planner", icon: "calendar_month" },
   { path: "/calendar", label: "Calendar", icon: "today" },
   { path: "/portfolio", label: "Portfolio", icon: "web_asset" },
+  { path: "/settings", label: "Settings", icon: "manage_accounts" },
 ];
 
 function useWeeklyUnplanned(): number {
@@ -501,6 +503,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/planner" component={() => <ProtectedPage component={Planner} />} />
             <Route path="/calendar" component={() => <ProtectedPage component={Calendar} />} />
             <Route path="/portfolio" component={() => <ProtectedPage component={Portfolio} />} />
+            <Route path="/settings" component={() => <ProtectedPage component={Settings} />} />
             <Route component={NotFound} />
           </Switch>
           <Toaster />

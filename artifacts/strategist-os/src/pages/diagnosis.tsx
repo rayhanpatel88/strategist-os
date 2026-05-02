@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRunDiagnosis, useCreateSession, getListSessionsQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 type DiagnosisResult = {
   strategicDiagnosis: string;
@@ -166,6 +168,27 @@ export default function Diagnosis() {
   const [form, setForm] = useState({
     goal: "", industry: "", assets: "", constraints: "", deadline: "", desiredOutcome: "", bottleneck: "",
   });
+
+  const { data: profile } = useQuery<{ preferredIndustry: string; defaultAssets: string; defaultConstraints: string }>({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      const res = await fetch(`${basePath}/api/settings`);
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setForm((prev) => ({
+        ...prev,
+        industry: prev.industry || profile.preferredIndustry || "",
+        assets: prev.assets || profile.defaultAssets || "",
+        constraints: prev.constraints || profile.defaultConstraints || "",
+      }));
+    }
+  }, [profile]);
 
   const runDiagnosis = useRunDiagnosis();
   const createSession = useCreateSession();
