@@ -20,6 +20,7 @@ import Landing from "@/pages/landing";
 import Settings from "@/pages/settings";
 import StrategyCard from "@/pages/strategy-card";
 import Goals from "@/pages/goals";
+import Notes from "@/pages/notes";
 import CommandPalette from "@/components/command-palette";
 import ChangelogModal, { useChangelogBadge, WhatsNewBanner } from "@/components/changelog-modal";
 
@@ -54,6 +55,7 @@ const navItems = [
   { path: "/planner", label: "Planner", icon: "calendar_month" },
   { path: "/calendar", label: "Calendar", icon: "today" },
   { path: "/goals", label: "Goals", icon: "flag" },
+  { path: "/notes", label: "Notes", icon: "sticky_note_2" },
   { path: "/portfolio", label: "Book a Meeting", icon: "event" },
   { path: "/settings", label: "Settings", icon: "manage_accounts" },
 ];
@@ -733,6 +735,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/planner" component={() => <ProtectedPage component={Planner} />} />
             <Route path="/calendar" component={() => <ProtectedPage component={Calendar} />} />
             <Route path="/goals" component={() => <ProtectedPage component={Goals} />} />
+            <Route path="/notes" component={() => <ProtectedPage component={Notes} />} />
             <Route path="/portfolio" component={() => <ProtectedPage component={Portfolio} />} />
             <Route path="/settings" component={() => <ProtectedPage component={Settings} />} />
             <Route path="/p/:userId" component={StrategyCard} />

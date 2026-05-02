@@ -751,33 +751,31 @@ function ExecutionHeatmap({ activity, loading, base, onScoreUpdate }: {
             ))}
 
             {/* Hint */}
-            <div style={{ fontSize: 9, color: "var(--sos-text-subtle)", letterSpacing: "0.04em", marginTop: 4, marginBottom: 4 }}>
+            <div style={{ fontSize: 9, color: "var(--sos-text-subtle)", letterSpacing: "0.04em", marginTop: 8, marginBottom: 12 }}>
               Click any past day to add or update its score.
             </div>
 
-            {/* Legend + link */}
-            <div className="flex items-center justify-between mt-2">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1.5">
-                  <div style={{ width: 10, height: 10, background: "var(--sos-track-bg)", borderRadius: 2 }} />
-                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>No plan</span>
+            {/* Legend */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2" style={{ marginBottom: 12 }}>
+              {[
+                { bg: "var(--sos-track-bg)", label: "No plan" },
+                { bg: "var(--sos-blue-tint)", label: "Planned" },
+                { bg: "var(--sos-blue)", label: "Score 7-8" },
+                { bg: "var(--sos-emerald)", label: "Score 9-10" },
+              ].map(({ bg, label }) => (
+                <div key={label} className="flex items-center gap-1.5">
+                  <div style={{ width: 10, height: 10, background: bg, borderRadius: 2, flexShrink: 0 }} />
+                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>{label}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <div style={{ width: 10, height: 10, background: "var(--sos-blue-tint)", borderRadius: 2 }} />
-                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Planned</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div style={{ width: 10, height: 10, background: "var(--sos-blue)", borderRadius: 2 }} />
-                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Score 7-8</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div style={{ width: 10, height: 10, background: "var(--sos-emerald)", borderRadius: 2 }} />
-                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>Score 9-10</span>
-                </div>
-              </div>
+              ))}
+            </div>
+
+            {/* Open Calendar link — on its own row, clear breathing room */}
+            <div style={{ borderTop: "1px solid var(--sos-border-s)", paddingTop: 12 }}>
               <Link href="/calendar">
-                <span style={{ fontSize: 10, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}>
+                <span style={{ fontSize: 10, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4 }}>
                   Open Calendar
+                  <span className="material-symbols-outlined" style={{ fontSize: 12 }}>arrow_forward</span>
                 </span>
               </Link>
             </div>
