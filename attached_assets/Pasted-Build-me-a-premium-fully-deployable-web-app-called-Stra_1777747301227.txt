@@ -1,0 +1,169 @@
+Build me a premium, fully deployable web app called “StrategistOS: The AI Leverage Command Centre”.
+
+Context:
+I am Rayhan Patel, an MSc Data Science student, AI automation builder, strategist, founder, and high-performance operator. I want this app to position me as a top 0.1% AI strategist and optimisation expert. The app should feel like something a founder, consultant, VC scout, PhD supervisor, or enterprise client would immediately respect.
+
+Core concept:
+StrategistOS is an AI-powered decision and optimisation dashboard that helps ambitious founders, students, creators, consultants, and operators convert messy goals into elite execution systems.
+
+The app should not feel like a generic productivity app. It should feel like a strategic intelligence layer.
+
+Primary user problem:
+High-agency people have ideas, goals, offers, content, coursework, projects, and opportunities, but they lack a system that turns ambiguity into clear positioning, leverage, execution priorities, and measurable next actions.
+
+Main features:
+
+1. Strategic Diagnosis Engine
+Create an input flow where the user describes:
+- Their current goal
+- Their industry or domain
+- Their current assets
+- Their constraints
+- Their deadline
+- Their desired outcome
+- Their current bottleneck
+
+The app should generate:
+- Strategic diagnosis
+- Leverage score out of 100
+- Bottleneck analysis
+- Opportunity map
+- Risk map
+- 3 highest ROI actions
+- “what a top 0.1% operator would do next”
+
+2. AI Optimisation Scorecard
+Create a dashboard that scores the user across:
+- Clarity
+- Leverage
+- Distribution
+- Execution speed
+- Differentiation
+- Proof/credibility
+- Monetisation potential
+- Automation potential
+
+Each score should include:
+- Current score
+- Why it scored that way
+- How to improve it
+- One elite-level recommendation
+
+3. Prompt Arsenal Generator
+The app should generate advanced prompts for:
+- Business strategy
+- Academic writing
+- AI automation
+- Content creation
+- LinkedIn positioning
+- Offer creation
+- Replit app building
+- Data science project improvement
+- PhD/research positioning
+
+Each generated prompt should be structured, reusable, and premium.
+
+4. Opportunity Stack Builder
+Allow the user to create an “Opportunity Stack” by entering:
+- Skills
+- Experience
+- Tools they know
+- Current projects
+- Target audience
+- Desired income or career path
+
+The app should output:
+- Best positioning angle
+- Best niche
+- Best offer/project idea
+- Best content angle
+- Best proof asset to build
+- 30-day execution roadmap
+
+5. AI Agent Workflow Designer
+Create a section where users can design AI workflows. Include templates for:
+- Lead generation agent
+- Research assistant agent
+- Coursework enhancement agent
+- LinkedIn content engine
+- Client onboarding automation
+- Customer support assistant
+- Data analysis assistant
+- Personal productivity agent
+
+Each workflow should include:
+- Trigger
+- Inputs
+- AI task
+- Tools/integrations
+- Output
+- Human review step
+- Monetisation/use-case
+
+6. Elite Execution Planner
+Create a planner that converts a strategic recommendation into:
+- 7-day sprint
+- 30-day roadmap
+- Daily actions
+- Success metrics
+- Risks
+- Review questions
+
+7. Public Portfolio Mode
+Create a polished public-facing page that presents the user as an elite AI strategist.
+It should include:
+- Hero section
+- Strategic positioning statement
+- Featured systems
+- AI optimisation philosophy
+- Case study cards
+- Contact/booking CTA
+Use premium copywriting, not generic wording.
+
+Design requirements:
+- Premium SaaS aesthetic
+- Dark mode by default
+- Clean typography
+- Strong spacing
+- Smooth animations
+- Strategic dashboard feel
+- Cards, tabs, progress bars, charts, and score widgets
+- Mobile responsive
+- Looks credible enough to show on LinkedIn, portfolio, and to clients
+- No childish colours
+- No emojis
+- Avoid generic AI startup copy
+- Avoid hype without substance
+
+Tech requirements:
+- Build as a full-stack Replit web app
+- Use React or Next.js if available
+- Use a clean backend API
+- Use persistent storage for saved strategy sessions
+- Include authentication if feasible
+- Include demo mode if authentication takes too long
+- Include export to PDF or markdown if feasible
+- Include sample data so the app looks impressive immediately
+- Make the app deployable on Replit
+
+AI requirements:
+If API keys are available, integrate OpenAI or Anthropic.
+If not, create a mock AI response system that is easy to replace with a real API later.
+Structure the AI prompts in separate files so I can edit them.
+
+Important:
+Do not build a shallow MVP. Build a polished, impressive version that demonstrates:
+- Strategic thinking
+- AI optimisation
+- automation thinking
+- data-informed decision-making
+- elite execution systems
+- commercial awareness
+- personal branding power
+
+Output:
+First create the complete app architecture.
+Then build the app.
+Then test every page.
+Then improve the UI until it feels premium.
+Then give me clear instructions for deployment, environment variables, and how to customise the app with my own branding.

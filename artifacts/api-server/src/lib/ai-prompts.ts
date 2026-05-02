@@ -1,0 +1,248 @@
+export type DiagnosisInput = {
+  goal: string;
+  industry: string;
+  assets: string;
+  constraints: string;
+  deadline: string;
+  desiredOutcome: string;
+  bottleneck: string;
+};
+
+export type ScorecardInput = {
+  goal: string;
+  industry: string;
+  currentStatus: string;
+};
+
+export type PromptInput = {
+  category: string;
+  context: string;
+  goal: string;
+};
+
+export type OpportunityInput = {
+  skills: string;
+  experience: string;
+  tools: string;
+  projects: string;
+  targetAudience: string;
+  desiredPath: string;
+};
+
+export type PlannerInput = {
+  strategicGoal: string;
+  keyRecommendation: string;
+  resources: string;
+  constraints: string;
+};
+
+export const buildDiagnosisPrompt = (input: DiagnosisInput): string => `
+You are a world-class strategic advisor operating at the level of McKinsey senior partner, elite VC, and high-performance coach combined.
+
+Analyze the following situation and produce a rigorous, precise strategic diagnosis:
+
+GOAL: ${input.goal}
+INDUSTRY/DOMAIN: ${input.industry}
+CURRENT ASSETS: ${input.assets}
+CONSTRAINTS: ${input.constraints}
+DEADLINE: ${input.deadline}
+DESIRED OUTCOME: ${input.desiredOutcome}
+CURRENT BOTTLENECK: ${input.bottleneck}
+
+Respond with a JSON object with EXACTLY this structure:
+{
+  "strategicDiagnosis": "A rigorous 2-3 paragraph diagnosis identifying the core strategic situation, key leverage points, and what is really happening beneath the surface",
+  "leverageScore": <number 1-100 representing leverage of current position>,
+  "bottleneckAnalysis": "Precise identification of the true bottleneck — often not what the person thinks it is",
+  "opportunityMap": ["opportunity 1", "opportunity 2", "opportunity 3", "opportunity 4"],
+  "riskMap": ["risk 1", "risk 2", "risk 3"],
+  "roiActions": [
+    {"action": "Highest ROI action", "impact": "Why this has outsized return", "timeframe": "e.g. 7 days"},
+    {"action": "Second action", "impact": "Why this matters", "timeframe": "e.g. 14 days"},
+    {"action": "Third action", "impact": "Why this compounds", "timeframe": "e.g. 30 days"}
+  ],
+  "eliteOperatorNextStep": "What a top 0.1% operator would do in the next 48 hours — specific, uncomfortable, and precise"
+}
+
+Be direct. No platitudes. No vague recommendations. Operate like someone with real skin in the game.
+`;
+
+export const buildScorecardPrompt = (input: ScorecardInput): string => `
+You are an elite strategic intelligence system. Score the following operator across 8 critical dimensions.
+
+GOAL: ${input.goal}
+INDUSTRY: ${input.industry}
+CURRENT STATUS: ${input.currentStatus}
+
+Score each dimension 1-100 with brutal honesty. Respond with EXACTLY this JSON structure:
+{
+  "overallScore": <weighted average 1-100>,
+  "dimensions": [
+    {
+      "name": "Clarity",
+      "score": <1-100>,
+      "reasoning": "Why this score — be specific",
+      "howToImprove": "Concrete steps to improve this score",
+      "eliteRecommendation": "What a top 0.1% operator does differently here"
+    },
+    {
+      "name": "Leverage",
+      "score": <1-100>,
+      "reasoning": "...",
+      "howToImprove": "...",
+      "eliteRecommendation": "..."
+    },
+    {
+      "name": "Distribution",
+      "score": <1-100>,
+      "reasoning": "...",
+      "howToImprove": "...",
+      "eliteRecommendation": "..."
+    },
+    {
+      "name": "Execution Speed",
+      "score": <1-100>,
+      "reasoning": "...",
+      "howToImprove": "...",
+      "eliteRecommendation": "..."
+    },
+    {
+      "name": "Differentiation",
+      "score": <1-100>,
+      "reasoning": "...",
+      "howToImprove": "...",
+      "eliteRecommendation": "..."
+    },
+    {
+      "name": "Proof/Credibility",
+      "score": <1-100>,
+      "reasoning": "...",
+      "howToImprove": "...",
+      "eliteRecommendation": "..."
+    },
+    {
+      "name": "Monetisation Potential",
+      "score": <1-100>,
+      "reasoning": "...",
+      "howToImprove": "...",
+      "eliteRecommendation": "..."
+    },
+    {
+      "name": "Automation Potential",
+      "score": <1-100>,
+      "reasoning": "...",
+      "howToImprove": "...",
+      "eliteRecommendation": "..."
+    }
+  ],
+  "topPriority": "The single highest-leverage dimension to focus on right now",
+  "strategicSummary": "2-3 sentence synthesis of the operator's strategic position and what needs to change"
+}
+`;
+
+export const buildPromptGeneratorPrompt = (input: PromptInput): string => `
+You are a master prompt architect. Create a premium, reusable prompt for the following use case.
+
+CATEGORY: ${input.category}
+CONTEXT: ${input.context}
+GOAL: ${input.goal}
+
+Create a structured, elite-level prompt that produces exceptional output. Respond with EXACTLY this JSON:
+{
+  "title": "Descriptive title for this prompt",
+  "category": "${input.category}",
+  "prompt": "The complete, structured prompt — include role assignment, context injection points, output format instructions, and quality gates. Use [VARIABLE] syntax for customisable parts.",
+  "usage": "How to use this prompt effectively — when to deploy it, what to watch for",
+  "variables": ["list", "of", "variable", "names", "to", "fill", "in"]
+}
+
+The prompt must be:
+- Professional and precise
+- Reusable across similar situations  
+- Structured with clear sections
+- Producing output of the highest quality
+`;
+
+export const buildOpportunityStackPrompt = (input: OpportunityInput): string => `
+You are an elite business strategist and positioning expert. Analyse this operator's assets and produce an opportunity stack.
+
+SKILLS: ${input.skills}
+EXPERIENCE: ${input.experience}
+TOOLS KNOWN: ${input.tools}
+CURRENT PROJECTS: ${input.projects}
+TARGET AUDIENCE: ${input.targetAudience}
+DESIRED PATH: ${input.desiredPath}
+
+Respond with EXACTLY this JSON:
+{
+  "positioningAngle": "The single sharpest positioning angle — not generic, hyper-specific to their combination of assets",
+  "bestNiche": "The most defensible and profitable niche given their specific skills and context",
+  "offerIdea": "A concrete offer or project idea with a clear value proposition and target buyer",
+  "contentAngle": "The content angle that will attract their ideal audience — what unique perspective they can own",
+  "proofAsset": "The single most powerful proof asset they should build next — specific, achievable, high-signal",
+  "roadmap30Day": [
+    {
+      "week": 1,
+      "focus": "Theme for week 1",
+      "actions": ["specific action 1", "specific action 2", "specific action 3"]
+    },
+    {
+      "week": 2,
+      "focus": "Theme for week 2",
+      "actions": ["specific action 1", "specific action 2", "specific action 3"]
+    },
+    {
+      "week": 3,
+      "focus": "Theme for week 3",
+      "actions": ["specific action 1", "specific action 2", "specific action 3"]
+    },
+    {
+      "week": 4,
+      "focus": "Theme for week 4",
+      "actions": ["specific action 1", "specific action 2", "specific action 3"]
+    }
+  ]
+}
+`;
+
+export const buildPlannerPrompt = (input: PlannerInput): string => `
+You are an elite execution strategist. Convert this recommendation into a precise execution plan.
+
+STRATEGIC GOAL: ${input.strategicGoal}
+KEY RECOMMENDATION: ${input.keyRecommendation}
+AVAILABLE RESOURCES: ${input.resources}
+CONSTRAINTS: ${input.constraints}
+
+Respond with EXACTLY this JSON:
+{
+  "title": "Concise title for this execution plan",
+  "sevenDaySprint": [
+    {"day": 1, "task": "Specific task", "priority": "high", "estimatedTime": "2 hours"},
+    {"day": 2, "task": "Specific task", "priority": "high", "estimatedTime": "3 hours"},
+    {"day": 3, "task": "Specific task", "priority": "medium", "estimatedTime": "1.5 hours"},
+    {"day": 4, "task": "Specific task", "priority": "high", "estimatedTime": "2 hours"},
+    {"day": 5, "task": "Specific task", "priority": "medium", "estimatedTime": "2 hours"},
+    {"day": 6, "task": "Specific task", "priority": "low", "estimatedTime": "1 hour"},
+    {"day": 7, "task": "Review and reflect", "priority": "medium", "estimatedTime": "1 hour"}
+  ],
+  "thirtyDayRoadmap": [
+    {"week": 1, "theme": "Week theme", "milestones": ["milestone 1", "milestone 2", "milestone 3"]},
+    {"week": 2, "theme": "Week theme", "milestones": ["milestone 1", "milestone 2", "milestone 3"]},
+    {"week": 3, "theme": "Week theme", "milestones": ["milestone 1", "milestone 2"]},
+    {"week": 4, "theme": "Week theme", "milestones": ["milestone 1", "milestone 2", "milestone 3"]}
+  ],
+  "successMetrics": ["specific measurable metric 1", "metric 2", "metric 3", "metric 4"],
+  "risks": [
+    {"risk": "Specific risk", "mitigation": "How to mitigate it"},
+    {"risk": "Another risk", "mitigation": "Mitigation strategy"},
+    {"risk": "Third risk", "mitigation": "How to handle"}
+  ],
+  "reviewQuestions": [
+    "What was the single biggest constraint on execution this week?",
+    "Which action produced the most unexpected leverage?",
+    "What assumption turned out to be wrong?",
+    "Where did I under-invest time?",
+    "What would I do differently?"
+  ]
+}
+`;

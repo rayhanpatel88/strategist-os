@@ -3,20 +3,36 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: StrategistOS API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: sessions
+    description: Strategy sessions
+  - name: diagnosis
+    description: Strategic diagnosis engine
+  - name: scorecard
+    description: AI optimisation scorecard
+  - name: prompts
+    description: Prompt arsenal generator
+  - name: opportunity
+    description: Opportunity stack builder
+  - name: workflows
+    description: AI agent workflow designer
+  - name: planner
+    description: Elite execution planner
+  - name: portfolio
+    description: Public portfolio
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +40,352 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /sessions:
+    get:
+      operationId: listSessions
+      tags: [sessions]
+      summary: List all strategy sessions
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+    post:
+      operationId: createSession
+      tags: [sessions]
+      summary: Create a new strategy session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionBody"
+      responses:
+        "201":
+          description: Created session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+
+  /sessions/{id}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Get a strategy session by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteSession
+      tags: [sessions]
+      summary: Delete a strategy session
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /sessions/summary:
+    get:
+      operationId: getSessionsSummary
+      tags: [sessions]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionsSummary"
+
+  /diagnosis:
+    post:
+      operationId: runDiagnosis
+      tags: [diagnosis]
+      summary: Run strategic diagnosis engine
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagnosisInput"
+      responses:
+        "200":
+          description: Diagnosis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosisResult"
+
+  /scorecard:
+    post:
+      operationId: runScorecard
+      tags: [scorecard]
+      summary: Generate AI optimisation scorecard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScorecardInput"
+      responses:
+        "200":
+          description: Scorecard result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScorecardResult"
+
+  /prompts/generate:
+    post:
+      operationId: generatePrompt
+      tags: [prompts]
+      summary: Generate a premium prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PromptGenerateInput"
+      responses:
+        "200":
+          description: Generated prompt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedPrompt"
+
+  /prompts/saved:
+    get:
+      operationId: listSavedPrompts
+      tags: [prompts]
+      summary: List saved prompts
+      responses:
+        "200":
+          description: List of saved prompts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedPrompt"
+    post:
+      operationId: savePrompt
+      tags: [prompts]
+      summary: Save a generated prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavePromptBody"
+      responses:
+        "201":
+          description: Saved prompt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedPrompt"
+
+  /prompts/saved/{id}:
+    delete:
+      operationId: deleteSavedPrompt
+      tags: [prompts]
+      summary: Delete a saved prompt
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /opportunity:
+    post:
+      operationId: buildOpportunityStack
+      tags: [opportunity]
+      summary: Build an opportunity stack
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OpportunityInput"
+      responses:
+        "200":
+          description: Opportunity stack result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OpportunityResult"
+
+  /workflows:
+    get:
+      operationId: listWorkflows
+      tags: [workflows]
+      summary: List saved AI workflows
+      responses:
+        "200":
+          description: List of workflows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiWorkflow"
+    post:
+      operationId: createWorkflow
+      tags: [workflows]
+      summary: Create a new AI workflow
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWorkflowBody"
+      responses:
+        "201":
+          description: Created workflow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiWorkflow"
+
+  /workflows/templates:
+    get:
+      operationId: listWorkflowTemplates
+      tags: [workflows]
+      summary: List workflow templates
+      responses:
+        "200":
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowTemplate"
+
+  /workflows/{id}:
+    delete:
+      operationId: deleteWorkflow
+      tags: [workflows]
+      summary: Delete a workflow
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /planner:
+    post:
+      operationId: createExecutionPlan
+      tags: [planner]
+      summary: Create an elite execution plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlannerInput"
+      responses:
+        "200":
+          description: Execution plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecutionPlan"
+
+  /planner/saved:
+    get:
+      operationId: listSavedPlans
+      tags: [planner]
+      summary: List saved execution plans
+      responses:
+        "200":
+          description: List of saved plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedPlan"
+    post:
+      operationId: savePlan
+      tags: [planner]
+      summary: Save an execution plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SavePlanBody"
+      responses:
+        "201":
+          description: Saved plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedPlan"
+
+  /portfolio:
+    get:
+      operationId: getPortfolio
+      tags: [portfolio]
+      summary: Get portfolio data
+      responses:
+        "200":
+          description: Portfolio data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
+    put:
+      operationId: updatePortfolio
+      tags: [portfolio]
+      summary: Update portfolio data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePortfolioBody"
+      responses:
+        "200":
+          description: Updated portfolio
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Portfolio"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +396,713 @@ components:
       required:
         - status
 
+    Session:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        goal:
+          type: string
+        industry:
+          type: string
+        leverageScore:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        diagnosisResult:
+          $ref: "#/components/schemas/DiagnosisResult"
+          nullable: true
+      required:
+        - id
+        - title
+        - goal
+        - industry
+        - createdAt
+        - updatedAt
+
+    CreateSessionBody:
+      type: object
+      properties:
+        title:
+          type: string
+        goal:
+          type: string
+        industry:
+          type: string
+      required:
+        - title
+        - goal
+        - industry
+
+    SessionsSummary:
+      type: object
+      properties:
+        totalSessions:
+          type: integer
+        averageLeverageScore:
+          type: number
+        recentSessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Session"
+        topIndustries:
+          type: array
+          items:
+            type: object
+            properties:
+              industry:
+                type: string
+              count:
+                type: integer
+            required:
+              - industry
+              - count
+      required:
+        - totalSessions
+        - averageLeverageScore
+        - recentSessions
+        - topIndustries
+
+    DiagnosisInput:
+      type: object
+      properties:
+        goal:
+          type: string
+        industry:
+          type: string
+        assets:
+          type: string
+        constraints:
+          type: string
+        deadline:
+          type: string
+        desiredOutcome:
+          type: string
+        bottleneck:
+          type: string
+        sessionId:
+          type: integer
+          nullable: true
+      required:
+        - goal
+        - industry
+        - assets
+        - constraints
+        - deadline
+        - desiredOutcome
+        - bottleneck
+
+    DiagnosisResult:
+      type: object
+      properties:
+        strategicDiagnosis:
+          type: string
+        leverageScore:
+          type: number
+        bottleneckAnalysis:
+          type: string
+        opportunityMap:
+          type: array
+          items:
+            type: string
+        riskMap:
+          type: array
+          items:
+            type: string
+        roiActions:
+          type: array
+          items:
+            type: object
+            properties:
+              action:
+                type: string
+              impact:
+                type: string
+              timeframe:
+                type: string
+            required:
+              - action
+              - impact
+              - timeframe
+        eliteOperatorNextStep:
+          type: string
+      required:
+        - strategicDiagnosis
+        - leverageScore
+        - bottleneckAnalysis
+        - opportunityMap
+        - riskMap
+        - roiActions
+        - eliteOperatorNextStep
+
+    ScorecardInput:
+      type: object
+      properties:
+        goal:
+          type: string
+        industry:
+          type: string
+        currentStatus:
+          type: string
+        sessionId:
+          type: integer
+          nullable: true
+      required:
+        - goal
+        - industry
+        - currentStatus
+
+    ScorecardDimension:
+      type: object
+      properties:
+        name:
+          type: string
+        score:
+          type: number
+        reasoning:
+          type: string
+        howToImprove:
+          type: string
+        eliteRecommendation:
+          type: string
+      required:
+        - name
+        - score
+        - reasoning
+        - howToImprove
+        - eliteRecommendation
+
+    ScorecardResult:
+      type: object
+      properties:
+        overallScore:
+          type: number
+        dimensions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScorecardDimension"
+        topPriority:
+          type: string
+        strategicSummary:
+          type: string
+      required:
+        - overallScore
+        - dimensions
+        - topPriority
+        - strategicSummary
+
+    PromptGenerateInput:
+      type: object
+      properties:
+        category:
+          type: string
+          enum:
+            - business-strategy
+            - academic-writing
+            - ai-automation
+            - content-creation
+            - linkedin-positioning
+            - offer-creation
+            - replit-app-building
+            - data-science
+            - phd-research
+        context:
+          type: string
+        goal:
+          type: string
+      required:
+        - category
+        - context
+        - goal
+
+    GeneratedPrompt:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        prompt:
+          type: string
+        usage:
+          type: string
+        variables:
+          type: array
+          items:
+            type: string
+      required:
+        - title
+        - category
+        - prompt
+        - usage
+        - variables
+
+    SavePromptBody:
+      type: object
+      properties:
+        title:
+          type: string
+        category:
+          type: string
+        prompt:
+          type: string
+        usage:
+          type: string
+        variables:
+          type: array
+          items:
+            type: string
+      required:
+        - title
+        - category
+        - prompt
+        - usage
+        - variables
+
+    SavedPrompt:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        category:
+          type: string
+        prompt:
+          type: string
+        usage:
+          type: string
+        variables:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - category
+        - prompt
+        - usage
+        - variables
+        - createdAt
+
+    OpportunityInput:
+      type: object
+      properties:
+        skills:
+          type: string
+        experience:
+          type: string
+        tools:
+          type: string
+        projects:
+          type: string
+        targetAudience:
+          type: string
+        desiredPath:
+          type: string
+      required:
+        - skills
+        - experience
+        - tools
+        - projects
+        - targetAudience
+        - desiredPath
+
+    OpportunityResult:
+      type: object
+      properties:
+        positioningAngle:
+          type: string
+        bestNiche:
+          type: string
+        offerIdea:
+          type: string
+        contentAngle:
+          type: string
+        proofAsset:
+          type: string
+        roadmap30Day:
+          type: array
+          items:
+            type: object
+            properties:
+              week:
+                type: integer
+              focus:
+                type: string
+              actions:
+                type: array
+                items:
+                  type: string
+            required:
+              - week
+              - focus
+              - actions
+      required:
+        - positioningAngle
+        - bestNiche
+        - offerIdea
+        - contentAngle
+        - proofAsset
+        - roadmap30Day
+
+    AiWorkflow:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        trigger:
+          type: string
+        inputs:
+          type: array
+          items:
+            type: string
+        aiTask:
+          type: string
+        tools:
+          type: array
+          items:
+            type: string
+        output:
+          type: string
+        humanReviewStep:
+          type: string
+        monetisationUseCase:
+          type: string
+        isTemplate:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - trigger
+        - inputs
+        - aiTask
+        - tools
+        - output
+        - humanReviewStep
+        - monetisationUseCase
+        - isTemplate
+        - createdAt
+
+    CreateWorkflowBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        trigger:
+          type: string
+        inputs:
+          type: array
+          items:
+            type: string
+        aiTask:
+          type: string
+        tools:
+          type: array
+          items:
+            type: string
+        output:
+          type: string
+        humanReviewStep:
+          type: string
+        monetisationUseCase:
+          type: string
+      required:
+        - name
+        - description
+        - trigger
+        - inputs
+        - aiTask
+        - tools
+        - output
+        - humanReviewStep
+        - monetisationUseCase
+
+    WorkflowTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        trigger:
+          type: string
+        inputs:
+          type: array
+          items:
+            type: string
+        aiTask:
+          type: string
+        tools:
+          type: array
+          items:
+            type: string
+        output:
+          type: string
+        humanReviewStep:
+          type: string
+        monetisationUseCase:
+          type: string
+        isTemplate:
+          type: boolean
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - description
+        - trigger
+        - inputs
+        - aiTask
+        - tools
+        - output
+        - humanReviewStep
+        - monetisationUseCase
+        - isTemplate
+        - createdAt
+
+    PlannerInput:
+      type: object
+      properties:
+        strategicGoal:
+          type: string
+        keyRecommendation:
+          type: string
+        resources:
+          type: string
+        constraints:
+          type: string
+      required:
+        - strategicGoal
+        - keyRecommendation
+        - resources
+        - constraints
+
+    DayAction:
+      type: object
+      properties:
+        day:
+          type: integer
+        task:
+          type: string
+        priority:
+          type: string
+          enum: [high, medium, low]
+        estimatedTime:
+          type: string
+      required:
+        - day
+        - task
+        - priority
+        - estimatedTime
+
+    ExecutionPlan:
+      type: object
+      properties:
+        title:
+          type: string
+        sevenDaySprint:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayAction"
+        thirtyDayRoadmap:
+          type: array
+          items:
+            type: object
+            properties:
+              week:
+                type: integer
+              theme:
+                type: string
+              milestones:
+                type: array
+                items:
+                  type: string
+            required:
+              - week
+              - theme
+              - milestones
+        successMetrics:
+          type: array
+          items:
+            type: string
+        risks:
+          type: array
+          items:
+            type: object
+            properties:
+              risk:
+                type: string
+              mitigation:
+                type: string
+            required:
+              - risk
+              - mitigation
+        reviewQuestions:
+          type: array
+          items:
+            type: string
+      required:
+        - title
+        - sevenDaySprint
+        - thirtyDayRoadmap
+        - successMetrics
+        - risks
+        - reviewQuestions
+
+    SavePlanBody:
+      type: object
+      properties:
+        title:
+          type: string
+        plan:
+          $ref: "#/components/schemas/ExecutionPlan"
+      required:
+        - title
+        - plan
+
+    SavedPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        plan:
+          $ref: "#/components/schemas/ExecutionPlan"
+        createdAt:
+          type: string
+      required:
+        - id
+        - title
+        - plan
+        - createdAt
+
+    Portfolio:
+      type: object
+      properties:
+        name:
+          type: string
+        tagline:
+          type: string
+        positioningStatement:
+          type: string
+        philosophy:
+          type: string
+        contactEmail:
+          type: string
+        bookingUrl:
+          type: string
+        systems:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              outcome:
+                type: string
+            required:
+              - title
+              - description
+              - outcome
+        caseStudies:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              challenge:
+                type: string
+              approach:
+                type: string
+              result:
+                type: string
+              industry:
+                type: string
+            required:
+              - title
+              - challenge
+              - approach
+              - result
+              - industry
+      required:
+        - name
+        - tagline
+        - positioningStatement
+        - philosophy
+        - contactEmail
+        - systems
+        - caseStudies
+
+    UpdatePortfolioBody:
+      type: object
+      properties:
+        name:
+          type: string
+        tagline:
+          type: string
+        positioningStatement:
+          type: string
+        philosophy:
+          type: string
+        contactEmail:
+          type: string
+        bookingUrl:
+          type: string
+        systems:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              outcome:
+                type: string
+            required:
+              - title
+              - description
+              - outcome
+        caseStudies:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+              challenge:
+                type: string
+              approach:
+                type: string
+              result:
+                type: string
+              industry:
+                type: string
+            required:
+              - title
+              - challenge
+              - approach
+              - result
+              - industry
