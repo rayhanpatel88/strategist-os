@@ -21,7 +21,7 @@ import Settings from "@/pages/settings";
 import StrategyCard from "@/pages/strategy-card";
 import Goals from "@/pages/goals";
 import CommandPalette from "@/components/command-palette";
-import ChangelogModal, { useChangelogBadge } from "@/components/changelog-modal";
+import ChangelogModal, { useChangelogBadge, WhatsNewBanner } from "@/components/changelog-modal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -335,6 +335,7 @@ function useIsMobile() {
 function AppLayout({ children }: { children: React.ReactNode }) {
   const [showSearch, setShowSearch] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showBanner, setShowBanner] = useState(false);
   const { hasUnread, markSeen } = useChangelogBadge();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -342,9 +343,24 @@ function AppLayout({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
+  // Auto-show banner once per session when there are unread updates
+  useEffect(() => {
+    if (!hasUnread) return;
+    if (sessionStorage.getItem("sos_banner_dismissed")) return;
+    const t = setTimeout(() => setShowBanner(true), 1800);
+    return () => clearTimeout(t);
+  }, [hasUnread]);
+
   function openChangelog() {
     markSeen();
+    setShowBanner(false);
     setShowChangelog(true);
+  }
+
+  function dismissBanner() {
+    sessionStorage.setItem("sos_banner_dismissed", "1");
+    markSeen();
+    setShowBanner(false);
   }
 
   useEffect(() => {
@@ -436,6 +452,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
       {showSearch && <CommandPalette onClose={() => setShowSearch(false)} />}
       {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
+      {showBanner && <WhatsNewBanner onOpen={openChangelog} onDismiss={dismissBanner} />}
     </div>
   );
 }

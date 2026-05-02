@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { changelog, CURRENT_VERSION, CHANGELOG_SEEN_KEY } from "@/data/changelog";
 
 export function useChangelogBadge() {
@@ -29,6 +29,135 @@ const typeColor: Record<string, string> = {
   fix: "#f59e0b",
 };
 
+// ── What's New Banner ─────────────────────────────────────────────────────────
+
+export function WhatsNewBanner({ onOpen, onDismiss }: { onOpen: () => void; onDismiss: () => void }) {
+  const latest = changelog[0];
+  const highlights = latest.items.filter((i) => i.type === "new").slice(0, 3);
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    timerRef.current = setTimeout(() => setVisible(true), 80);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        @keyframes sos-banner-in {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+      <div
+        style={{
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          zIndex: 80,
+          width: 340,
+          background: "var(--sos-surface)",
+          border: "1px solid var(--sos-emerald)",
+          boxShadow: "0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(114,254,136,0.06)",
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(16px)",
+          transition: "opacity 0.28s ease, transform 0.28s ease",
+          pointerEvents: visible ? "auto" : "none",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 14px 10px",
+            borderBottom: "1px solid var(--sos-border)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--sos-emerald)", display: "inline-block", flexShrink: 0 }} />
+            <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif" }}>
+              What's New — v{latest.version}
+            </span>
+          </div>
+          <button
+            onClick={onDismiss}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--sos-text-dim)", fontSize: 18, lineHeight: 1, padding: "0 4px" }}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Summary line */}
+        <div style={{ padding: "8px 14px 0", fontSize: 11, color: "var(--sos-text-dim)", fontStyle: "italic", letterSpacing: "0.02em" }}>
+          {latest.summary}
+        </div>
+
+        {/* Highlights */}
+        <div style={{ padding: "10px 14px 12px", display: "flex", flexDirection: "column", gap: 9 }}>
+          {highlights.map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+              <span style={{
+                fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
+                color: typeColor[item.type],
+                border: `1px solid ${typeColor[item.type]}`,
+                padding: "1px 5px",
+                flexShrink: 0,
+                marginTop: 3,
+                fontFamily: "Space Grotesk, sans-serif",
+                opacity: 0.9,
+              }}>
+                {typeLabel[item.type]}
+              </span>
+              <span style={{ fontSize: 11, color: "var(--sos-text-secondary)", lineHeight: 1.55 }}>
+                {item.text}
+              </span>
+            </div>
+          ))}
+          {latest.items.length > highlights.length && (
+            <div style={{ fontSize: 10, color: "var(--sos-text-dim)", paddingLeft: 1, letterSpacing: "0.02em" }}>
+              +{latest.items.length - highlights.length} more in the full changelog
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "10px 14px 12px",
+            borderTop: "1px solid var(--sos-border)",
+          }}
+        >
+          <button
+            onClick={onDismiss}
+            style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.04em" }}
+          >
+            Dismiss
+          </button>
+          <button
+            onClick={onOpen}
+            style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase",
+              color: "#121317",
+              background: "var(--sos-emerald)",
+              border: "none",
+              padding: "7px 16px",
+              cursor: "pointer",
+              fontFamily: "Space Grotesk, sans-serif",
+            }}
+          >
+            See all updates
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ── Full Changelog Modal ──────────────────────────────────────────────────────
+
 export default function ChangelogModal({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -47,7 +176,7 @@ export default function ChangelogModal({ onClose }: { onClose: () => void }) {
       <div
         style={{
           width: "100%",
-          maxWidth: 520,
+          maxWidth: 540,
           maxHeight: "88dvh",
           background: "var(--sos-surface)",
           border: "1px solid var(--sos-border)",
@@ -84,11 +213,11 @@ export default function ChangelogModal({ onClose }: { onClose: () => void }) {
           {changelog.map((entry, i) => (
             <div key={entry.version}>
               {/* Version header */}
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-1">
                 <span
                   style={{
                     fontSize: 10, fontWeight: 700, letterSpacing: "0.08em",
-                    color: i === 0 ? "var(--sos-bg)" : "var(--sos-text-dim)",
+                    color: i === 0 ? "#121317" : "var(--sos-text-dim)",
                     background: i === 0 ? "var(--sos-emerald)" : "transparent",
                     border: i === 0 ? "none" : "1px solid var(--sos-border)",
                     padding: "2px 8px",
@@ -106,6 +235,13 @@ export default function ChangelogModal({ onClose }: { onClose: () => void }) {
                   </span>
                 )}
               </div>
+
+              {/* Summary line */}
+              {entry.summary && (
+                <div style={{ fontSize: 11, color: "var(--sos-text-dim)", fontStyle: "italic", marginBottom: 10, letterSpacing: "0.02em" }}>
+                  {entry.summary}
+                </div>
+              )}
 
               {/* Items */}
               <div className="space-y-2">
