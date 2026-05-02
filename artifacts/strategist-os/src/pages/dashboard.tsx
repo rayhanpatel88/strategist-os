@@ -1194,6 +1194,196 @@ function MomentumSparkline({ base }: { base: string }) {
   );
 }
 
+// ── Goals Widget ─────────────────────────────────────────────────────────────
+
+type GoalItem = {
+  id: number;
+  title: string;
+  type: "monthly" | "quarterly";
+  status: string;
+  progress: number;
+  targetDate: string;
+  category: string;
+};
+
+const GOAL_STATUS_COLOR: Record<string, string> = {
+  "Not Started": "var(--sos-text-dim)",
+  "In Progress": "var(--sos-blue)",
+  "On Track": "var(--sos-emerald)",
+  "At Risk": "#f59e0b",
+  "Complete": "var(--sos-emerald)",
+};
+
+function daysUntilGoal(dateStr: string): number {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr + "T00:00:00");
+  return Math.round((target.getTime() - today.getTime()) / 86400000);
+}
+
+function GoalsWidget({ base }: { base: string }) {
+  const [goals, setGoals] = useState<GoalItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${base}/api/goals`)
+      .then((r) => r.json())
+      .then((d) => setGoals(d.goals ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [base]);
+
+  const active = useMemo(
+    () =>
+      [...goals]
+        .filter((g) => g.status !== "Complete")
+        .sort((a, b) => daysUntilGoal(a.targetDate) - daysUntilGoal(b.targetDate)),
+    [goals],
+  );
+
+  const stats = useMemo(() => ({
+    total: goals.length,
+    complete: goals.filter((g) => g.status === "Complete").length,
+    overdue: active.filter((g) => daysUntilGoal(g.targetDate) < 0).length,
+    avgProgress: goals.length > 0 ? Math.round(goals.reduce((a, g) => a + g.progress, 0) / goals.length) : 0,
+  }), [goals, active]);
+
+  return (
+    <div className="mb-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="label-caps">Goals</div>
+        <div className="flex items-center gap-3">
+          {stats.overdue > 0 && (
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-error)", background: "rgba(239,68,68,0.1)", padding: "3px 8px", border: "1px solid rgba(239,68,68,0.2)" }}>
+              {stats.overdue} overdue
+            </span>
+          )}
+          <Link href="/goals">
+            <span style={{ fontSize: 10, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}>
+              View All
+            </span>
+          </Link>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="animate-pulse" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", height: 64 }} />
+          ))}
+        </div>
+      ) : goals.length === 0 ? (
+        <div className="p-8 text-center" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+          <div style={{ fontSize: 12, color: "var(--sos-text-muted)", marginBottom: 10 }}>No goals set yet.</div>
+          <Link href="/goals">
+            <span style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+              Set your first goal
+            </span>
+          </Link>
+        </div>
+      ) : (
+        <>
+          {/* Summary pills */}
+          <div className="grid grid-cols-2 md:grid-cols-4 mb-3" style={{ gap: 1, background: "var(--sos-border-s)" }}>
+            {[
+              { label: "Total", value: stats.total, color: undefined },
+              { label: "Complete", value: stats.complete, color: stats.complete > 0 ? "var(--sos-emerald)" : undefined },
+              { label: "Overdue", value: stats.overdue, color: stats.overdue > 0 ? "var(--sos-error)" : undefined },
+              { label: "Avg Progress", value: `${stats.avgProgress}%`, color: undefined },
+            ].map((s) => (
+              <div key={s.label} style={{ background: "var(--sos-surface)", padding: "10px 14px" }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 4 }}>
+                  {s.label}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: s.color ?? "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+                  {s.value}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Goal rows */}
+          <div className="space-y-px" style={{ background: "var(--sos-border-s)" }}>
+            {active.slice(0, 5).map((goal) => {
+              const days = daysUntilGoal(goal.targetDate);
+              const statusColor = GOAL_STATUS_COLOR[goal.status] ?? "var(--sos-text-dim)";
+              const isOverdue = days < 0;
+              const isUrgent = !isOverdue && days <= 7;
+
+              return (
+                <Link key={goal.id} href="/goals">
+                  <div
+                    style={{ background: "var(--sos-surface)", borderLeft: `3px solid ${isOverdue ? "var(--sos-error)" : statusColor}`, padding: "12px 16px", cursor: "pointer", display: "flex", flexDirection: "column", gap: 8 }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sos-row-hover)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sos-surface)"; }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: goal.type === "quarterly" ? "var(--sos-blue)" : "#8b5cf6", flexShrink: 0 }}>
+                          {goal.type}
+                        </span>
+                        {goal.category && (
+                          <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em", flexShrink: 0 }}>
+                            {goal.category}
+                          </span>
+                        )}
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                          {goal.title}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: isOverdue ? "var(--sos-error)" : isUrgent ? "#f59e0b" : "var(--sos-text-dim)" }}>
+                          {isOverdue ? `${Math.abs(days)}d overdue` : days === 0 ? "Due today" : `${days}d left`}
+                        </span>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: statusColor, fontFamily: "Space Grotesk, sans-serif", minWidth: 32, textAlign: "right" }}>
+                          {goal.progress}%
+                        </span>
+                      </div>
+                    </div>
+                    {/* Progress bar */}
+                    <div style={{ height: 2, background: "var(--sos-track-bg)", width: "100%" }}>
+                      <div style={{ height: 2, width: `${goal.progress}%`, background: isOverdue ? "var(--sos-error)" : statusColor, transition: "width 0.5s ease" }} />
+                    </div>
+                    {/* Status chip */}
+                    <div className="flex items-center justify-between">
+                      <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: statusColor }}>
+                        {goal.status}
+                      </span>
+                      <span className="material-symbols-outlined" style={{ color: "var(--sos-text-dim)", fontSize: 12 }}>arrow_forward</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Show more */}
+          {active.length > 5 && (
+            <Link href="/goals">
+              <div
+                style={{ padding: "10px 16px", fontSize: 10, color: "var(--sos-text-dim)", letterSpacing: "0.06em", textAlign: "center", cursor: "pointer", background: "var(--sos-surface)", border: "1px solid var(--sos-border-s)", borderTop: "none" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--sos-blue)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--sos-text-dim)"; }}
+              >
+                +{active.length - 5} more active goals
+              </div>
+            </Link>
+          )}
+
+          {/* Completed count footer */}
+          {stats.complete > 0 && (
+            <div style={{ padding: "8px 16px", fontSize: 10, color: "var(--sos-emerald)", letterSpacing: "0.06em", background: "rgba(114,254,136,0.04)", border: "1px solid rgba(114,254,136,0.12)", borderTop: "none", display: "flex", alignItems: "center", gap: 6 }}>
+              <span className="material-symbols-outlined" style={{ fontSize: 12 }}>check_circle</span>
+              {stats.complete} goal{stats.complete !== 1 ? "s" : ""} complete
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const summary = useGetSessionsSummary();
   const sessions = useListSessions();
