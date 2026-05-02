@@ -307,7 +307,17 @@ export default function Calendar() {
   const [newTask, setNewTask] = useState(blankTask());
   const [reviewOpen, setReviewOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<"plan" | "schedule" | "tasks">("schedule");
-  const [streak, setStreak] = useState<{ currentStreak: number; longestStreak: number } | null>(null);
+  type StreakData = {
+    currentStreak: number;
+    longestStreak: number;
+    frozenDates: string[];
+    freezesUsedThisMonth: number;
+    freezesAllowed: number;
+  };
+  const [streak, setStreak] = useState<StreakData | null>(null);
+  const [freezePromptDate, setFreezePromptDate] = useState<string | null>(null);
+  const [freezePromptDismissed, setFreezePromptDismissed] = useState(false);
+  const [freezing, setFreezing] = useState(false);
   const [recurringTemplates, setRecurringTemplates] = useState<RecurringTpl[]>([]);
   const [showSaveRecurring, setShowSaveRecurring] = useState(false);
   const [recurringForm, setRecurringForm] = useState<{ name: string; days: number[] }>({ name: "", days: [] });
@@ -328,9 +338,47 @@ export default function Calendar() {
   const fetchStreak = useCallback(() => {
     fetch(`${base}/api/calendar/streak`)
       .then((r) => r.json())
-      .then((data) => setStreak(data))
+      .then((data) => {
+        setStreak(data);
+        // Auto-detect freeze opportunity: streak is 0, freezes remain, yesterday has no content
+        if (
+          data.currentStreak === 0 &&
+          data.freezesUsedThisMonth < data.freezesAllowed
+        ) {
+          const yesterday = new Date();
+          yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+          const yStr = yesterday.toISOString().split("T")[0];
+          if (!data.frozenDates.includes(yStr)) {
+            setFreezePromptDate(yStr);
+          }
+        } else {
+          setFreezePromptDate(null);
+        }
+      })
       .catch(() => {});
   }, [base]);
+
+  const applyFreeze = useCallback((date: string) => {
+    setFreezing(true);
+    fetch(`${base}/api/calendar/streak/freeze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.ok) {
+          toast({ title: "Streak frozen", description: `${date} protected. Freeze used.` });
+          setFreezePromptDate(null);
+          setFreezePromptDismissed(false);
+          fetchStreak();
+        } else {
+          toast({ title: "Could not apply freeze", description: res.error ?? "Unknown error", variant: "destructive" });
+        }
+      })
+      .catch(() => toast({ title: "Network error", variant: "destructive" }))
+      .finally(() => setFreezing(false));
+  }, [base, fetchStreak, toast]);
 
   const fetchRecurringTemplates = useCallback(() => {
     fetch(`${base}/api/calendar/recurring-templates`)
@@ -574,10 +622,16 @@ export default function Calendar() {
               <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
                 Calendar
               </span>
-              {streak !== null && streak.currentStreak > 0 && (
-                <div style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(114,254,136,0.08)", border: "1px solid rgba(114,254,136,0.22)", padding: "3px 8px" }}>
-                  <span style={{ fontSize: 12 }}>🔥</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: "var(--sos-emerald)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
+              {streak !== null && (
+                <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 4, background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)", border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`, padding: "3px 8px" }}>
+                    <span style={{ fontSize: 12 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
+                  </div>
+                  <div title={`${streak.freezesAllowed - streak.freezesUsedThisMonth} freeze${streak.freezesAllowed - streak.freezesUsedThisMonth !== 1 ? "s" : ""} left this month`} style={{ display: "flex", alignItems: "center", gap: 3, background: "rgba(147,197,253,0.08)", border: "1px solid rgba(147,197,253,0.18)", padding: "3px 7px" }}>
+                    <span style={{ fontSize: 10 }}>🧊</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, color: "var(--sos-blue)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.freezesAllowed - streak.freezesUsedThisMonth}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -669,13 +723,23 @@ export default function Calendar() {
               Calendar
             </span>
             {streak !== null && (
-              <div
-                title={`Longest streak: ${streak.longestStreak} day${streak.longestStreak !== 1 ? "s" : ""}`}
-                style={{ display: "flex", alignItems: "center", gap: 5, background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)", border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`, padding: "4px 10px", flexShrink: 0, cursor: "default" }}
-              >
-                <span style={{ fontSize: 13 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
-                <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>day{streak.currentStreak !== 1 ? "s" : ""}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                <div
+                  title={`Longest streak: ${streak.longestStreak} day${streak.longestStreak !== 1 ? "s" : ""}`}
+                  style={{ display: "flex", alignItems: "center", gap: 5, background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)", border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`, padding: "4px 10px", cursor: "default" }}
+                >
+                  <span style={{ fontSize: 13 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.currentStreak}</span>
+                  <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>day{streak.currentStreak !== 1 ? "s" : ""}</span>
+                </div>
+                <div
+                  title={`${streak.freezesAllowed - streak.freezesUsedThisMonth} of ${streak.freezesAllowed} freezes left this month`}
+                  style={{ display: "flex", alignItems: "center", gap: 4, background: "rgba(147,197,253,0.07)", border: "1px solid rgba(147,197,253,0.18)", padding: "4px 10px", cursor: "default" }}
+                >
+                  <span style={{ fontSize: 13 }}>🧊</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "var(--sos-blue)", fontFamily: "Space Grotesk, sans-serif" }}>{streak.freezesAllowed - streak.freezesUsedThisMonth}</span>
+                  <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>left</span>
+                </div>
               </div>
             )}
             <div className="flex items-center gap-2">
@@ -755,6 +819,38 @@ export default function Calendar() {
           </div>
         </div>
       </div>
+
+      {/* Streak freeze prompt banner */}
+      {freezePromptDate && !freezePromptDismissed && (
+        <div className="flex items-center justify-between gap-3 shrink-0 px-4 py-2" style={{ background: "rgba(147,197,253,0.06)", borderBottom: "1px solid rgba(147,197,253,0.18)" }}>
+          <div className="flex items-center gap-2 min-w-0">
+            <span style={{ fontSize: 13 }}>🧊</span>
+            <span style={{ fontSize: 11, color: "var(--sos-text-body)" }}>
+              <span style={{ color: "var(--sos-text-dim)" }}>No plan on </span>
+              <span style={{ fontWeight: 600, color: "var(--sos-blue)" }}>
+                {new Date(freezePromptDate + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
+              </span>
+              <span style={{ color: "var(--sos-text-dim)" }}>. Spend a freeze to protect your streak?</span>
+              {streak && (
+                <span style={{ color: "var(--sos-text-dim)", fontSize: 10 }}> ({streak.freezesAllowed - streak.freezesUsedThisMonth} left)</span>
+              )}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => applyFreeze(freezePromptDate)}
+              disabled={freezing}
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-blue)", background: "rgba(147,197,253,0.12)", border: "1px solid rgba(147,197,253,0.3)", padding: "4px 12px", cursor: freezing ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+              {freezing ? "..." : "Use Freeze"}
+            </button>
+            <button
+              onClick={() => setFreezePromptDismissed(true)}
+              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Recurring template suggestion banner */}
       {suggestedTemplate && (
