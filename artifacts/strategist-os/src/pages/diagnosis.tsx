@@ -17,13 +17,13 @@ function PageHeader({ title, sub, right }: { title: string; sub?: string; right?
   return (
     <div
       className="flex items-center justify-between px-8 py-4 shrink-0"
-      style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+      style={{ borderBottom: "1px solid var(--sos-border)" }}
     >
       <div>
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
           {title}
         </span>
-        {sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", marginTop: 2, letterSpacing: "0.04em" }}>{sub}</div>}
+        {sub && <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2, letterSpacing: "0.04em" }}>{sub}</div>}
       </div>
       {right}
     </div>
@@ -33,7 +33,7 @@ function PageHeader({ title, sub, right }: { title: string; sub?: string; right?
 function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase" }}>{label}</div>
       {children}
     </div>
   );
@@ -75,7 +75,7 @@ function HudBtn({ onClick, disabled, children, variant = "primary", "data-testid
         data-testid={dt}
         style={{
           fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
-          color: "rgba(255,255,255,0.45)", background: "none", border: "1px solid rgba(255,255,255,0.12)",
+          color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)",
           padding: "8px 16px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif",
           opacity: disabled ? 0.4 : 1,
         }}
@@ -91,7 +91,7 @@ function HudBtn({ onClick, disabled, children, variant = "primary", "data-testid
       data-testid={dt}
       style={{
         fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
-        color: "#121317", background: disabled ? "rgba(255,255,255,0.5)" : "#ffffff",
+        color: "var(--sos-btn-text)", background: disabled ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)",
         border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer",
         fontFamily: "Space Grotesk, sans-serif", width: "100%",
         transition: "background 0.1s",
@@ -136,9 +136,9 @@ export default function Diagnosis() {
   };
 
   if (step === "result" && result) {
-    const scoreColor = result.leverageScore >= 75 ? "#72fe88" : result.leverageScore >= 50 ? "#4b8eff" : "#ffb4ab";
+    const scoreColor = result.leverageScore >= 75 ? "var(--sos-emerald)" : result.leverageScore >= 50 ? "var(--sos-blue)" : "var(--sos-error)";
     return (
-      <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+      <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
         <PageHeader
           title="Strategic Diagnosis"
           sub="Analysis complete"
@@ -151,47 +151,47 @@ export default function Diagnosis() {
 
         <div className="flex-1 overflow-y-auto px-8 py-7 space-y-4">
           {/* Leverage score bar */}
-          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
             <div className="flex items-end justify-between mb-4">
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>Leverage Score</div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 6 }}>Leverage Score</div>
                 <div style={{ fontSize: 44, fontWeight: 700, color: scoreColor, fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
                   {result.leverageScore}
-                  <span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)", marginLeft: 4 }}>/100</span>
+                  <span style={{ fontSize: 16, color: "var(--sos-text-muted)", marginLeft: 4 }}>/100</span>
                 </div>
               </div>
-              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "right", maxWidth: 280 }}>
+              <div style={{ fontSize: 13, color: "var(--sos-text-secondary)", textAlign: "right", maxWidth: 280 }}>
                 {result.leverageScore >= 75 ? "High leverage position" : result.leverageScore >= 50 ? "Moderate leverage. Clear upside." : "Low leverage. Significant improvement available."}
               </div>
             </div>
-            <div style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
+            <div style={{ height: 3, background: "var(--sos-track-bg)" }}>
               <div style={{ height: 3, width: `${result.leverageScore}%`, background: scoreColor, transition: "width 1s ease" }} />
             </div>
           </div>
 
           {/* Strategic Diagnosis */}
-          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 12 }}>Strategic Diagnosis</div>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, whiteSpace: "pre-line" }}>{result.strategicDiagnosis}</p>
+          <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 12 }}>Strategic Diagnosis</div>
+            <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.7, whiteSpace: "pre-line" }}>{result.strategicDiagnosis}</p>
           </div>
 
           {/* Bottleneck */}
-          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 12 }}>Bottleneck Analysis</div>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>{result.bottleneckAnalysis}</p>
+          <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 12 }}>Bottleneck Analysis</div>
+            <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.7 }}>{result.bottleneckAnalysis}</p>
           </div>
 
           {/* ROI Actions */}
-          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 16 }}>Three Highest-Return Actions</div>
+          <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 16 }}>Three Highest-Return Actions</div>
             <div className="space-y-5">
               {result.roiActions.map((action, i) => (
                 <div key={i} className="flex gap-4" data-testid={`card-roi-action-${i}`}>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: "#4b8eff", width: 24, flexShrink: 0, fontFamily: "Space Grotesk, sans-serif" }}>{i + 1}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: "var(--sos-blue)", width: 24, flexShrink: 0, fontFamily: "Space Grotesk, sans-serif" }}>{i + 1}</div>
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 4 }}>{action.action}</div>
-                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginBottom: 3 }}>{action.impact}</div>
-                    <div style={{ fontSize: 11, color: "#72fe88", fontWeight: 600, letterSpacing: "0.04em" }}>{action.timeframe}</div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--sos-text)", marginBottom: 4 }}>{action.action}</div>
+                    <div style={{ fontSize: 12, color: "var(--sos-text-dim)", marginBottom: 3 }}>{action.impact}</div>
+                    <div style={{ fontSize: 11, color: "var(--sos-emerald)", fontWeight: 600, letterSpacing: "0.04em" }}>{action.timeframe}</div>
                   </div>
                 </div>
               ))}
@@ -200,23 +200,23 @@ export default function Diagnosis() {
 
           {/* Opportunity + Risk */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 14 }}>Opportunity Map</div>
+            <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 14 }}>Opportunity Map</div>
               <ul className="space-y-3">
                 {result.opportunityMap.map((o, i) => (
-                  <li key={i} className="flex gap-3" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
-                    <span style={{ color: "#72fe88", flexShrink: 0, marginTop: 1 }}>+</span>
+                  <li key={i} className="flex gap-3" style={{ fontSize: 12, color: "var(--sos-text-body)", lineHeight: 1.5 }}>
+                    <span style={{ color: "var(--sos-emerald)", flexShrink: 0, marginTop: 1 }}>+</span>
                     {o}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
-              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 14 }}>Risk Map</div>
+            <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 14 }}>Risk Map</div>
               <ul className="space-y-3">
                 {result.riskMap.map((r, i) => (
-                  <li key={i} className="flex gap-3" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
-                    <span style={{ color: "#ffb4ab", flexShrink: 0, marginTop: 1 }}>!</span>
+                  <li key={i} className="flex gap-3" style={{ fontSize: 12, color: "var(--sos-text-body)", lineHeight: 1.5 }}>
+                    <span style={{ color: "var(--sos-error)", flexShrink: 0, marginTop: 1 }}>!</span>
                     {r}
                   </li>
                 ))}
@@ -224,12 +224,12 @@ export default function Diagnosis() {
             </div>
           </div>
 
-          {/* Elite operator */}
-          <div className="p-6" style={{ background: "rgba(114,254,136,0.05)", border: "1px solid rgba(114,254,136,0.18)" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "#72fe88", textTransform: "uppercase", marginBottom: 12 }}>
+          {/* Recommended next step */}
+          <div className="p-6" style={{ background: "var(--sos-emerald-tint)", border: "1px solid var(--sos-emerald-border)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-emerald)", textTransform: "uppercase", marginBottom: 12 }}>
               Recommended Next Step
             </div>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>{result.eliteOperatorNextStep}</p>
+            <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.7 }}>{result.eliteOperatorNextStep}</p>
           </div>
         </div>
       </div>
@@ -237,7 +237,7 @@ export default function Diagnosis() {
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+    <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       <PageHeader title="Strategic Diagnosis" sub="Describe your position. Receive a structured diagnosis with ranked priorities and next steps." />
 
       <div className="flex-1 overflow-y-auto">

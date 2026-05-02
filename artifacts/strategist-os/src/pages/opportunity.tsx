@@ -20,7 +20,7 @@ function HudBtn({ onClick, disabled, children, "data-testid": dt }: { onClick?: 
       data-testid={dt}
       style={{
         fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
-        color: "#121317", background: disabled ? "rgba(255,255,255,0.5)" : "#ffffff",
+        color: "var(--sos-btn-text)", background: disabled ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)",
         border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer",
         fontFamily: "Space Grotesk, sans-serif", width: "100%",
       }}
@@ -54,18 +54,18 @@ export default function Opportunity() {
 
   if (step === "result" && result) {
     return (
-      <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+      <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
         <div
           className="flex items-center justify-between px-8 py-4 shrink-0"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+          style={{ borderBottom: "1px solid var(--sos-border)" }}
         >
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
             Opportunity_Stack
           </span>
           <button
             onClick={() => { setStep("form"); setResult(null); }}
             data-testid="button-new-opportunity"
-            style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", background: "none", border: "1px solid rgba(255,255,255,0.12)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}
+            style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}
           >
             New Analysis
           </button>
@@ -84,15 +84,15 @@ export default function Opportunity() {
                 key={i}
                 className="p-6"
                 style={{
-                  background: item.highlight ? "rgba(114,254,136,0.05)" : "#1e1f23",
-                  border: item.highlight ? "1px solid rgba(114,254,136,0.18)" : "1px solid rgba(255,255,255,0.07)",
+                  background: item.highlight ? "var(--sos-emerald-tint)" : "var(--sos-surface)",
+                  border: item.highlight ? "1px solid var(--sos-emerald-border)" : "1px solid var(--sos-border)",
                 }}
                 data-testid={`card-opportunity-${i}`}
               >
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: item.highlight ? "#72fe88" : "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: item.highlight ? "var(--sos-emerald)" : "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 10 }}>
                   {item.label}
                 </div>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}>{item.value}</p>
+                <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.6 }}>{item.value}</p>
               </div>
             ))}
           </div>
@@ -100,31 +100,31 @@ export default function Opportunity() {
           {/* Proof asset — full width */}
           <div
             className="p-6"
-            style={{ background: "rgba(75,142,255,0.05)", border: "1px solid rgba(75,142,255,0.18)" }}
+            style={{ background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)" }}
             data-testid="card-opportunity-4"
           >
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "#4b8eff", textTransform: "uppercase", marginBottom: 10 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-blue)", textTransform: "uppercase", marginBottom: 10 }}>
               Proof Asset to Build
             </div>
-            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.6 }}>{result.proofAsset}</p>
+            <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.6 }}>{result.proofAsset}</p>
           </div>
 
           {/* 30-day roadmap */}
-          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 20 }}>
+          <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 20 }}>
               30-Day Execution Roadmap
             </div>
             <div className="grid grid-cols-4 gap-6">
               {result.roadmap30Day.map((week) => (
                 <div key={week.week} data-testid={`card-roadmap-week-${week.week}`}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: "#4b8eff", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, fontFamily: "Space Grotesk, sans-serif" }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: "var(--sos-blue)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, fontFamily: "Space Grotesk, sans-serif" }}>
                     Week {week.week}
                   </div>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#ffffff", marginBottom: 10, lineHeight: 1.4 }}>{week.focus}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--sos-text)", marginBottom: 10, lineHeight: 1.4 }}>{week.focus}</div>
                   <ul className="space-y-2">
                     {week.actions.map((action, j) => (
-                      <li key={j} className="flex gap-2" style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", lineHeight: 1.5 }}>
-                        <span style={{ color: "#4b8eff", flexShrink: 0 }}>→</span>
+                      <li key={j} className="flex gap-2" style={{ fontSize: 11, color: "var(--sos-text-secondary)", lineHeight: 1.5 }}>
+                        <span style={{ color: "var(--sos-blue)", flexShrink: 0 }}>→</span>
                         {action}
                       </li>
                     ))}
@@ -139,20 +139,20 @@ export default function Opportunity() {
   }
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+    <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       <div
         className="px-8 py-4 shrink-0"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ borderBottom: "1px solid var(--sos-border)" }}
       >
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
           Opportunity_Stack_Builder
         </span>
-        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", marginTop: 2, letterSpacing: "0.04em" }}>Map your assets. Get a clear positioning angle and a 30-day execution plan.</div>
+        <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2, letterSpacing: "0.04em" }}>Map your assets. Get a clear positioning angle and a 30-day execution plan.</div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-8 py-7 max-w-2xl space-y-6">
         <div>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Skills *</div>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Skills *</div>
           <textarea
             value={form.skills}
             onChange={(e) => setForm({ ...form, skills: e.target.value })}
@@ -164,7 +164,7 @@ export default function Opportunity() {
         </div>
 
         <div>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Experience</div>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Experience</div>
           <textarea
             value={form.experience}
             onChange={(e) => setForm({ ...form, experience: e.target.value })}
@@ -177,7 +177,7 @@ export default function Opportunity() {
 
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Tools You Know</div>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Tools You Know</div>
             <input
               value={form.tools}
               onChange={(e) => setForm({ ...form, tools: e.target.value })}
@@ -187,7 +187,7 @@ export default function Opportunity() {
             />
           </div>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Current Projects</div>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Current Projects</div>
             <input
               value={form.projects}
               onChange={(e) => setForm({ ...form, projects: e.target.value })}
@@ -199,7 +199,7 @@ export default function Opportunity() {
         </div>
 
         <div>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Target Audience *</div>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Target Audience *</div>
           <input
             value={form.targetAudience}
             onChange={(e) => setForm({ ...form, targetAudience: e.target.value })}
@@ -210,7 +210,7 @@ export default function Opportunity() {
         </div>
 
         <div>
-          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Desired Income or Career Path</div>
+          <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Desired Income or Career Path</div>
           <input
             value={form.desiredPath}
             onChange={(e) => setForm({ ...form, desiredPath: e.target.value })}

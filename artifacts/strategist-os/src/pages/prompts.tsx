@@ -26,10 +26,10 @@ type GeneratedPrompt = { title: string; category: string; prompt: string; usage:
 function HudBtn({ onClick, disabled, children, variant = "primary", "data-testid": dt }: { onClick?: () => void; disabled?: boolean; children: React.ReactNode; variant?: "primary" | "ghost" | "dim"; "data-testid"?: string }) {
   const styles: React.CSSProperties =
     variant === "primary"
-      ? { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#121317", background: disabled ? "rgba(255,255,255,0.5)" : "#ffffff", border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", width: "100%", transition: "background 0.1s" }
+      ? { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: disabled ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", width: "100%", transition: "background 0.1s" }
       : variant === "ghost"
-      ? { fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", background: "none", border: "1px solid rgba(255,255,255,0.12)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", opacity: disabled ? 0.4 : 1 }
-      : { fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#4b8eff", background: "none", border: "1px solid rgba(75,142,255,0.25)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" };
+      ? { fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", opacity: disabled ? 0.4 : 1 }
+      : { fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-blue)", background: "none", border: "1px solid var(--sos-blue-border)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" };
   return (
     <button onClick={onClick} disabled={disabled} data-testid={dt} style={styles}>
       {children}
@@ -98,17 +98,17 @@ export default function Prompts() {
   };
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+    <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       {/* Header */}
       <div
         className="flex items-center justify-between px-8 py-4 shrink-0"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ borderBottom: "1px solid var(--sos-border)" }}
       >
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
           Prompt_Arsenal
         </span>
         {/* Tab switcher */}
-        <div className="flex" style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
+        <div className="flex" style={{ border: "1px solid var(--sos-ghost-border)" }}>
           {(["generate", "saved"] as const).map((t) => (
             <button
               key={t}
@@ -117,10 +117,10 @@ export default function Prompts() {
               style={{
                 fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
                 padding: "7px 16px", cursor: "pointer", border: "none",
-                background: tab === t ? "rgba(255,255,255,0.08)" : "transparent",
-                color: tab === t ? "#ffffff" : "rgba(255,255,255,0.35)",
+                background: tab === t ? "var(--sos-tab-active-bg)" : "transparent",
+                color: tab === t ? "var(--sos-text)" : "var(--sos-text-dim)",
                 fontFamily: "Space Grotesk, sans-serif",
-                borderRight: t === "generate" ? "1px solid rgba(255,255,255,0.1)" : "none",
+                borderRight: t === "generate" ? "1px solid var(--sos-ghost-border)" : "none",
                 transition: "background 0.1s",
               }}
             >
@@ -135,9 +135,9 @@ export default function Prompts() {
           {/* Left — category selector */}
           <div
             className="flex flex-col shrink-0 overflow-y-auto py-6"
-            style={{ width: 200, borderRight: "1px solid rgba(255,255,255,0.07)", paddingLeft: 24, paddingRight: 16 }}
+            style={{ width: 200, borderRight: "1px solid var(--sos-border)", paddingLeft: 24, paddingRight: 16 }}
           >
-            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 14 }}>Category</div>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-muted)", textTransform: "uppercase", marginBottom: 14 }}>Category</div>
             <div className="space-y-1">
               {CATEGORIES.map((cat) => (
                 <button
@@ -147,14 +147,13 @@ export default function Prompts() {
                   style={{
                     display: "block", width: "100%", textAlign: "left",
                     fontSize: 12, padding: "8px 10px",
-                    background: category === cat.id ? "rgba(255,255,255,0.06)" : "transparent",
-                    borderLeft: category === cat.id ? "2px solid #ffffff" : "2px solid transparent",
-                    color: category === cat.id ? "#ffffff" : "rgba(255,255,255,0.38)",
+                    background: category === cat.id ? "var(--sos-nav-active-bg)" : "transparent",
+                    color: category === cat.id ? "var(--sos-text)" : "var(--sos-text-dim)",
                     fontWeight: category === cat.id ? 600 : 400,
                     cursor: "pointer", border: "none",
                     borderLeftWidth: 2,
                     borderLeftStyle: "solid",
-                    borderLeftColor: category === cat.id ? "#ffffff" : "transparent",
+                    borderLeftColor: category === cat.id ? "var(--sos-nav-active-border)" : "transparent",
                     transition: "all 0.1s",
                   }}
                 >
@@ -168,7 +167,7 @@ export default function Prompts() {
           <div className="flex-1 overflow-y-auto px-8 py-7 space-y-6">
             <div className="space-y-5 max-w-2xl">
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Context</div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Context</div>
                 <textarea
                   id="prompt-context"
                   value={context}
@@ -180,7 +179,7 @@ export default function Prompts() {
                 />
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Goal</div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Goal</div>
                 <input
                   id="prompt-goal"
                   value={goal}
@@ -196,11 +195,11 @@ export default function Prompts() {
             </div>
 
             {generated && (
-              <div className="max-w-2xl" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)", padding: 24 }}>
+              <div className="max-w-2xl" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", padding: 24 }}>
                 <div className="flex items-start justify-between mb-5">
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#ffffff", marginBottom: 3 }}>{generated.title}</div>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textTransform: "capitalize", letterSpacing: "0.04em" }}>{generated.category.replace(/-/g, " ")}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "var(--sos-text)", marginBottom: 3 }}>{generated.title}</div>
+                    <div style={{ fontSize: 11, color: "var(--sos-text-dim)", textTransform: "capitalize", letterSpacing: "0.04em" }}>{generated.category.replace(/-/g, " ")}</div>
                   </div>
                   <div className="flex gap-2">
                     <HudBtn variant="ghost" onClick={handleCopy} data-testid="button-copy-prompt">{copied ? "Copied" : "Copy"}</HudBtn>
@@ -208,23 +207,23 @@ export default function Prompts() {
                   </div>
                 </div>
 
-                <div style={{ background: "#0d0e12", padding: 16, marginBottom: 16, border: "1px solid rgba(255,255,255,0.05)" }}>
-                  <pre style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontFamily: "Space Grotesk, monospace", whiteSpace: "pre-wrap", lineHeight: 1.7, overflow: "auto", maxHeight: 280 }}>
+                <div style={{ background: "var(--sos-surface-lowest)", padding: 16, marginBottom: 16, border: "1px solid var(--sos-border-s)" }}>
+                  <pre style={{ fontSize: 12, color: "var(--sos-text-body)", fontFamily: "Space Grotesk, monospace", whiteSpace: "pre-wrap", lineHeight: 1.7, overflow: "auto", maxHeight: 280 }}>
                     {generated.prompt}
                   </pre>
                 </div>
 
                 <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>Usage guidance</div>
-                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>{generated.usage}</p>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>Usage guidance</div>
+                  <p style={{ fontSize: 12, color: "var(--sos-text-secondary)", lineHeight: 1.6 }}>{generated.usage}</p>
                 </div>
 
                 {generated.variables.length > 0 && (
                   <div>
-                    <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Variables to fill in</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Variables to fill in</div>
                     <div className="flex flex-wrap gap-2">
                       {generated.variables.map((v) => (
-                        <span key={v} style={{ background: "rgba(75,142,255,0.1)", border: "1px solid rgba(75,142,255,0.2)", color: "#4b8eff", fontSize: 11, padding: "3px 8px", fontFamily: "Space Grotesk, monospace" }}>
+                        <span key={v} style={{ background: "var(--sos-blue-tint)", border: "1px solid var(--sos-blue-border)", color: "var(--sos-blue)", fontSize: 11, padding: "3px 8px", fontFamily: "Space Grotesk, monospace" }}>
                           [{v}]
                         </span>
                       ))}
@@ -239,30 +238,30 @@ export default function Prompts() {
         <div className="flex-1 overflow-y-auto px-8 py-7">
           {savedPrompts.isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="mb-3 p-5 animate-pulse" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)", height: 90 }} />
+              <div key={i} className="mb-3 p-5 animate-pulse" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", height: 90 }} />
             ))
           ) : savedPrompts.data && savedPrompts.data.length > 0 ? (
             <div className="space-y-3 max-w-3xl">
               {savedPrompts.data.map((prompt) => (
-                <div key={prompt.id} style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }} data-testid={`card-saved-prompt-${prompt.id}`}>
+                <div key={prompt.id} style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }} data-testid={`card-saved-prompt-${prompt.id}`}>
                   <div className="flex items-start justify-between p-5 pb-4">
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 3 }}>{prompt.title}</div>
-                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "capitalize", letterSpacing: "0.04em" }}>{prompt.category.replace(/-/g, " ")}</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "var(--sos-text)", marginBottom: 3 }}>{prompt.title}</div>
+                      <div style={{ fontSize: 10, color: "var(--sos-text-dim)", textTransform: "capitalize", letterSpacing: "0.04em" }}>{prompt.category.replace(/-/g, " ")}</div>
                     </div>
                     <div className="flex gap-2">
                       <HudBtn variant="ghost" onClick={() => { navigator.clipboard.writeText(prompt.prompt); toast({ title: "Copied" }); }} data-testid={`button-copy-saved-prompt-${prompt.id}`}>Copy</HudBtn>
                       <button
                         onClick={() => handleDelete(prompt.id)}
                         data-testid={`button-delete-saved-prompt-${prompt.id}`}
-                        style={{ fontSize: 10, color: "rgba(255,180,171,0.6)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase" }}
+                        style={{ fontSize: 10, color: "var(--sos-error-dim)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase" }}
                       >
                         Delete
                       </button>
                     </div>
                   </div>
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "12px 20px" }}>
-                    <pre style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "Space Grotesk, monospace", overflow: "hidden", maxHeight: 64, whiteSpace: "pre-wrap" }}>
+                  <div style={{ borderTop: "1px solid var(--sos-border)", padding: "12px 20px" }}>
+                    <pre style={{ fontSize: 11, color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, monospace", overflow: "hidden", maxHeight: 64, whiteSpace: "pre-wrap" }}>
                       {prompt.prompt.substring(0, 220)}{prompt.prompt.length > 220 ? "..." : ""}
                     </pre>
                   </div>
@@ -271,8 +270,8 @@ export default function Prompts() {
             </div>
           ) : (
             <div className="py-20 text-center">
-              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>No prompts saved.</div>
-              <button onClick={() => setTab("generate")} style={{ fontSize: 12, color: "#4b8eff", background: "none", border: "none", cursor: "pointer" }}>
+              <div style={{ fontSize: 12, color: "var(--sos-text-muted)", marginBottom: 10 }}>No prompts saved.</div>
+              <button onClick={() => setTab("generate")} style={{ fontSize: 12, color: "var(--sos-blue)", background: "none", border: "none", cursor: "pointer" }}>
                 Generate a prompt to begin.
               </button>
             </div>

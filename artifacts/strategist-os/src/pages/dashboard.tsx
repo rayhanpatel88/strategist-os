@@ -7,11 +7,11 @@ const now = new Date();
 const systemDate = now.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).toUpperCase();
 
 function HudCard({ label, value, sub, accent }: { label: string; value: string | number; sub?: string; accent?: "emerald" | "blue" | "white" }) {
-  const valueColor = accent === "emerald" ? "#72fe88" : accent === "blue" ? "#4b8eff" : "#ffffff";
+  const valueColor = accent === "emerald" ? "var(--sos-emerald)" : accent === "blue" ? "var(--sos-blue)" : "var(--sos-text)";
   return (
     <div
       className="flex flex-col gap-2 p-5"
-      style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}
+      style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}
     >
       <div className="label-caps">{label}</div>
       <div
@@ -21,16 +21,16 @@ function HudCard({ label, value, sub, accent }: { label: string; value: string |
         {value}
       </div>
       {sub && (
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", letterSpacing: "0.04em" }}>{sub}</div>
+        <div style={{ fontSize: 11, color: "var(--sos-text-muted)", letterSpacing: "0.04em" }}>{sub}</div>
       )}
     </div>
   );
 }
 
-function TelemetryBar({ value, max = 100, color = "#72fe88" }: { value: number; max?: number; color?: string }) {
+function TelemetryBar({ value, max = 100, color = "var(--sos-emerald)" }: { value: number; max?: number; color?: string }) {
   const pct = Math.min(100, (value / max) * 100);
   return (
-    <div style={{ height: 2, background: "rgba(255,255,255,0.06)", width: "100%" }}>
+    <div style={{ height: 2, background: "var(--sos-track-bg)", width: "100%" }}>
       <div style={{ height: 2, width: `${pct}%`, background: color, transition: "width 0.8s ease" }} />
     </div>
   );
@@ -55,22 +55,22 @@ export default function Dashboard() {
   const avgScore = summary.data?.averageLeverageScore ? Math.round(summary.data.averageLeverageScore) : null;
 
   return (
-    <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+    <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       {/* Page header */}
       <div
         className="flex items-center justify-between px-8 py-4 shrink-0"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ borderBottom: "1px solid var(--sos-border)" }}
       >
         <div className="flex items-center gap-4">
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
             Command_Centre
           </span>
-          <span style={{ width: 1, height: 14, background: "rgba(255,255,255,0.12)", display: "inline-block" }} />
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", letterSpacing: "0.08em" }}>{systemDate}</span>
+          <span style={{ width: 1, height: 14, background: "var(--sos-ghost-border)", display: "inline-block" }} />
+          <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.08em" }}>{systemDate}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="status-pip" style={{ background: "#72fe88" }} />
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Live</span>
+          <span className="status-pip" style={{ background: "var(--sos-emerald)" }} />
+          <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Live</span>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-4 gap-3 mb-8">
           {summary.isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="p-5 animate-pulse" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)", height: 110 }} />
+              <div key={i} className="p-5 animate-pulse" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", height: 110 }} />
             ))
           ) : (
             <>
@@ -113,17 +113,17 @@ export default function Dashboard() {
 
         {/* Telemetry bars */}
         {!summary.isLoading && avgScore !== null && (
-          <div className="mb-8 p-5" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="mb-8 p-5" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
             <div className="label-caps mb-4">Performance Telemetry</div>
             <div className="space-y-4">
               {[
-                { label: "LEVERAGE SCORE", value: avgScore, color: avgScore >= 75 ? "#72fe88" : "#4b8eff" },
-                { label: "SESSION VELOCITY", value: Math.min(100, (summary.data?.totalSessions ?? 0) * 10), color: "#4b8eff" },
-                { label: "MODULE COVERAGE", value: 100, color: "#72fe88" },
+                { label: "LEVERAGE SCORE", value: avgScore, color: avgScore >= 75 ? "var(--sos-emerald)" : "var(--sos-blue)" },
+                { label: "SESSION VELOCITY", value: Math.min(100, (summary.data?.totalSessions ?? 0) * 10), color: "var(--sos-blue)" },
+                { label: "MODULE COVERAGE", value: 100, color: "var(--sos-emerald)" },
               ].map((item) => (
                 <div key={item.label}>
                   <div className="flex justify-between items-center mb-2">
-                    <span style={{ fontSize: 10, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>{item.label}</span>
+                    <span style={{ fontSize: 10, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase" }}>{item.label}</span>
                     <span className="data-mono" style={{ fontSize: 12, color: item.color, fontFamily: "Space Grotesk, sans-serif" }}>{item.value}</span>
                   </div>
                   <TelemetryBar value={item.value} color={item.color} />
@@ -146,19 +146,19 @@ export default function Dashboard() {
               <Link key={item.href} href={item.href}>
                 <div
                   className="p-4 cursor-pointer group transition-all duration-100"
-                  style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.18)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)"; }}
+                  style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)"; }}
                   data-testid={`card-quick-action-${item.href.replace("/", "")}`}
                 >
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="material-symbols-outlined" style={{ color: "#4b8eff", fontSize: 16 }}>{item.icon}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#ffffff", letterSpacing: "0.04em", fontFamily: "Space Grotesk, sans-serif" }}>{item.label}</span>
+                    <span className="material-symbols-outlined" style={{ color: "var(--sos-blue)", fontSize: 16 }}>{item.icon}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.04em", fontFamily: "Space Grotesk, sans-serif" }}>{item.label}</span>
                   </div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{item.desc}</div>
+                  <div style={{ fontSize: 11, color: "var(--sos-text-dim)" }}>{item.desc}</div>
                   <div className="flex items-center gap-1 mt-3">
-                    <span style={{ fontSize: 10, color: "#4b8eff", letterSpacing: "0.06em", textTransform: "uppercase" }}>Open</span>
-                    <span className="material-symbols-outlined" style={{ color: "#4b8eff", fontSize: 12 }}>arrow_forward</span>
+                    <span style={{ fontSize: 10, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Open</span>
+                    <span className="material-symbols-outlined" style={{ color: "var(--sos-blue)", fontSize: 12 }}>arrow_forward</span>
                   </div>
                 </div>
               </Link>
@@ -173,28 +173,28 @@ export default function Dashboard() {
             <Link href="/diagnosis">
               <span
                 className="cursor-pointer transition-colors"
-                style={{ fontSize: 11, color: "#4b8eff", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}
+                style={{ fontSize: 11, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif", fontWeight: 600 }}
               >
                 + New Session
               </span>
             </Link>
           </div>
 
-          <div style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+          <div style={{ border: "1px solid var(--sos-border)" }}>
             {/* Table header */}
             <div
               className="grid px-5 py-3"
-              style={{ gridTemplateColumns: "1fr 120px 80px 100px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+              style={{ gridTemplateColumns: "1fr 120px 80px 100px", background: "var(--sos-row-hover)", borderBottom: "1px solid var(--sos-border)" }}
             >
               {["Session Title", "Industry", "Score", "Action"].map((h) => (
-                <div key={h} style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase" }}>{h}</div>
+                <div key={h} style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-muted)", textTransform: "uppercase" }}>{h}</div>
               ))}
             </div>
 
             {sessions.isLoading ? (
               Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="px-5 py-4 animate-pulse" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)" }}>
-                  <div style={{ height: 12, background: "rgba(255,255,255,0.08)", width: "40%", marginBottom: 4 }} />
+                <div key={i} className="px-5 py-4 animate-pulse" style={{ borderBottom: "1px solid var(--sos-border-s)", background: i % 2 === 0 ? "transparent" : "var(--sos-row-alt)" }}>
+                  <div style={{ height: 12, background: "var(--sos-tab-active-bg)", width: "40%", marginBottom: 4 }} />
                 </div>
               ))
             ) : sessions.data && sessions.data.length > 0 ? (
@@ -204,18 +204,18 @@ export default function Dashboard() {
                   className="grid px-5 py-4 items-center"
                   style={{
                     gridTemplateColumns: "1fr 120px 80px 100px",
-                    background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
-                    borderBottom: "1px solid rgba(255,255,255,0.05)",
+                    background: i % 2 === 0 ? "transparent" : "var(--sos-row-alt)",
+                    borderBottom: "1px solid var(--sos-border-s)",
                   }}
                   data-testid={`card-session-${session.id}`}
                 >
                   <div>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "#ffffff" }}>{session.title}</div>
-                    <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 2 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: "var(--sos-text)" }}>{session.title}</div>
+                    <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>
                       {new Date(session.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", letterSpacing: "0.04em" }}>{session.industry || "—"}</div>
+                  <div style={{ fontSize: 11, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>{session.industry || "—"}</div>
                   <div>
                     {session.leverageScore != null ? (
                       <span
@@ -223,21 +223,21 @@ export default function Dashboard() {
                         style={{
                           fontSize: 16,
                           fontWeight: 700,
-                          color: session.leverageScore >= 75 ? "#72fe88" : session.leverageScore >= 50 ? "#4b8eff" : "#ffb4ab",
+                          color: session.leverageScore >= 75 ? "var(--sos-emerald)" : session.leverageScore >= 50 ? "var(--sos-blue)" : "var(--sos-error)",
                           fontFamily: "Space Grotesk, sans-serif",
                         }}
                       >
                         {Math.round(session.leverageScore)}
                       </span>
                     ) : (
-                      <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 13 }}>—</span>
+                      <span style={{ color: "var(--sos-text-subtle)", fontSize: 13 }}>—</span>
                     )}
                   </div>
                   <button
                     onClick={() => handleDelete(session.id)}
-                    style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", letterSpacing: "0.06em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#ffb4ab"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.25)"; }}
+                    style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--sos-error)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--sos-text-muted)"; }}
                     data-testid={`button-delete-session-${session.id}`}
                   >
                     Remove
@@ -246,9 +246,9 @@ export default function Dashboard() {
               ))
             ) : (
               <div className="px-5 py-14 text-center">
-                <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 8 }}>No sessions recorded.</div>
+                <div style={{ fontSize: 12, color: "var(--sos-text-muted)", marginBottom: 8 }}>No sessions recorded.</div>
                 <Link href="/diagnosis">
-                  <span className="cursor-pointer" style={{ fontSize: 12, color: "#4b8eff" }}>Run the first diagnosis.</span>
+                  <span className="cursor-pointer" style={{ fontSize: 12, color: "var(--sos-blue)" }}>Run the first diagnosis.</span>
                 </Link>
               </div>
             )}

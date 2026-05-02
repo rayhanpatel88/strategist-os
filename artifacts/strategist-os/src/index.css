@@ -75,6 +75,41 @@
 
 /* LIGHT MODE — kept for system compat but app always loads dark */
 :root {
+  /* === StrategistOS Semantic Tokens — Light === */
+  --sos-bg: #f5f6f8;
+  --sos-surface: #ffffff;
+  --sos-surface-low: #edeef2;
+  --sos-surface-lowest: #e4e5eb;
+  --sos-sidebar-bg: #f0f1f5;
+  --sos-text: #0d0e12;
+  --sos-text-body: rgba(13,14,18,0.82);
+  --sos-text-secondary: rgba(13,14,18,0.6);
+  --sos-text-dim: rgba(13,14,18,0.42);
+  --sos-text-muted: rgba(13,14,18,0.3);
+  --sos-text-subtle: rgba(13,14,18,0.2);
+  --sos-border: rgba(13,14,18,0.08);
+  --sos-border-s: rgba(13,14,18,0.05);
+  --sos-emerald: #00a844;
+  --sos-blue: #2b6ce6;
+  --sos-error: #c04040;
+  --sos-error-dim: rgba(192,64,64,0.6);
+  --sos-emerald-tint: rgba(0,168,68,0.06);
+  --sos-emerald-border: rgba(0,168,68,0.2);
+  --sos-blue-tint: rgba(43,108,230,0.06);
+  --sos-blue-border: rgba(43,108,230,0.2);
+  --sos-nav-active-border: #0d0e12;
+  --sos-nav-active-bg: rgba(13,14,18,0.05);
+  --sos-nav-hover-bg: rgba(13,14,18,0.02);
+  --sos-btn-bg: #0d0e12;
+  --sos-btn-text: #ffffff;
+  --sos-btn-disabled-bg: rgba(13,14,18,0.3);
+  --sos-ghost-border: rgba(13,14,18,0.15);
+  --sos-tab-active-bg: rgba(13,14,18,0.07);
+  --sos-track-bg: rgba(13,14,18,0.06);
+  --sos-row-alt: rgba(13,14,18,0.015);
+  --sos-row-hover: rgba(13,14,18,0.025);
+  --sos-portfolio-nav-blur: rgba(245,246,248,0.92);
+
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
@@ -143,6 +178,41 @@
 
 /* INTELLIGENCE DARK MODE — full obsidian palette */
 .dark {
+  /* === StrategistOS Semantic Tokens — Dark (Intelligence) === */
+  --sos-bg: #121317;
+  --sos-surface: #1e1f23;
+  --sos-surface-low: #292a2e;
+  --sos-surface-lowest: #0d0e12;
+  --sos-sidebar-bg: #0d0e12;
+  --sos-text: #ffffff;
+  --sos-text-body: rgba(255,255,255,0.85);
+  --sos-text-secondary: rgba(255,255,255,0.65);
+  --sos-text-dim: rgba(255,255,255,0.42);
+  --sos-text-muted: rgba(255,255,255,0.28);
+  --sos-text-subtle: rgba(255,255,255,0.2);
+  --sos-border: rgba(255,255,255,0.07);
+  --sos-border-s: rgba(255,255,255,0.05);
+  --sos-emerald: #72fe88;
+  --sos-blue: #4b8eff;
+  --sos-error: #ffb4ab;
+  --sos-error-dim: rgba(255,180,171,0.6);
+  --sos-emerald-tint: rgba(114,254,136,0.05);
+  --sos-emerald-border: rgba(114,254,136,0.18);
+  --sos-blue-tint: rgba(75,142,255,0.05);
+  --sos-blue-border: rgba(75,142,255,0.16);
+  --sos-nav-active-border: #ffffff;
+  --sos-nav-active-bg: rgba(255,255,255,0.05);
+  --sos-nav-hover-bg: rgba(255,255,255,0.02);
+  --sos-btn-bg: #ffffff;
+  --sos-btn-text: #121317;
+  --sos-btn-disabled-bg: rgba(255,255,255,0.4);
+  --sos-ghost-border: rgba(255,255,255,0.12);
+  --sos-tab-active-bg: rgba(255,255,255,0.08);
+  --sos-track-bg: rgba(255,255,255,0.06);
+  --sos-row-alt: rgba(255,255,255,0.015);
+  --sos-row-hover: rgba(255,255,255,0.03);
+  --sos-portfolio-nav-blur: rgba(13,14,18,0.92);
+
   --button-outline: rgba(255,255,255, .08);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
@@ -280,7 +350,7 @@
   input, textarea {
     background: transparent !important;
     border: none !important;
-    border-bottom: 1px solid rgba(255,255,255,0.12) !important;
+    border-bottom: 1px solid var(--sos-ghost-border) !important;
     border-radius: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
@@ -292,7 +362,7 @@
   }
 
   input:focus, textarea:focus {
-    border-bottom-color: rgba(255,255,255,0.6) !important;
+    border-bottom-color: var(--sos-text-secondary) !important;
     box-shadow: none !important;
     ring: none !important;
   }
