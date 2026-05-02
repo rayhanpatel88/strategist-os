@@ -67,6 +67,16 @@ A premium full-stack dark-mode SaaS web application built for Rayhan Patel (MSc 
 - `GET /scorecard/history` — saved scorecard assessments for current user (up to 50, newest first)
 - `DELETE /scorecard/history/:id` — delete a saved scorecard assessment
 
+## AI Integration
+
+- Uses Replit OpenAI AI Integrations proxy (no user API key required, billed to Replit credits)
+- Env vars auto-provisioned: `AI_INTEGRATIONS_OPENAI_BASE_URL`, `AI_INTEGRATIONS_OPENAI_API_KEY`
+- Server lib: `lib/integrations-openai-ai-server/` — pre-configured OpenAI SDK client + batch utilities
+- Model: `gpt-5.1` for all strategic analysis (diagnosis, scorecard, opportunity, planner, prompt generator)
+- All AI calls go through `artifacts/api-server/src/lib/mock-ai.ts` which calls `openai.chat.completions.create`
+- System prompt enforces raw JSON output; `extractJSON()` parses the response
+- No mock fallback — all responses are live AI-generated
+
 ## Key Files
 - `artifacts/strategist-os/src/App.tsx` — router, Clerk auth, sidebar layout, ThemeProvider
 - `artifacts/strategist-os/src/pages/landing.tsx` — public landing page
