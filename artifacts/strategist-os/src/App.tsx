@@ -12,6 +12,7 @@ import Opportunity from "@/pages/opportunity";
 import Workflows from "@/pages/workflows";
 import Planner from "@/pages/planner";
 import Portfolio from "@/pages/portfolio";
+import Calendar from "@/pages/calendar";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ const navItems = [
   { path: "/opportunity", label: "Opportunities", icon: "trending_up" },
   { path: "/workflows", label: "Workflows", icon: "account_tree" },
   { path: "/planner", label: "Planner", icon: "calendar_month" },
+  { path: "/calendar", label: "Calendar", icon: "today" },
   { path: "/portfolio", label: "Portfolio", icon: "web_asset" },
 ];
 
@@ -163,6 +165,7 @@ function Router() {
         <Route path="/opportunity" component={Opportunity} />
         <Route path="/workflows" component={Workflows} />
         <Route path="/planner" component={Planner} />
+        <Route path="/calendar" component={Calendar} />
         <Route path="/portfolio" component={Portfolio} />
         <Route component={NotFound} />
       </Switch>

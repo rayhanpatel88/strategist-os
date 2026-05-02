@@ -4,11 +4,13 @@ import {
   buildPromptGeneratorPrompt,
   buildOpportunityStackPrompt,
   buildPlannerPrompt,
+  buildDailyPlannerPrompt,
   type DiagnosisInput,
   type ScorecardInput,
   type PromptInput,
   type OpportunityInput,
   type PlannerInput,
+  type DailyPlanInput,
 } from "./ai-prompts.js";
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -359,4 +361,59 @@ function getMockExecutionPlan(input: PlannerInput) {
       "If I could only do one thing differently next week, what would it be?",
     ],
   };
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function getMockDailyPlan(input: DailyPlanInput) {
+  const must = input.mustComplete || "Primary deliverable";
+  const goal = input.goal || "Accomplish the key priority";
+  const hours = input.hoursAvailable;
+  return {
+    objective: `Deliver ${must.substring(0, 60)} as the measurable output for the day.`,
+    priorities: [
+      must.substring(0, 70) || "Ship the primary deliverable",
+      "Resolve all outstanding blockers before 4pm",
+      "Complete end-of-day review and prepare tomorrow's context",
+    ],
+    timeBlocks: [
+      { id: uid(), startTime: "08:00", endTime: "08:30", activity: "Morning setup: confirm today's objective, clear inbox, set context", category: "Admin", priority: "Low", status: "Planned" },
+      { id: uid(), startTime: "08:30", endTime: "11:00", activity: must || `${goal}: primary deep work block`, category: "Deep Work", priority: "High", status: "Planned" },
+      { id: uid(), startTime: "11:00", endTime: "11:15", activity: "Break", category: "Health", priority: "Low", status: "Planned" },
+      { id: uid(), startTime: "11:15", endTime: "12:30", activity: "Secondary priorities, communications, and follow-ups", category: "Admin", priority: "Medium", status: "Planned" },
+      ...(hours >= 6 ? [
+        { id: uid(), startTime: "12:30", endTime: "13:15", activity: "Lunch break", category: "Health", priority: "Low", status: "Planned" },
+        { id: uid(), startTime: "13:15", endTime: "15:30", activity: `${goal}: second focused block`, category: "Deep Work", priority: "High", status: "Planned" },
+        { id: uid(), startTime: "15:30", endTime: "16:00", activity: "Communications, stakeholder updates, admin clearance", category: "Admin", priority: "Medium", status: "Planned" },
+      ] : []),
+      { id: uid(), startTime: hours >= 6 ? "16:00" : "12:30", endTime: hours >= 6 ? "16:30" : "13:00", activity: "End-of-day review: what moved, what blocked, what changes tomorrow", category: "Review", priority: "High", status: "Planned" },
+    ],
+    tasks: [
+      { id: uid(), name: must || "Ship the primary deliverable", priority: "High", estimatedDuration: "2.5 hours", dueTime: "12:00", linkedGoal: goal, status: "Not Started" },
+      { id: uid(), name: "Clear all outstanding communications and requests", priority: "Medium", estimatedDuration: "45 min", dueTime: "15:30", linkedGoal: "", status: "Not Started" },
+      { id: uid(), name: "Write end-of-day review notes", priority: "Medium", estimatedDuration: "20 min", dueTime: "16:30", linkedGoal: goal, status: "Not Started" },
+    ],
+    risks: [
+      input.avoid ? `Avoid: ${input.avoid}` : "Avoid unscheduled context switches during deep work blocks",
+      hours < 4 ? "Limited time — protect the morning block as non-negotiable" : "Meeting creep may compress the afternoon focused session",
+    ],
+    reviewQuestions: [
+      "What was the single output that created the most forward momentum today?",
+      "What consumed more time than it deserved, and why?",
+      "What changes to structure or approach would make tomorrow more effective?",
+    ],
+  };
+}
+
+export async function generateDailyPlan(input: DailyPlanInput) {
+  const prompt = buildDailyPlannerPrompt(input);
+  try {
+    const text = await callAI(prompt);
+    const cleaned = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    return JSON.parse(cleaned);
+  } catch {
+    return getMockDailyPlan(input);
+  }
 }

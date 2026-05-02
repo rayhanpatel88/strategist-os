@@ -9,6 +9,7 @@ import workflowsRouter from "./workflows";
 import plannerRouter from "./planner";
 import portfolioRouter from "./portfolio";
 import enquiriesRouter from "./enquiries";
+import calendarRouter from "./calendar";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(workflowsRouter);
 router.use(plannerRouter);
 router.use(portfolioRouter);
 router.use(enquiriesRouter);
+router.use(calendarRouter);
 
 export default router;

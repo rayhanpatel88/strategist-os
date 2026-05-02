@@ -1,0 +1,127 @@
+Create a new page called “Planner” inside StrategistOS.
+
+Goal:
+Build a premium Notion-style daily planning system that helps users organise their day around priorities, schedule blocks, tasks, and strategic outcomes.
+
+The page should feel like a calm execution command centre, not a basic to-do list.
+
+Core features:
+
+1. Daily Command View
+Add a clean daily dashboard with:
+- Today’s date
+- Main objective for the day
+- Top 3 priorities
+- Schedule timeline
+- Task list
+- Notes section
+- End-of-day review
+
+2. Time Blocking
+Allow users to create time blocks with:
+- Start time
+- End time
+- Activity name
+- Category
+- Priority level
+- Status
+
+Categories:
+- Deep Work
+- Admin
+- Study
+- Client Work
+- Content
+- Health
+- Personal
+- Review
+
+Statuses:
+- Planned
+- In Progress
+- Complete
+- Moved
+
+3. Task System
+Allow users to add tasks with:
+- Task name
+- Priority
+- Estimated duration
+- Due time
+- Linked goal
+- Status
+
+Task statuses:
+- Not Started
+- In Progress
+- Done
+- Deferred
+
+4. Notion-Style Layout
+Design the page with:
+- Left column: daily objective, top priorities, quick notes
+- Main column: time-blocked schedule
+- Right column: task list and review prompts
+
+Use cards, subtle borders, clean spacing, drag-friendly visual layout if possible.
+
+5. Planner Templates
+Add quick-start templates:
+- Deep Work Day
+- University Study Day
+- Client Delivery Day
+- Content Creation Day
+- Admin Reset Day
+- Balanced Day
+
+When a template is selected, pre-fill suggested blocks and tasks.
+
+6. AI Planning Assistant
+Add an optional AI planner input where the user can type:
+“My goal today is..., I have X hours, I need to finish..., and I want to avoid...”
+
+The AI should generate:
+- Suggested daily objective
+- Prioritised task list
+- Time-blocked schedule
+- Risk warnings
+- End-of-day review questions
+
+If API keys are not configured, use a high-quality mock planning response that can be swapped for a real AI call later.
+
+7. End-of-Day Review
+Add a review section with:
+- What moved forward today?
+- What got delayed?
+- What created friction?
+- What should be changed tomorrow?
+- Score the day out of 10
+
+8. Persistence
+Save planner data locally or in the existing app database.
+Users should be able to return and see their previous plan.
+
+Design rules:
+- Premium Notion-inspired layout
+- Dark mode compatible
+- Minimal, mature, strategic tone
+- No emojis
+- No em dashes
+- No motivational fluff
+- Use clean headings and concise microcopy
+- Make it feel like a serious execution system
+
+Navigation:
+Add “Planner” to the app navigation/sidebar.
+
+Copywriting tone:
+Use precise professional copy.
+
+Examples:
+Instead of “Plan your amazing day”
+Use “Structure the day around what matters.”
+
+Instead of “Let AI supercharge your productivity”
+Use “Generate a realistic plan from your priorities, time limits, and constraints.”
+
+Build the page, connect it to navigation, test all interactions, and make the UI feel polished.

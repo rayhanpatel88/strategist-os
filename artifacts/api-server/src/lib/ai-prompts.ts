@@ -205,6 +205,40 @@ Respond with EXACTLY this JSON:
 }
 `;
 
+export type DailyPlanInput = {
+  goal: string;
+  hoursAvailable: number;
+  mustComplete: string;
+  avoid: string;
+};
+
+export const buildDailyPlannerPrompt = (input: DailyPlanInput): string => `
+You are a senior execution strategist. Generate a focused, realistic daily plan.
+
+GOAL FOR THE DAY: ${input.goal}
+AVAILABLE HOURS: ${input.hoursAvailable}
+MUST COMPLETE TODAY: ${input.mustComplete}
+AVOID TODAY: ${input.avoid}
+
+Respond with EXACTLY this JSON (no markdown, no extra text):
+{
+  "objective": "One clear sentence summarising the day's primary output",
+  "priorities": ["Priority 1", "Priority 2", "Priority 3"],
+  "timeBlocks": [
+    {"id": "1", "startTime": "09:00", "endTime": "10:30", "activity": "Specific activity", "category": "Deep Work", "priority": "High", "status": "Planned"},
+    {"id": "2", "startTime": "10:30", "endTime": "11:00", "activity": "Specific activity", "category": "Admin", "priority": "Medium", "status": "Planned"}
+  ],
+  "tasks": [
+    {"id": "1", "name": "Specific task", "priority": "High", "estimatedDuration": "2 hours", "dueTime": "12:00", "linkedGoal": "goal text", "status": "Not Started"}
+  ],
+  "risks": ["Risk or constraint to watch for today", "Second risk"],
+  "reviewQuestions": ["End-of-day question 1", "End-of-day question 2", "End-of-day question 3"]
+}
+
+Categories must be one of: Deep Work, Admin, Study, Client Work, Content, Health, Personal, Review.
+Priority must be one of: High, Medium, Low.
+`;
+
 export const buildPlannerPrompt = (input: PlannerInput): string => `
 You are an elite execution strategist. Convert this recommendation into a precise execution plan.
 
