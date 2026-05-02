@@ -355,6 +355,11 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         e.preventDefault();
         setShowSearch((v) => !v);
       }
+      if (e.key === "?" && !["INPUT", "TEXTAREA"].includes((e.target as HTMLElement).tagName)) {
+        e.preventDefault();
+        markSeen();
+        setShowChangelog((v) => !v);
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

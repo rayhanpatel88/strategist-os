@@ -120,7 +120,7 @@ function WeeklyReviewModal({ weekStart, base, onClose }: { weekStart: string; ba
         </div>
 
         {/* Body: two columns */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+        <div className="sos-weekly-modal-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
           {/* Left: last week */}
           <div style={{ padding: "24px", borderRight: "1px solid var(--sos-border)" }}>
             <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)", marginBottom: 16 }}>
@@ -132,7 +132,7 @@ function WeeklyReviewModal({ weekStart, base, onClose }: { weekStart: string; ba
               <div style={{ fontSize: 11, color: "var(--sos-text-muted)" }}>No data recorded for last week.</div>
             ) : (
               <>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
+                <div className="sos-weekly-modal-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
                   <div style={{ background: "var(--sos-bg)", border: "1px solid var(--sos-border)", padding: "14px 16px" }}>
                     <div style={{ fontSize: 26, fontWeight: 700, color: "var(--sos-emerald)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
                       {review.daysPlanned}
@@ -1120,7 +1120,7 @@ export default function Dashboard() {
 
           <div style={{ border: "1px solid var(--sos-border)" }}>
             <div
-              className="grid px-5 py-3"
+              className="sos-sessions-header grid px-5 py-3"
               style={{ gridTemplateColumns: "1fr 120px 80px 100px", background: "var(--sos-row-hover)", borderBottom: "1px solid var(--sos-border)" }}
             >
               {["Session Title", "Industry", "Score", "Action"].map((h) => (
@@ -1138,7 +1138,7 @@ export default function Dashboard() {
               sessions.data.slice(0, 8).map((session, i) => (
                 <div
                   key={session.id}
-                  className="grid px-5 py-4 items-center"
+                  className="sos-sessions-row grid px-5 py-4 items-center"
                   style={{
                     gridTemplateColumns: "1fr 120px 80px 100px",
                     background: i % 2 === 0 ? "transparent" : "var(--sos-row-alt)",

@@ -68,7 +68,7 @@ function HistorySidebar({
 }) {
   return (
     <aside
-      className="flex flex-col shrink-0 h-full overflow-hidden"
+      className="sos-hist-panel flex flex-col shrink-0 h-full overflow-hidden"
       style={{ width: 264, borderRight: "1px solid var(--sos-border)", background: "var(--sos-sidebar-bg)" }}
     >
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--sos-border)" }}>
@@ -170,7 +170,7 @@ function ResultPanel({ result, onNew }: { result: OpportunityResult; onNew: () =
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             { label: "Positioning Angle", value: result.positioningAngle, highlight: true },
             { label: "Target Niche", value: result.bestNiche, highlight: false },
@@ -193,7 +193,7 @@ function ResultPanel({ result, onNew }: { result: OpportunityResult; onNew: () =
 
         <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 20 }}>30-Day Roadmap</div>
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {result.roadmap30Day.map((week) => (
               <div key={week.week} data-testid={`card-roadmap-week-${week.week}`}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "var(--sos-blue)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 6, fontFamily: "Space Grotesk, sans-serif" }}>Week {week.week}</div>

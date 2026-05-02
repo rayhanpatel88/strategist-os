@@ -57,7 +57,7 @@ function WorkflowCard({ wf, onDelete }: { wf: Workflow; onDelete?: (id: number) 
 
       {expanded && (
         <div style={{ padding: "0 20px 20px", borderTop: "1px solid var(--sos-border)" }}>
-          <div className="grid grid-cols-2 gap-5 pt-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5">
             {[
               { label: "Trigger", content: <p style={{ fontSize: 12, color: "var(--sos-text-secondary)", lineHeight: 1.6 }}>{wf.trigger}</p> },
               {

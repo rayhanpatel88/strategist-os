@@ -290,7 +290,7 @@ function ResultPanel({ result, goal, onNew }: { result: DiagnosisResult; goal: s
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 14 }}>Opportunities</div>
             <ul className="space-y-3">
@@ -398,7 +398,7 @@ function FormPanel({ onResult }: { onResult: (r: DiagnosisResult, goal: string) 
       ) : (
       <div className="flex-1 overflow-y-auto">
         <div className="px-4 md:px-8 py-5 md:py-7 max-w-2xl space-y-7">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FieldGroup label="Current Goal *">
               <input id="goal" value={form.goal} onChange={(e) => setForm({ ...form, goal: e.target.value })}
                 placeholder="State the specific outcome you are working toward" data-testid="input-goal" style={inputStyle} />
@@ -421,7 +421,7 @@ function FormPanel({ onResult }: { onResult: (r: DiagnosisResult, goal: string) 
               rows={2} data-testid="input-bottleneck" style={taStyle} />
           </FieldGroup>
 
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FieldGroup label="Constraints">
               <textarea id="constraints" value={form.constraints} onChange={(e) => setForm({ ...form, constraints: e.target.value })}
                 placeholder="Time per week, budget, access, competing priorities"

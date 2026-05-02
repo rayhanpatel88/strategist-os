@@ -462,4 +462,104 @@
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Calendar 3-panel → vertical stack */
+  .sos-cal-body {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  .sos-cal-left {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--sos-border) !important;
+    max-height: none !important;
+  }
+  .sos-cal-right {
+    width: 100% !important;
+    border-left: none !important;
+    border-top: 1px solid var(--sos-border) !important;
+    max-height: none !important;
+  }
+  .sos-cal-date-label {
+    min-width: 0 !important;
+    font-size: 11px !important;
+    text-align: left !important;
+  }
+  .sos-cal-header {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .sos-cal-header-left {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+  }
+  .sos-cal-header-right {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+
+  /* Prompts category sidebar → horizontal scroll bar */
+  .sos-cat-sidebar {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--sos-border) !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    padding: 8px 12px !important;
+    flex-shrink: 0 !important;
+    min-height: 0 !important;
+    max-height: 50px !important;
+    align-items: center !important;
+  }
+  .sos-cat-sidebar .space-y-1 {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 4px !important;
+    white-space: nowrap !important;
+    margin-bottom: 0 !important;
+  }
+  .sos-cat-sidebar .space-y-1 button {
+    border-left: none !important;
+    border-bottom: 2px solid transparent !important;
+    padding: 4px 10px !important;
+    white-space: nowrap !important;
+  }
+  .sos-cat-sidebar > div:first-child {
+    display: none !important;
+  }
+
+  /* Weekly review modal two-col → single col */
+  .sos-weekly-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .sos-weekly-modal-grid > div:first-child {
+    border-right: none !important;
+    border-bottom: 1px solid var(--sos-border) !important;
+  }
+
+  /* Sessions table: hide Industry + Action, keep title + score */
+  .sos-sessions-header {
+    display: none !important;
+  }
+  .sos-sessions-row {
+    grid-template-columns: 1fr auto !important;
+  }
+  .sos-sessions-row > *:nth-child(2),
+  .sos-sessions-row > *:nth-child(4) {
+    display: none !important;
+  }
+
+  /* Scorecard dimension row: compress progress bar */
+  .sos-dim-bar {
+    width: 60px !important;
+  }
+
+  /* Header button groups that can wrap */
+  .sos-header-actions {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
 }

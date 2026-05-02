@@ -380,34 +380,34 @@ export default function Calendar() {
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sos-bg)" }}>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
-        <div className="flex items-center gap-6">
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+      <div className="sos-cal-header flex items-center justify-between px-4 md:px-8 py-3 md:py-4 shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+        <div className="sos-cal-header-left flex items-center gap-3 md:gap-6 min-w-0">
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif", flexShrink: 0 }}>
             Calendar
           </span>
           {/* Date navigation */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2">
             <button onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
-              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer" }}>
+              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer", flexShrink: 0 }}>
               Prev
             </button>
-            <span style={{ fontSize: 12, color: "var(--sos-text)", fontWeight: 600, minWidth: 220, textAlign: "center" }}>
+            <span className="sos-cal-date-label" style={{ fontSize: 12, color: "var(--sos-text)", fontWeight: 600, minWidth: 220, textAlign: "center" }}>
               {formatDisplayDate(selectedDate)}
             </span>
             <button onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
-              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer" }}>
+              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer", flexShrink: 0 }}>
               Next
             </button>
             {selectedDate !== todayStr() && (
               <button onClick={() => setSelectedDate(todayStr())}
-                style={{ fontSize: 10, color: "var(--sos-blue)", background: "none", border: "none", padding: "4px 6px", cursor: "pointer", letterSpacing: "0.06em" }}>
+                style={{ fontSize: 10, color: "var(--sos-blue)", background: "none", border: "none", padding: "4px 6px", cursor: "pointer", letterSpacing: "0.06em", flexShrink: 0 }}>
                 Today
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="sos-cal-header-right flex items-center gap-2 md:gap-3 shrink-0">
           {/* Template selector */}
           <div style={{ position: "relative" }}>
             <button onClick={() => setShowTemplates((v) => !v)}
@@ -442,9 +442,9 @@ export default function Calendar() {
           <div style={{ fontSize: 12, color: "var(--sos-text-muted)", letterSpacing: "0.06em" }}>Loading plan...</div>
         </div>
       ) : (
-        <div className="flex flex-1 overflow-hidden">
+        <div className="sos-cal-body flex flex-1 overflow-hidden">
           {/* Left column */}
-          <div className="flex flex-col gap-5 shrink-0 overflow-y-auto py-6 px-5" style={{ width: 260, borderRight: "1px solid var(--sos-border)" }}>
+          <div className="sos-cal-left flex flex-col gap-5 shrink-0 overflow-y-auto py-6 px-5" style={{ width: 260, borderRight: "1px solid var(--sos-border)" }}>
             {/* Objective */}
             <div>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8, fontFamily: "Space Grotesk, sans-serif" }}>
@@ -648,7 +648,7 @@ export default function Calendar() {
           </div>
 
           {/* Right column: Tasks + Review */}
-          <div className="flex flex-col shrink-0 overflow-y-auto py-6 px-5" style={{ width: 280, borderLeft: "1px solid var(--sos-border)" }}>
+          <div className="sos-cal-right flex flex-col shrink-0 overflow-y-auto py-6 px-5" style={{ width: 280, borderLeft: "1px solid var(--sos-border)" }}>
             {/* Tasks */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">

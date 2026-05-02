@@ -70,6 +70,7 @@ function HistorySidebar({ history, activeId, onSelect, onDelete, onNew }: {
         }}>
           <span className="material-symbols-outlined" style={{ fontSize: 13 }}>add</span>
           New Assessment
+          {/* scorecard history sidebar already has sos-hist-panel */}
         </button>
       </div>
 
@@ -145,7 +146,7 @@ function ResultPanel({ result, onNew }: { result: ScorecardResult; onNew: () => 
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-5 md:py-7 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-6 flex flex-col items-center justify-center" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 20 }}>Overall Score</div>
             <div style={{ position: "relative", width: 120, height: 120 }}>
@@ -175,7 +176,7 @@ function ResultPanel({ result, onNew }: { result: ScorecardResult; onNew: () => 
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 12 }}>Summary</div>
             <p style={{ fontSize: 13, color: "var(--sos-text-body)", lineHeight: 1.7 }}>{result.strategicSummary}</p>
@@ -200,7 +201,7 @@ function ResultPanel({ result, onNew }: { result: ScorecardResult; onNew: () => 
                     <span style={{ fontSize: 13, fontWeight: 600, color: "var(--sos-text)" }}>{dim.name}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <div style={{ width: 120, height: 2, background: "var(--sos-track-bg)" }}>
+                    <div className="sos-dim-bar" style={{ width: 120, height: 2, background: "var(--sos-track-bg)" }}>
                       <div style={{ height: 2, width: `${dim.score}%`, background: scoreColor(dim.score), transition: "width 0.8s ease" }} />
                     </div>
                     <span style={{ fontSize: 18, fontWeight: 700, color: scoreColor(dim.score), fontFamily: "Space Grotesk, sans-serif", width: 40, textAlign: "right" }}>{dim.score}</span>

@@ -80,7 +80,7 @@ function renderPlan(p: ExecutionPlan) {
       {/* 30-Day Roadmap */}
       <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
         <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 20 }}>30-Day Roadmap</div>
-        <div className="grid grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {p.thirtyDayRoadmap.map((week) => (
             <div key={week.week} data-testid={`card-roadmap-week-${week.week}`}>
               <div style={{ fontSize: 10, fontWeight: 700, color: "var(--sos-blue)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5, fontFamily: "Space Grotesk, sans-serif" }}>Week {week.week}</div>
@@ -98,7 +98,7 @@ function renderPlan(p: ExecutionPlan) {
       </div>
 
       {/* Metrics + Risks */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
           <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 14 }}>Success Metrics</div>
           <ul className="space-y-3">
@@ -222,7 +222,7 @@ export default function Planner() {
                   <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Key Recommendation *</div>
                   <textarea value={form.keyRecommendation} onChange={(e) => setForm({ ...form, keyRecommendation: e.target.value })} placeholder="The key recommendation to execute." rows={3} data-testid="input-planner-recommendation" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
                 </div>
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8 }}>Available Resources</div>
                     <input value={form.resources} onChange={(e) => setForm({ ...form, resources: e.target.value })} placeholder="Time, money, tools, people" data-testid="input-planner-resources" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />

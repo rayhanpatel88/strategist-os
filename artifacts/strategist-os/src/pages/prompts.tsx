@@ -110,7 +110,7 @@ export default function Prompts() {
       {tab === "generate" ? (
         <div className="flex flex-1 overflow-hidden">
           {/* Category selector */}
-          <div className="flex flex-col shrink-0 overflow-y-auto py-6" style={{ width: 200, borderRight: "1px solid var(--sos-border)", paddingLeft: 24, paddingRight: 16 }}>
+          <div className="sos-cat-sidebar flex flex-col shrink-0 overflow-y-auto py-6" style={{ width: 200, borderRight: "1px solid var(--sos-border)", paddingLeft: 24, paddingRight: 16 }}>
             <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-muted)", textTransform: "uppercase", marginBottom: 14 }}>Category</div>
             <div className="space-y-1">
               {CATEGORIES.map((cat) => (
