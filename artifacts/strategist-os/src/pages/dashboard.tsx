@@ -1,8 +1,12 @@
 import { useGetSessionsSummary, useListSessions, useDeleteSession, getListSessionsQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine,
+} from "recharts";
 
 const now = new Date();
 const systemDate = now.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).toUpperCase();
@@ -342,6 +346,149 @@ function ScorePopover({ popover, saving, onScore, onClose }: {
   );
 }
 
+type DiagnosisHistoryEntry = { id: number; goal: string; leverageScore: number; createdAt: string };
+
+function LeverageScoreTrend({ base }: { base: string }) {
+  const { data: history = [], isLoading } = useQuery<DiagnosisHistoryEntry[]>({
+    queryKey: ["diagnosis-history"],
+    queryFn: async () => {
+      const res = await fetch(`${base}/api/diagnosis/history`);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+
+  const chartData = [...history]
+    .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    .map((entry, i) => ({
+      index: i + 1,
+      score: entry.leverageScore,
+      goal: entry.goal ? entry.goal.slice(0, 48) + (entry.goal.length > 48 ? "…" : "") : "Diagnosis",
+      date: new Date(entry.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" }),
+    }));
+
+  const latest = chartData[chartData.length - 1];
+  const prev = chartData[chartData.length - 2];
+  const delta = latest && prev ? latest.score - prev.score : null;
+  const trend = delta === null ? null : delta > 0 ? "up" : delta < 0 ? "down" : "flat";
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const d = payload[0].payload;
+    const scoreColor = d.score >= 75 ? "#72fe88" : d.score >= 50 ? "#4b8cf5" : "#ffb4ab";
+    return (
+      <div style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", padding: "10px 14px", minWidth: 180, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" }}>
+        <div style={{ fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-muted)", marginBottom: 5 }}>{d.date}</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: scoreColor, fontFamily: "Space Grotesk, sans-serif", lineHeight: 1, marginBottom: 4 }}>
+          {d.score}<span style={{ fontSize: 12, color: "var(--sos-text-muted)", fontWeight: 400 }}>/100</span>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--sos-text-dim)", lineHeight: 1.4 }}>{d.goal}</div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="label-caps">Leverage Score Trend</div>
+        {chartData.length >= 2 && delta !== null && (
+          <div className="flex items-center gap-2">
+            <span style={{
+              fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
+              color: trend === "up" ? "var(--sos-emerald)" : trend === "down" ? "var(--sos-error)" : "var(--sos-text-dim)",
+              fontFamily: "Space Grotesk, sans-serif",
+            }}>
+              {trend === "up" ? "▲" : trend === "down" ? "▼" : "—"} {Math.abs(delta)} pts since last run
+            </span>
+            <span style={{ width: 1, height: 12, background: "var(--sos-ghost-border)", display: "inline-block" }} />
+            <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.04em" }}>{chartData.length} diagnoses</span>
+          </div>
+        )}
+      </div>
+
+      <div className="p-5" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+        {isLoading ? (
+          <div style={{ height: 160, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ fontSize: 11, color: "var(--sos-text-muted)" }}>Loading...</div>
+          </div>
+        ) : chartData.length === 0 ? (
+          <div style={{ height: 160, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
+            <div style={{ fontSize: 11, color: "var(--sos-text-muted)", textAlign: "center", lineHeight: 1.6, maxWidth: 320 }}>
+              Run your first Diagnosis to start tracking your leverage score over time.
+            </div>
+            <Link href="/diagnosis">
+              <span style={{ fontSize: 10, fontWeight: 600, color: "var(--sos-blue)", letterSpacing: "0.06em", textTransform: "uppercase", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+                Go to Diagnosis →
+              </span>
+            </Link>
+          </div>
+        ) : chartData.length === 1 ? (
+          <div style={{ height: 160, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <div style={{ fontSize: 36, fontWeight: 700, color: chartData[0].score >= 75 ? "var(--sos-emerald)" : chartData[0].score >= 50 ? "var(--sos-blue)" : "var(--sos-error)", fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+              {chartData[0].score}
+            </div>
+            <div style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
+              Your first score — run another diagnosis to see the trend
+            </div>
+          </div>
+        ) : (
+          <>
+            <ResponsiveContainer width="100%" height={180}>
+              <AreaChart data={chartData} margin={{ top: 8, right: 4, left: -24, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#72fe88" stopOpacity={0.18} />
+                    <stop offset="95%" stopColor="#72fe88" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tick={{ fontSize: 9, fill: "var(--sos-text-dim)", letterSpacing: "0.04em" }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fontSize: 9, fill: "var(--sos-text-dim)" }}
+                  axisLine={false}
+                  tickLine={false}
+                  ticks={[0, 25, 50, 75, 100]}
+                />
+                <ReferenceLine y={75} stroke="rgba(114,254,136,0.2)" strokeDasharray="4 4" label={{ value: "HIGH", position: "right", fontSize: 8, fill: "rgba(114,254,136,0.5)", fontFamily: "Space Grotesk, sans-serif" }} />
+                <ReferenceLine y={50} stroke="rgba(75,140,245,0.15)" strokeDasharray="4 4" label={{ value: "MID", position: "right", fontSize: 8, fill: "rgba(75,140,245,0.4)", fontFamily: "Space Grotesk, sans-serif" }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ stroke: "rgba(255,255,255,0.12)", strokeWidth: 1 }} />
+                <Area
+                  type="monotone"
+                  dataKey="score"
+                  stroke="#72fe88"
+                  strokeWidth={2}
+                  fill="url(#scoreGradient)"
+                  dot={{ r: 3, fill: "#72fe88", strokeWidth: 0 }}
+                  activeDot={{ r: 5, fill: "#72fe88", stroke: "rgba(114,254,136,0.3)", strokeWidth: 4 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+            <div className="flex items-center gap-4 mt-3">
+              {[
+                { label: "High leverage", color: "var(--sos-emerald)", y: "≥75" },
+                { label: "Moderate", color: "var(--sos-blue)", y: "50–74" },
+                { label: "Constrained", color: "var(--sos-error)", y: "<50" },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-1.5">
+                  <div style={{ width: 8, height: 8, background: item.color, borderRadius: 1 }} />
+                  <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.04em" }}>{item.label} ({item.y})</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ExecutionHeatmap({ activity, loading, base, onScoreUpdate }: {
   activity: ActivityEntry[];
   loading: boolean;
@@ -654,6 +801,9 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* Leverage Score Trend */}
+        <LeverageScoreTrend base={base} />
 
         {/* Execution Heatmap */}
         <ExecutionHeatmap activity={activity} loading={activityLoading} base={base} onScoreUpdate={handleScoreUpdate} />

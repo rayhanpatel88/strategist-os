@@ -60,6 +60,10 @@ A premium full-stack dark-mode SaaS web application built for Rayhan Patel (MSc 
 - `POST /planner`, `GET/POST /planner/saved`
 - `GET/PUT /portfolio`
 - `GET/PUT /settings` — user profile (display name, preferred industry, strategic focus, default assets/constraints)
+- `GET /diagnosis/history` — saved diagnoses for current user (up to 50, newest first)
+- `DELETE /diagnosis/history/:id` — delete a saved diagnosis
+- `GET /opportunity/history` — saved opportunity analyses for current user (up to 50, newest first)
+- `DELETE /opportunity/history/:id` — delete a saved opportunity analysis
 
 ## Key Files
 - `artifacts/strategist-os/src/App.tsx` — router, Clerk auth, sidebar layout, ThemeProvider
