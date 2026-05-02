@@ -249,6 +249,15 @@ export default function Calendar() {
   const { toast } = useToast();
   const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("autoplan") === "today") {
+      setSelectedDate(todayStr());
+      setAiOpen(true);
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   const loadPlan = useCallback((date: string) => {
     setLoading(true);
     fetch(`${base}/api/calendar/${date}`)

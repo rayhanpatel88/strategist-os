@@ -64,7 +64,7 @@ function useWeeklyUnplanned(): number {
 }
 
 function Sidebar() {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const { theme, setTheme } = useTheme();
   const isDark = theme === "dark";
   const base = import.meta.env.BASE_URL;
@@ -142,7 +142,12 @@ function Sidebar() {
                 </span>
                 {item.path === "/calendar" && unplannedDays > 0 && (
                   <span
-                    title={`${unplannedDays} day${unplannedDays === 1 ? "" : "s"} unplanned this week`}
+                    title={`${unplannedDays} day${unplannedDays === 1 ? "" : "s"} unplanned — click to plan today`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigate("/calendar?autoplan=today");
+                    }}
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
@@ -159,6 +164,7 @@ function Sidebar() {
                       padding: "0 4px",
                       lineHeight: 1,
                       flexShrink: 0,
+                      cursor: "pointer",
                     }}
                   >
                     {unplannedDays}
