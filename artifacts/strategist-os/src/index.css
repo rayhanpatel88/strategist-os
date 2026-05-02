@@ -76,7 +76,7 @@
 
 /* LIGHT MODE — kept for system compat but app always loads dark */
 :root {
-  /* === StrategistOS Semantic Tokens — Light === */
+  /* === StrategistAI Semantic Tokens — Light === */
   --sos-bg: #f5f6f8;
   --sos-surface: #ffffff;
   --sos-surface-low: #edeef2;
@@ -179,7 +179,7 @@
 
 /* INTELLIGENCE DARK MODE — full obsidian palette */
 .dark {
-  /* === StrategistOS Semantic Tokens — Dark (Intelligence) === */
+  /* === StrategistAI Semantic Tokens — Dark (Intelligence) === */
   --sos-bg: #121317;
   --sos-surface: #1e1f23;
   --sos-surface-low: #292a2e;

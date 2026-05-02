@@ -134,7 +134,7 @@ function Sidebar({ onSearchOpen, onClose }: { onSearchOpen: () => void; onClose?
         />
         <div>
           <div style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 13, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.01em" }}>
-            StrategistOS
+            StrategistAI
           </div>
           <div style={{ fontSize: 9, letterSpacing: "0.1em", color: "var(--sos-text-muted)", textTransform: "uppercase", fontWeight: 500 }}>
             Strategy System
@@ -352,7 +352,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
               alt="" style={{ width: 26, height: 26, objectFit: "contain" }}
             />
             <span style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 13, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.01em" }}>
-              StrategistOS
+              StrategistAI
             </span>
           </div>
           <button
@@ -462,7 +462,7 @@ function AuthPageShell({ children }: { children: React.ReactNode }) {
               style={{ width: 28, height: 28, objectFit: "contain" }}
             />
             <span style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 14, fontWeight: 700, color: "var(--sos-text)", letterSpacing: "0.01em" }}>
-              StrategistOS
+              StrategistAI
             </span>
           </div>
         </Link>
@@ -646,7 +646,7 @@ function ClerkProviderWithRoutes() {
         signIn: {
           start: {
             title: "Welcome back",
-            subtitle: "Sign in to StrategistOS",
+            subtitle: "Sign in to StrategistAI",
           },
         },
         signUp: {

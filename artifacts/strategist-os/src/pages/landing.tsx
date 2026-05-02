@@ -41,7 +41,7 @@ export default function Landing() {
               letterSpacing: "0.01em",
             }}
           >
-            StrategistOS
+            StrategistAI
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ export default function Landing() {
               maxWidth: 480,
             }}
           >
-            StrategistOS brings together diagnosis, positioning scorecards, opportunity
+            StrategistAI brings together diagnosis, positioning scorecards, opportunity
             mapping, and execution planning in one workspace.
           </p>
 
@@ -258,7 +258,7 @@ export default function Landing() {
         style={{ borderTop: "1px solid var(--sos-border)" }}
       >
         <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-          StrategistOS · Strategy System
+          StrategistAI · Strategy System
         </span>
       </footer>
     </div>

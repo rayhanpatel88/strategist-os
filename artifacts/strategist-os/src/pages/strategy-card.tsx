@@ -73,14 +73,14 @@ export default function StrategyCard() {
         </div>
         <Link href="/">
           <button style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", background: "#72fe88", color: "#0d0e12", border: "none", padding: "11px 28px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
-            Get StrategistOS
+            Get StrategistAI
           </button>
         </Link>
       </div>
     );
   }
 
-  const displayName = profile.displayName || "StrategistOS User";
+  const displayName = profile.displayName || "StrategistAI User";
 
   return (
     <div style={{ minHeight: "100dvh", background: "#121317", color: "#e3e2e7", fontFamily: "Inter, sans-serif" }}>
@@ -90,7 +90,7 @@ export default function StrategyCard() {
           <div style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
             <img src={`${basePath}/logos/logo-s-light.png`} alt="" style={{ width: 24, height: 24, objectFit: "contain" }} />
             <span style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 13, fontWeight: 700, color: "#e3e2e7", letterSpacing: "0.01em" }}>
-              StrategistOS
+              StrategistAI
             </span>
           </div>
         </Link>
@@ -190,7 +190,7 @@ export default function StrategyCard() {
         {/* CTA */}
         <div style={{ textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 40 }}>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 20, letterSpacing: "0.04em" }}>
-            Built with StrategistOS
+            Built with StrategistAI
           </div>
           <Link href={`${basePath}/sign-up`}>
             <button style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", background: "#72fe88", color: "#0d0e12", border: "none", padding: "12px 32px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
