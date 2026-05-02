@@ -319,19 +319,114 @@ router.get("/calendar/weekly-review", async (req, res) => {
     .select()
     .from(weeklyReflectionsTable)
     .where(and(eq(weeklyReflectionsTable.userId, userId), eq(weeklyReflectionsTable.weekStart, start as string)));
+  const totalBlocksW = days.reduce((a, d) => a + d.blocksTotal, 0);
+  const completedBlocksW = days.reduce((a, d) => a + d.blocksCompleted, 0);
+  const totalTasksW = days.reduce((a, d) => a + d.tasksTotal, 0);
+  const doneTasksW = days.reduce((a, d) => a + d.tasksDone, 0);
+  const daysPlannedW = days.filter((d) => d.planned).length;
+
+  const planningScore = (daysPlannedW / 7) * 40;
+  const blocksScore = totalBlocksW > 0 ? (completedBlocksW / totalBlocksW) * 30 : 0;
+  const tasksScore = totalTasksW > 0 ? (doneTasksW / totalTasksW) * 20 : 0;
+  const reviewScore = avgDayScore !== null ? (avgDayScore / 10) * 10 : 0;
+  const weeklyScore = Math.round(planningScore + blocksScore + tasksScore + reviewScore);
+
   res.json({
     days,
     summary: {
-      daysPlanned: days.filter((d) => d.planned).length,
+      daysPlanned: daysPlannedW,
       avgDayScore,
       avgMomentum,
-      totalBlocks: days.reduce((a, d) => a + d.blocksTotal, 0),
-      completedBlocks: days.reduce((a, d) => a + d.blocksCompleted, 0),
-      totalTasks: days.reduce((a, d) => a + d.tasksTotal, 0),
-      doneTasks: days.reduce((a, d) => a + d.tasksDone, 0),
+      totalBlocks: totalBlocksW,
+      completedBlocks: completedBlocksW,
+      totalTasks: totalTasksW,
+      doneTasks: doneTasksW,
+      weeklyScore,
     },
     reflection: reflection?.data ?? null,
   });
+});
+
+// ── Weekly Score Trend ────────────────────────────────────────────────────────
+
+router.get("/calendar/weekly-scores", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const weeksBack = Math.min(16, Math.max(2, parseInt((req.query.weeks as string) ?? "8", 10)));
+
+  // Build list of week start dates (Mondays), oldest first
+  const todayDate = new Date();
+  const dayOfWeek = todayDate.getUTCDay();
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const thisMonday = new Date(Date.UTC(todayDate.getUTCFullYear(), todayDate.getUTCMonth(), todayDate.getUTCDate() - daysToMonday));
+
+  const weekStarts: Date[] = [];
+  for (let i = weeksBack - 1; i >= 0; i--) {
+    const d = new Date(thisMonday);
+    d.setUTCDate(thisMonday.getUTCDate() - i * 7);
+    weekStarts.push(d);
+  }
+
+  // Collect all dates across all weeks in one query
+  const allDates: string[] = [];
+  weekStarts.forEach((ws) => {
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(ws);
+      d.setUTCDate(ws.getUTCDate() + i);
+      allDates.push(d.toISOString().split("T")[0]);
+    }
+  });
+
+  const rows = await db
+    .select()
+    .from(calendarPlansTable)
+    .where(and(eq(calendarPlansTable.userId, userId), inArray(calendarPlansTable.date, allDates)));
+
+  const plansByDate = new Map(rows.map((r) => [r.date, r.data as CalendarPlanData]));
+
+  const hasContent = (d: CalendarPlanData) =>
+    !!(d.objective?.trim()) || (d.timeBlocks?.length ?? 0) > 0 || (d.tasks?.length ?? 0) > 0;
+
+  const result = weekStarts.map((ws) => {
+    const weekStr = ws.toISOString().split("T")[0];
+    const dates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(ws);
+      d.setUTCDate(ws.getUTCDate() + i);
+      dates.push(d.toISOString().split("T")[0]);
+    }
+
+    let daysPlanned = 0, totalBlocks = 0, completedBlocks = 0, totalTasks = 0, doneTasks = 0;
+    const reviewScores: number[] = [];
+
+    dates.forEach((date) => {
+      const plan = plansByDate.get(date);
+      if (!plan) return;
+      if (hasContent(plan)) daysPlanned++;
+      const blocks = plan.timeBlocks ?? [];
+      totalBlocks += blocks.length;
+      completedBlocks += blocks.filter((b) => b.status === "Complete").length;
+      const tasks = plan.tasks ?? [];
+      totalTasks += tasks.length;
+      doneTasks += tasks.filter((t) => t.status === "Done").length;
+      if (plan.review?.score != null) reviewScores.push(plan.review.score);
+    });
+
+    const avgDayScore = reviewScores.length > 0
+      ? reviewScores.reduce((a, b) => a + b, 0) / reviewScores.length
+      : null;
+
+    const score = Math.round(
+      (daysPlanned / 7) * 40 +
+      (totalBlocks > 0 ? (completedBlocks / totalBlocks) * 30 : 0) +
+      (totalTasks > 0 ? (doneTasks / totalTasks) * 20 : 0) +
+      (avgDayScore !== null ? (avgDayScore / 10) * 10 : 0)
+    );
+
+    const label = ws.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+    return { weekStart: weekStr, score, label, daysPlanned };
+  });
+
+  res.json(result);
 });
 
 router.put("/calendar/weekly-reflection", async (req, res) => {
