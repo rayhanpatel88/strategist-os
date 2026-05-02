@@ -74,7 +74,7 @@ function printDiagnosis(result: DiagnosisResult, sessionTitle: string) {
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Strategy Diagnosis — ${sessionTitle}</title>
+<title>Strategy Diagnosis: ${sessionTitle}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,13 +110,13 @@ function printDiagnosis(result: DiagnosisResult, sessionTitle: string) {
 </head>
 <body>
 <div class="header">
-  <div class="brand">StrategistOS — Strategic Diagnosis</div>
+  <div class="brand">StrategistOS: Strategic Diagnosis</div>
   <div class="meta"><div>${date}</div><div>Rayhan Patel · MSc Data Science</div></div>
 </div>
 <h1>${sessionTitle}</h1>
 <div class="score-row">
   <span class="score-val">${result.leverageScore}</span>
-  <span class="score-label">Leverage Score &mdash; ${scoreLabel}</span>
+  <span class="score-label">Leverage Score: ${scoreLabel}</span>
 </div>
 <div class="track"><div class="track-fill"></div></div>
 <div class="section">

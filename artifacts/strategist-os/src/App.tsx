@@ -209,7 +209,7 @@ function Sidebar({ onSearchOpen }: { onSearchOpen: () => void }) {
                 </span>
                 {item.path === "/calendar" && unplannedDays > 0 && (
                   <span
-                    title={`${unplannedDays} day${unplannedDays === 1 ? "" : "s"} unplanned — click to plan today`}
+                    title={`${unplannedDays} day${unplannedDays === 1 ? "" : "s"} unplanned. Click to plan today.`}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();

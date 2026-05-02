@@ -429,7 +429,7 @@ function LeverageScoreTrend({ base }: { base: string }) {
               {chartData[0].score}
             </div>
             <div style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-              Your first score — run another diagnosis to see the trend
+              Your first score. Run another diagnosis to see the trend.
             </div>
           </div>
         ) : (
@@ -723,8 +723,8 @@ function ExecutionHeatmap({ activity, loading, base, onScoreUpdate }: {
                       key={date}
                       onClick={isPast ? (e) => handleCellClick(e, date) : undefined}
                       title={isFuture ? "" : entry?.hasContent
-                        ? (entry.score !== null ? `${date} · Score ${entry.score}/10 — click to update` : `${date} · Planned — click to rate`)
-                        : `${date} — click to rate`}
+                        ? (entry.score !== null ? `${date} · Score ${entry.score}/10. Click to update.` : `${date} · Planned. Click to rate.`)
+                        : `${date}. Click to rate.`}
                       style={{
                         height: 20,
                         background: bg,

@@ -190,7 +190,7 @@ export default function StrategyCard() {
         {/* CTA */}
         <div style={{ textAlign: "center", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 40 }}>
           <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginBottom: 20, letterSpacing: "0.04em" }}>
-            Built with StrategistOS — AI Leverage Command Centre
+            Built with StrategistOS
           </div>
           <Link href={`${basePath}/sign-up`}>
             <button style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", background: "#72fe88", color: "#0d0e12", border: "none", padding: "12px 32px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>

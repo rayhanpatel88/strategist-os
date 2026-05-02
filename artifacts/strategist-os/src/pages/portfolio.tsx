@@ -39,7 +39,7 @@ export default function BookMeeting() {
             Book a Meeting
           </span>
           <div style={{ fontSize: 10, color: "var(--sos-text-muted)", marginTop: 2 }}>
-            30-minute strategy session — pick a time that works for you.
+            30-minute strategy session. Pick a time that works.
           </div>
         </div>
         <div className="flex items-center gap-2">

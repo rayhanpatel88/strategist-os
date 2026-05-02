@@ -37,9 +37,7 @@ export type PlannerInput = {
 };
 
 export const buildDiagnosisPrompt = (input: DiagnosisInput): string => `
-You are a world-class strategic advisor operating at the level of McKinsey senior partner, elite VC, and high-performance coach combined.
-
-Analyze the following situation and produce a rigorous, precise strategic diagnosis:
+You are a strategic advisor. Analyse the situation below and produce a clear, direct diagnosis.
 
 GOAL: ${input.goal}
 INDUSTRY/DOMAIN: ${input.industry}
@@ -51,9 +49,9 @@ CURRENT BOTTLENECK: ${input.bottleneck}
 
 Respond with a JSON object with EXACTLY this structure:
 {
-  "strategicDiagnosis": "A rigorous 2-3 paragraph diagnosis identifying the core strategic situation, key leverage points, and what is really happening beneath the surface",
+  "strategicDiagnosis": "A clear 2-3 paragraph diagnosis identifying the core strategic situation, key leverage points, and what is actually happening",
   "leverageScore": <number 1-100 representing leverage of current position>,
-  "bottleneckAnalysis": "Precise identification of the true bottleneck — often not what the person thinks it is",
+  "bottleneckAnalysis": "What is actually blocking progress, not just the surface-level issue",
   "opportunityMap": ["opportunity 1", "opportunity 2", "opportunity 3", "opportunity 4"],
   "riskMap": ["risk 1", "risk 2", "risk 3"],
   "roiActions": [
@@ -61,29 +59,29 @@ Respond with a JSON object with EXACTLY this structure:
     {"action": "Second action", "impact": "Why this matters", "timeframe": "e.g. 14 days"},
     {"action": "Third action", "impact": "Why this compounds", "timeframe": "e.g. 30 days"}
   ],
-  "eliteOperatorNextStep": "What a top 0.1% operator would do in the next 48 hours — specific, uncomfortable, and precise"
+  "eliteOperatorNextStep": "The highest-priority action for the next 48 hours, with specifics"
 }
 
-Be direct. No platitudes. No vague recommendations. Operate like someone with real skin in the game.
+Be direct. No vague recommendations.
 `;
 
 export const buildScorecardPrompt = (input: ScorecardInput): string => `
-You are an elite strategic intelligence system. Score the following operator across 8 critical dimensions.
+You are a strategic scoring assistant. Score the following across 8 dimensions.
 
 GOAL: ${input.goal}
 INDUSTRY: ${input.industry}
 CURRENT STATUS: ${input.currentStatus}
 
-Score each dimension 1-100 with brutal honesty. Respond with EXACTLY this JSON structure:
+Score each dimension 1-100 with honesty. Respond with EXACTLY this JSON structure:
 {
   "overallScore": <weighted average 1-100>,
   "dimensions": [
     {
       "name": "Clarity",
       "score": <1-100>,
-      "reasoning": "Why this score — be specific",
+      "reasoning": "Why this score, be specific",
       "howToImprove": "Concrete steps to improve this score",
-      "eliteRecommendation": "What a top 0.1% operator does differently here"
+      "eliteRecommendation": "What a stronger operator does differently here"
     },
     {
       "name": "Leverage",
@@ -136,35 +134,35 @@ Score each dimension 1-100 with brutal honesty. Respond with EXACTLY this JSON s
     }
   ],
   "topPriority": "The single highest-leverage dimension to focus on right now",
-  "strategicSummary": "2-3 sentence synthesis of the operator's strategic position and what needs to change"
+  "strategicSummary": "2-3 sentence summary of the strategic position and what needs to change"
 }
 `;
 
 export const buildPromptGeneratorPrompt = (input: PromptInput): string => `
-You are a master prompt architect. Create a premium, reusable prompt for the following use case.
+You are a prompt writer. Create a structured, reusable prompt for the following use case.
 
 CATEGORY: ${input.category}
 CONTEXT: ${input.context}
 GOAL: ${input.goal}
 
-Create a structured, elite-level prompt that produces exceptional output. Respond with EXACTLY this JSON:
+Create a well-structured, reusable prompt. Respond with EXACTLY this JSON:
 {
   "title": "Descriptive title for this prompt",
   "category": "${input.category}",
-  "prompt": "The complete, structured prompt — include role assignment, context injection points, output format instructions, and quality gates. Use [VARIABLE] syntax for customisable parts.",
-  "usage": "How to use this prompt effectively — when to deploy it, what to watch for",
+  "prompt": "The complete, structured prompt. Include role assignment, context injection points, output format instructions, and quality gates. Use [VARIABLE] syntax for customisable parts.",
+  "usage": "How to use this prompt effectively: when to deploy it, what to watch for",
   "variables": ["list", "of", "variable", "names", "to", "fill", "in"]
 }
 
 The prompt must be:
 - Professional and precise
-- Reusable across similar situations  
+- Reusable across similar situations
 - Structured with clear sections
-- Producing output of the highest quality
+- Producing consistent, useful output
 `;
 
 export const buildOpportunityStackPrompt = (input: OpportunityInput): string => `
-You are an elite business strategist and positioning expert. Analyse this operator's assets and produce an opportunity stack.
+You are a business strategist. Analyse this person's assets and produce an opportunity stack.
 
 SKILLS: ${input.skills}
 EXPERIENCE: ${input.experience}
@@ -175,11 +173,11 @@ DESIRED PATH: ${input.desiredPath}
 
 Respond with EXACTLY this JSON:
 {
-  "positioningAngle": "The single sharpest positioning angle — not generic, hyper-specific to their combination of assets",
+  "positioningAngle": "The sharpest positioning angle, specific to their combination of assets",
   "bestNiche": "The most defensible and profitable niche given their specific skills and context",
   "offerIdea": "A concrete offer or project idea with a clear value proposition and target buyer",
-  "contentAngle": "The content angle that will attract their ideal audience — what unique perspective they can own",
-  "proofAsset": "The single most powerful proof asset they should build next — specific, achievable, high-signal",
+  "contentAngle": "The content angle that will attract their ideal audience and the perspective they can own",
+  "proofAsset": "The single most valuable proof asset they should build next: specific, achievable, high-signal",
   "roadmap30Day": [
     {
       "week": 1,
@@ -213,7 +211,7 @@ export type DailyPlanInput = {
 };
 
 export const buildDailyPlannerPrompt = (input: DailyPlanInput): string => `
-You are a senior execution strategist. Generate a focused, realistic daily plan.
+You are an execution planner. Generate a focused, realistic daily plan.
 
 GOAL FOR THE DAY: ${input.goal}
 AVAILABLE HOURS: ${input.hoursAvailable}
@@ -240,7 +238,7 @@ Priority must be one of: High, Medium, Low.
 `;
 
 export const buildPlannerPrompt = (input: PlannerInput): string => `
-You are an elite execution strategist. Convert this recommendation into a precise execution plan.
+You are an execution planner. Convert this recommendation into a precise execution plan.
 
 STRATEGIC GOAL: ${input.strategicGoal}
 KEY RECOMMENDATION: ${input.keyRecommendation}

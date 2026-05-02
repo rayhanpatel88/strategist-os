@@ -118,9 +118,9 @@ const TEMPLATES: Record<string, Partial<PlanData>> = {
   },
   "University Study Day": {
     objective: "Make measurable progress on coursework through structured study blocks with active recall.",
-    priorities: ["Complete assigned readings before attempting problems", "Use active recall — no passive re-reading", "Submit any due assignments by 5pm"],
+    priorities: ["Complete assigned readings before attempting problems", "Use active recall, not passive re-reading", "Submit any due assignments by 5pm"],
     timeBlocks: [
-      { startTime: "08:00", endTime: "08:20", activity: "Review yesterday's notes — key points only", category: "Study", priority: "Medium", status: "Planned" },
+      { startTime: "08:00", endTime: "08:20", activity: "Review yesterday's notes: key points only", category: "Study", priority: "Medium", status: "Planned" },
       { startTime: "08:20", endTime: "10:30", activity: "Study block 1: core subject material", category: "Study", priority: "High", status: "Planned" },
       { startTime: "10:30", endTime: "10:45", activity: "Break", category: "Health", priority: "Low", status: "Planned" },
       { startTime: "10:45", endTime: "12:30", activity: "Study block 2: practice problems and application", category: "Study", priority: "High", status: "Planned" },

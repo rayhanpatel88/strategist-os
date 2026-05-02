@@ -4,9 +4,9 @@ import { useTheme } from "@/components/theme-provider";
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const features = [
-  { icon: "biotech", label: "Diagnosis", desc: "Surface your real bottlenecks" },
+  { icon: "biotech", label: "Diagnosis", desc: "Find your real bottlenecks" },
   { icon: "analytics", label: "Scorecard", desc: "8-dimension positioning map" },
-  { icon: "bolt", label: "Arsenal", desc: "AI prompt library built for leverage" },
+  { icon: "bolt", label: "Arsenal", desc: "Reusable AI prompt library" },
   { icon: "trending_up", label: "Opportunities", desc: "Demand-skill gap analysis" },
   { icon: "calendar_month", label: "Planner", desc: "7-day sprint engine" },
   { icon: "account_tree", label: "Workflows", desc: "Systemise repeatable work" },
@@ -155,8 +155,8 @@ export default function Landing() {
               maxWidth: 480,
             }}
           >
-            StrategistOS combines AI-powered diagnosis, positioning scorecards, opportunity
-            mapping, and execution planning into one integrated command centre.
+            StrategistOS brings together diagnosis, positioning scorecards, opportunity
+            mapping, and execution planning in one workspace.
           </p>
 
           <div className="flex items-center gap-3 flex-wrap justify-center">
@@ -258,7 +258,7 @@ export default function Landing() {
         style={{ borderTop: "1px solid var(--sos-border)" }}
       >
         <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-          StrategistOS &mdash; Strategy System
+          StrategistOS · Strategy System
         </span>
       </footer>
     </div>

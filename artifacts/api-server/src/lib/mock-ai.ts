@@ -22,7 +22,7 @@ async function callAI(prompt: string): Promise<string> {
       {
         role: "system",
         content:
-          "You are a world-class strategic advisor. Always respond with valid JSON only — no markdown fences, no preamble, no explanation. Output raw JSON that exactly matches the requested structure.",
+          "You are a strategic advisor. Always respond with valid JSON only. No markdown fences, no preamble, no explanation. Output raw JSON that exactly matches the requested structure.",
       },
       { role: "user", content: prompt },
     ],

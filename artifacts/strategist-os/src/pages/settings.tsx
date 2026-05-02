@@ -319,10 +319,10 @@ function StrategyCardShare({ userId }: { userId: string }) {
   return (
     <div style={{ paddingTop: 32, borderTop: "1px solid var(--sos-border)", paddingBottom: 32 }}>
       <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 16, paddingBottom: 8, borderBottom: "1px solid var(--sos-border-s)" }}>
-        Strategy Card — Public Profile
+        Strategy Card: Public Profile
       </div>
       <div style={{ fontSize: 12, color: "var(--sos-text-secondary)", lineHeight: 1.6, marginBottom: 16 }}>
-        Share your Strategy Card to show clients, investors, or collaborators your Leverage Score, positioning strengths, and strategic focus — without giving them access to your workspace.
+        Share your Strategy Card with clients, investors, or collaborators. They can see your scores and strategic focus without accessing your workspace.
       </div>
       <div
         className="flex items-center gap-3"
