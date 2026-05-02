@@ -247,8 +247,18 @@ export default function Calendar() {
   const [newTask, setNewTask] = useState(blankTask());
   const [reviewOpen, setReviewOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<"plan" | "schedule" | "tasks">("schedule");
+  const [streak, setStreak] = useState<{ currentStreak: number; longestStreak: number } | null>(null);
   const { toast } = useToast();
   const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
+
+  const fetchStreak = useCallback(() => {
+    fetch(`${base}/api/calendar/streak`)
+      .then((r) => r.json())
+      .then((data) => setStreak(data))
+      .catch(() => {});
+  }, [base]);
+
+  useEffect(() => { fetchStreak(); }, [fetchStreak]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -285,6 +295,7 @@ export default function Calendar() {
       });
       setSavedFlash(true);
       setTimeout(() => setSavedFlash(false), 2000);
+      fetchStreak();
     } catch {
       toast({ title: "Save failed. Please try again.", variant: "destructive" });
     } finally {
@@ -386,6 +397,25 @@ export default function Calendar() {
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif", flexShrink: 0 }}>
             Calendar
           </span>
+          {streak !== null && (
+            <div
+              title={`Longest streak: ${streak.longestStreak} day${streak.longestStreak !== 1 ? "s" : ""}`}
+              style={{
+                display: "flex", alignItems: "center", gap: 5,
+                background: streak.currentStreak > 0 ? "rgba(114,254,136,0.08)" : "var(--sos-surface)",
+                border: `1px solid ${streak.currentStreak > 0 ? "rgba(114,254,136,0.22)" : "var(--sos-border-s)"}`,
+                padding: "4px 10px", flexShrink: 0, cursor: "default",
+              }}
+            >
+              <span style={{ fontSize: 13 }}>{streak.currentStreak > 0 ? "🔥" : "💤"}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: streak.currentStreak > 0 ? "var(--sos-emerald)" : "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>
+                {streak.currentStreak}
+              </span>
+              <span style={{ fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", fontFamily: "Space Grotesk, sans-serif" }}>
+                day{streak.currentStreak !== 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
           {/* Date navigation */}
           <div className="flex items-center gap-1 md:gap-2">
             <button onClick={() => setSelectedDate((d) => shiftDate(d, -1))}
