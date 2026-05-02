@@ -20,6 +20,7 @@ import Landing from "@/pages/landing";
 import Settings from "@/pages/settings";
 import StrategyCard from "@/pages/strategy-card";
 import CommandPalette from "@/components/command-palette";
+import ChangelogModal, { useChangelogBadge } from "@/components/changelog-modal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -100,7 +101,7 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function Sidebar({ onSearchOpen, onClose }: { onSearchOpen: () => void; onClose?: () => void }) {
+function Sidebar({ onSearchOpen, onClose, onChangelogOpen, hasChangelog }: { onSearchOpen: () => void; onClose?: () => void; onChangelogOpen: () => void; hasChangelog: boolean }) {
   const [location, navigate] = useLocation();
   const { theme, setTheme } = useTheme();
   const { signOut } = useClerk();
@@ -257,6 +258,29 @@ function Sidebar({ onSearchOpen, onClose }: { onSearchOpen: () => void; onClose?
         )}
         <div className="flex flex-col gap-2">
           <button
+            onClick={() => { onClose?.(); onChangelogOpen(); }}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              fontSize: 10, color: "var(--sos-text-dim)", background: "none",
+              border: "1px solid var(--sos-border)", padding: "6px 12px",
+              cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase",
+              fontFamily: "Space Grotesk, sans-serif", width: "100%",
+              transition: "border-color 0.15s", position: "relative",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-text-dim)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--sos-border)"; }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 13 }}>new_releases</span>
+            What's New
+            {hasChangelog && (
+              <span style={{
+                width: 6, height: 6, borderRadius: "50%",
+                background: "var(--sos-emerald)",
+                flexShrink: 0, marginLeft: "auto",
+              }} />
+            )}
+          </button>
+          <button
             onClick={() => setTheme(isDark ? "light" : "dark")}
             style={{
               display: "flex", alignItems: "center", gap: 8,
@@ -308,11 +332,18 @@ function useIsMobile() {
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   const [showSearch, setShowSearch] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
+  const { hasUnread, markSeen } = useChangelogBadge();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [location] = useLocation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
+
+  function openChangelog() {
+    markSeen();
+    setShowChangelog(true);
+  }
 
   useEffect(() => {
     if (isMobile) setSidebarOpen(false);
@@ -383,6 +414,8 @@ function AppLayout({ children }: { children: React.ReactNode }) {
         <Sidebar
           onSearchOpen={() => { setSidebarOpen(false); setShowSearch(true); }}
           onClose={() => setSidebarOpen(false)}
+          onChangelogOpen={openChangelog}
+          hasChangelog={hasUnread}
         />
       </div>
 
@@ -395,6 +428,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
 
       {showSearch && <CommandPalette onClose={() => setShowSearch(false)} />}
+      {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
     </div>
   );
 }
