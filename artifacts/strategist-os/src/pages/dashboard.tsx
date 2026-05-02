@@ -74,7 +74,8 @@ function cellColor(date: string, todayStr: string, map: Map<string, ActivityEntr
 function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; loading: boolean }) {
   const grid = buildHeatmapGrid();
   const todayStr = new Date().toISOString().split("T")[0];
-  const map = new Map(activity.map((a) => [a.date, a]));
+  const safeActivity = Array.isArray(activity) ? activity : [];
+  const map = new Map(safeActivity.map((a) => [a.date, a]));
 
   const allDates = grid.flat();
   const pastDates = allDates.filter((d) => d <= todayStr);
@@ -89,6 +90,8 @@ function ExecutionHeatmap({ activity, loading }: { activity: ActivityEntry[]; lo
     if (map.get(ds)?.hasContent) {
       streak++;
     } else if (i > 0) {
+      break;
+    } else {
       break;
     }
   }
