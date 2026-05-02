@@ -246,6 +246,7 @@ export default function Calendar() {
   const [addingTask, setAddingTask] = useState(false);
   const [newTask, setNewTask] = useState(blankTask());
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"plan" | "schedule" | "tasks">("schedule");
   const { toast } = useToast();
   const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
 
@@ -391,7 +392,7 @@ export default function Calendar() {
               style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-border-s)", padding: "4px 8px", cursor: "pointer", flexShrink: 0 }}>
               Prev
             </button>
-            <span className="sos-cal-date-label" style={{ fontSize: 12, color: "var(--sos-text)", fontWeight: 600, minWidth: 220, textAlign: "center" }}>
+            <span className="sos-cal-date-label" style={{ fontSize: 12, color: "var(--sos-text)", fontWeight: 600, minWidth: 0, textAlign: "center" }}>
               {formatDisplayDate(selectedDate)}
             </span>
             <button onClick={() => setSelectedDate((d) => shiftDate(d, 1))}
@@ -436,6 +437,28 @@ export default function Calendar() {
         </div>
       </div>
 
+      {/* Mobile panel tabs */}
+      <div className="md:hidden flex shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
+        {(["plan", "schedule", "tasks"] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setMobileTab(tab)}
+            style={{
+              flex: 1, padding: "9px 0", fontSize: 10,
+              fontWeight: mobileTab === tab ? 700 : 400,
+              letterSpacing: "0.1em", textTransform: "capitalize",
+              color: mobileTab === tab ? "var(--sos-text)" : "var(--sos-text-dim)",
+              background: mobileTab === tab ? "var(--sos-surface)" : "none",
+              border: "none", cursor: "pointer",
+              borderBottom: mobileTab === tab ? "2px solid var(--sos-blue)" : "2px solid transparent",
+              fontFamily: "Space Grotesk, sans-serif",
+            }}
+          >
+            {tab === "plan" ? "Plan" : tab === "schedule" ? "Schedule" : "Tasks"}
+          </button>
+        ))}
+      </div>
+
       {/* Body */}
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
@@ -444,7 +467,7 @@ export default function Calendar() {
       ) : (
         <div className="sos-cal-body flex flex-1 overflow-hidden">
           {/* Left column */}
-          <div className="sos-cal-left flex flex-col gap-5 shrink-0 overflow-y-auto py-6 px-5" style={{ width: 260, borderRight: "1px solid var(--sos-border)" }}>
+          <div className={`sos-cal-left flex flex-col gap-5 shrink-0 overflow-y-auto py-6 px-5 ${mobileTab !== "plan" ? "hidden md:flex" : ""}`} style={{ width: 260, borderRight: "1px solid var(--sos-border)" }}>
             {/* Objective */}
             <div>
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 8, fontFamily: "Space Grotesk, sans-serif" }}>
@@ -499,7 +522,7 @@ export default function Calendar() {
           </div>
 
           {/* Center column: Time Blocks */}
-          <div className="sos-cal-center flex flex-col flex-1 overflow-y-auto py-6 px-6">
+          <div className={`sos-cal-center flex flex-col flex-1 overflow-y-auto py-6 px-6 ${mobileTab !== "schedule" ? "hidden md:flex" : ""}`}>
             <div className="flex items-center justify-between mb-4">
               <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text-dim)", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
                 Schedule
@@ -648,7 +671,7 @@ export default function Calendar() {
           </div>
 
           {/* Right column: Tasks + Review */}
-          <div className="sos-cal-right flex flex-col shrink-0 overflow-y-auto py-6 px-5" style={{ width: 280, borderLeft: "1px solid var(--sos-border)" }}>
+          <div className={`sos-cal-right flex flex-col shrink-0 overflow-y-auto py-6 px-5 ${mobileTab !== "tasks" ? "hidden md:flex" : ""}`} style={{ width: 280, borderLeft: "1px solid var(--sos-border)" }}>
             {/* Tasks */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">

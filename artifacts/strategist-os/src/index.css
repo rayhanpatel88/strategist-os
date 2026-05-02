@@ -463,43 +463,15 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Calendar 3-panel → vertical stack */
-  .sos-cal-body {
-    flex-direction: column !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-  }
-  .sos-cal-left {
-    width: 100% !important;
-    border-right: none !important;
-    border-bottom: 1px solid var(--sos-border) !important;
-    max-height: none !important;
-    overflow-y: visible !important;
-    flex-shrink: 0 !important;
-  }
-  .sos-cal-center {
-    flex: none !important;
-    overflow-y: visible !important;
-    min-height: 280px;
-  }
-  .sos-cal-right {
-    width: 100% !important;
-    border-left: none !important;
-    border-top: 1px solid var(--sos-border) !important;
-    max-height: none !important;
-    overflow-y: visible !important;
-    flex-shrink: 0 !important;
-  }
-  .sos-cal-date-label {
-    min-width: 0 !important;
-    font-size: 11px !important;
-    text-align: left !important;
-  }
+  /* Calendar: header wraps on mobile */
   .sos-cal-header {
     flex-wrap: wrap !important;
-    gap: 8px !important;
+    gap: 6px !important;
+    height: auto !important;
+    padding: 10px 16px !important;
   }
   .sos-cal-header-left {
+    flex: 1 1 auto !important;
     flex-wrap: wrap !important;
     gap: 6px !important;
     min-width: 0 !important;
@@ -507,6 +479,21 @@
   .sos-cal-header-right {
     flex-wrap: wrap !important;
     gap: 6px !important;
+  }
+  .sos-cal-date-label {
+    font-size: 11px !important;
+    min-width: 0 !important;
+  }
+  /* Calendar: override fixed panel widths so tab-selected panel fills body */
+  .sos-cal-left,
+  .sos-cal-right {
+    width: 100% !important;
+    border-right: none !important;
+    border-left: none !important;
+    flex: 1 1 auto !important;
+  }
+  .sos-cal-center {
+    overflow-y: auto !important;
   }
 
   /* Weekly review modal two-col → single col */
