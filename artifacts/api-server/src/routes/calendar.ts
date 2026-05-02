@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { db } from "@workspace/db";
-import { calendarPlansTable, type CalendarPlanData } from "@workspace/db";
+import { calendarPlansTable, recurringTemplatesTable, type CalendarPlanData } from "@workspace/db";
 import { asc, eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { generateDailyPlan } from "../lib/mock-ai.js";
@@ -225,6 +225,49 @@ router.put("/calendar/:date", async (req, res) => {
   }
   res.json({ date, data });
 });
+
+// ── Recurring Templates ─────────────────────────────────────────────────────
+
+router.get("/calendar/recurring-templates", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const rows = await db
+    .select()
+    .from(recurringTemplatesTable)
+    .where(eq(recurringTemplatesTable.userId, userId));
+  res.json(rows);
+});
+
+const RecurringTemplateBody = z.object({
+  name: z.string().min(1),
+  days: z.array(z.number().int().min(0).max(6)).min(1),
+  data: z.record(z.any()),
+});
+
+router.post("/calendar/recurring-templates", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const parsed = RecurringTemplateBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid request", details: parsed.error.issues });
+    return;
+  }
+  const [row] = await db
+    .insert(recurringTemplatesTable)
+    .values({ userId, name: parsed.data.name, days: parsed.data.days, data: parsed.data.data as any })
+    .returning();
+  res.json(row);
+});
+
+router.delete("/calendar/recurring-templates/:id", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid id" }); return; }
+  await db
+    .delete(recurringTemplatesTable)
+    .where(and(eq(recurringTemplatesTable.id, id), eq(recurringTemplatesTable.userId, userId)));
+  res.json({ ok: true });
+});
+
+// ── AI Plan ──────────────────────────────────────────────────────────────────
 
 const AiPlanBody = z.object({
   goal: z.string().min(1),

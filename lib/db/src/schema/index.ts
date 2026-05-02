@@ -10,3 +10,4 @@ export * from "./weekly-goals";
 export * from "./opportunities";
 export * from "./diagnoses";
 export * from "./scorecards";
+export * from "./recurring-templates";

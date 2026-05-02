@@ -42,6 +42,14 @@ const CATEGORIES = ["Deep Work", "Admin", "Study", "Client Work", "Content", "He
 const BLOCK_STATUSES = ["Planned", "In Progress", "Complete", "Moved"];
 const TASK_STATUSES = ["Not Started", "In Progress", "Done", "Deferred"];
 const PRIORITIES = ["High", "Medium", "Low"];
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+type RecurringTpl = {
+  id: number;
+  name: string;
+  days: number[];
+  data: Partial<Omit<PlanData, "review">>;
+};
 
 const CAT_COLOR: Record<string, string> = {
   "Deep Work": "#3b82f6",
@@ -248,6 +256,13 @@ export default function Calendar() {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [mobileTab, setMobileTab] = useState<"plan" | "schedule" | "tasks">("schedule");
   const [streak, setStreak] = useState<{ currentStreak: number; longestStreak: number } | null>(null);
+  const [recurringTemplates, setRecurringTemplates] = useState<RecurringTpl[]>([]);
+  const [showSaveRecurring, setShowSaveRecurring] = useState(false);
+  const [recurringForm, setRecurringForm] = useState<{ name: string; days: number[] }>({ name: "", days: [] });
+  const [savingRecurring, setSavingRecurring] = useState(false);
+  const [suggestedTemplate, setSuggestedTemplate] = useState<RecurringTpl | null>(null);
+  const [bannerDismissedFor, setBannerDismissedFor] = useState<string | null>(null);
+  const [showManageRecurring, setShowManageRecurring] = useState(false);
   const { toast } = useToast();
   const base = (import.meta.env.BASE_URL as string).replace(/\/$/, "");
 
@@ -258,7 +273,15 @@ export default function Calendar() {
       .catch(() => {});
   }, [base]);
 
+  const fetchRecurringTemplates = useCallback(() => {
+    fetch(`${base}/api/calendar/recurring-templates`)
+      .then((r) => r.json())
+      .then((rows: RecurringTpl[]) => setRecurringTemplates(rows))
+      .catch(() => {});
+  }, [base]);
+
   useEffect(() => { fetchStreak(); }, [fetchStreak]);
+  useEffect(() => { fetchRecurringTemplates(); }, [fetchRecurringTemplates]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -284,6 +307,62 @@ export default function Calendar() {
   }, [base]);
 
   useEffect(() => { loadPlan(selectedDate); }, [selectedDate, loadPlan]);
+
+  // Suggest matching recurring template when navigating to an empty day
+  useEffect(() => {
+    const planIsEmpty = !plan.objective?.trim() && plan.timeBlocks.length === 0 && plan.tasks.length === 0;
+    if (!planIsEmpty || bannerDismissedFor === selectedDate || recurringTemplates.length === 0) {
+      setSuggestedTemplate(null);
+      return;
+    }
+    const dayOfWeek = new Date(selectedDate + "T12:00:00").getDay();
+    const match = recurringTemplates.find((t) => t.days.includes(dayOfWeek)) ?? null;
+    setSuggestedTemplate(match);
+  }, [plan, selectedDate, recurringTemplates, bannerDismissedFor]);
+
+  const applyRecurringTemplate = (tpl: RecurringTpl) => {
+    setPlan((p) => ({
+      ...p,
+      objective: tpl.data.objective ?? p.objective,
+      priorities: tpl.data.priorities ?? p.priorities,
+      notes: tpl.data.notes ?? p.notes,
+      timeBlocks: (tpl.data.timeBlocks ?? []).map((b) => ({ ...b, id: uid(), status: "Planned" })),
+      tasks: (tpl.data.tasks ?? []).map((t) => ({ ...t, id: uid(), status: "Not Started" })),
+    }));
+    setSuggestedTemplate(null);
+    setBannerDismissedFor(selectedDate);
+    toast({ title: `Template applied: ${tpl.name}` });
+  };
+
+  const saveAsRecurring = async () => {
+    if (!recurringForm.name.trim()) { toast({ title: "Enter a template name", variant: "destructive" }); return; }
+    if (recurringForm.days.length === 0) { toast({ title: "Select at least one day", variant: "destructive" }); return; }
+    setSavingRecurring(true);
+    try {
+      await fetch(`${base}/api/calendar/recurring-templates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: recurringForm.name,
+          days: recurringForm.days,
+          data: { objective: plan.objective, priorities: plan.priorities, notes: plan.notes, timeBlocks: plan.timeBlocks, tasks: plan.tasks },
+        }),
+      });
+      fetchRecurringTemplates();
+      setShowSaveRecurring(false);
+      setRecurringForm({ name: "", days: [] });
+      toast({ title: "Recurring template saved" });
+    } catch {
+      toast({ title: "Failed to save template", variant: "destructive" });
+    } finally {
+      setSavingRecurring(false);
+    }
+  };
+
+  const deleteRecurringTemplate = async (id: number) => {
+    await fetch(`${base}/api/calendar/recurring-templates/${id}`, { method: "DELETE" });
+    setRecurringTemplates((ts) => ts.filter((t) => t.id !== id));
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -446,13 +525,38 @@ export default function Calendar() {
               Templates
             </button>
             {showTemplates && (
-              <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "var(--sos-surface)", border: "1px solid var(--sos-border)", zIndex: 50, minWidth: 200 }}>
+              <div style={{ position: "absolute", right: 0, top: "calc(100% + 4px)", background: "var(--sos-surface)", border: "1px solid var(--sos-border)", zIndex: 50, minWidth: 220, maxHeight: 360, overflowY: "auto" }}>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", padding: "8px 14px 4px", fontFamily: "Space Grotesk, sans-serif" }}>Daily Presets</div>
                 {Object.keys(TEMPLATES).map((name) => (
                   <button key={name} onClick={() => applyTemplate(name)}
-                    style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12, color: "var(--sos-text-body)", padding: "10px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
+                    style={{ display: "block", width: "100%", textAlign: "left", fontSize: 12, color: "var(--sos-text-body)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
                     {name}
                   </button>
                 ))}
+                {recurringTemplates.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-text-dim)", padding: "10px 14px 4px", fontFamily: "Space Grotesk, sans-serif", borderTop: "1px solid var(--sos-border)" }}>Recurring</div>
+                    {recurringTemplates.map((t) => (
+                      <button key={t.id} onClick={() => { applyRecurringTemplate(t); setShowTemplates(false); }}
+                        style={{ display: "block", width: "100%", textAlign: "left", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", borderBottom: "1px solid var(--sos-border-s)" }}>
+                        <div style={{ fontSize: 12, color: "var(--sos-text-body)" }}>{t.name}</div>
+                        <div style={{ fontSize: 9, color: "var(--sos-text-dim)", marginTop: 2 }}>{t.days.map((d) => DAY_LABELS[d]).join(" / ")}</div>
+                      </button>
+                    ))}
+                  </>
+                )}
+                <div style={{ borderTop: "1px solid var(--sos-border)", padding: "4px 0" }}>
+                  <button onClick={() => { setShowSaveRecurring(true); setShowTemplates(false); setRecurringForm({ name: "", days: [] }); }}
+                    style={{ display: "block", width: "100%", textAlign: "left", fontSize: 11, color: "var(--sos-emerald)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.06em" }}>
+                    + Save current as recurring
+                  </button>
+                  {recurringTemplates.length > 0 && (
+                    <button onClick={() => { setShowManageRecurring(true); setShowTemplates(false); }}
+                      style={{ display: "block", width: "100%", textAlign: "left", fontSize: 11, color: "var(--sos-text-dim)", padding: "9px 14px", background: "none", border: "none", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.06em" }}>
+                      Manage recurring templates
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -466,6 +570,29 @@ export default function Calendar() {
           </button>
         </div>
       </div>
+
+      {/* Recurring template suggestion banner */}
+      {suggestedTemplate && (
+        <div className="flex items-center justify-between gap-3 shrink-0 px-4 py-2" style={{ background: "rgba(114,254,136,0.06)", borderBottom: "1px solid rgba(114,254,136,0.18)" }}>
+          <div className="flex items-center gap-2 min-w-0">
+            <span style={{ fontSize: 12 }}>↩</span>
+            <span style={{ fontSize: 11, color: "var(--sos-text-body)" }}>
+              <span style={{ fontWeight: 600, color: "var(--sos-emerald)" }}>{suggestedTemplate.name}</span>
+              <span style={{ color: "var(--sos-text-dim)" }}> matches {DAY_LABELS[new Date(selectedDate + "T12:00:00").getDay()]}. Apply it?</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={() => applyRecurringTemplate(suggestedTemplate)}
+              style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-emerald)", background: "rgba(114,254,136,0.12)", border: "1px solid rgba(114,254,136,0.3)", padding: "4px 12px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+              Apply
+            </button>
+            <button onClick={() => { setSuggestedTemplate(null); setBannerDismissedFor(selectedDate); }}
+              style={{ fontSize: 10, color: "var(--sos-text-dim)", background: "none", border: "none", cursor: "pointer", padding: "4px 6px" }}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Mobile panel tabs */}
       <div className="md:hidden flex shrink-0" style={{ borderBottom: "1px solid var(--sos-border)" }}>
@@ -820,6 +947,109 @@ export default function Calendar() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Save as Recurring Template Modal */}
+      {showSaveRecurring && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", zIndex: 100 }}>
+          <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", width: 420, maxWidth: "92vw" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 4 }}>
+              Save as Recurring Template
+            </div>
+            <div style={{ fontSize: 12, color: "var(--sos-text-dim)", marginBottom: 20 }}>
+              This plan will auto-fill on matching days when the schedule is empty.
+            </div>
+            <div className="space-y-4">
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 6 }}>Template name *</div>
+                <input
+                  value={recurringForm.name}
+                  onChange={(e) => setRecurringForm((f) => ({ ...f, name: e.target.value }))}
+                  placeholder="e.g. Deep Work Morning, Client Day"
+                  style={{ width: "100%", fontSize: 12, color: "var(--sos-text-body)", background: "var(--sos-input-bg)", border: "1px solid var(--sos-border-s)", padding: "8px 10px" }}
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 10 }}>Repeat on *</div>
+                <div className="flex gap-2 flex-wrap">
+                  {DAY_LABELS.map((label, idx) => {
+                    const active = recurringForm.days.includes(idx);
+                    return (
+                      <button key={idx} onClick={() => setRecurringForm((f) => ({
+                        ...f,
+                        days: active ? f.days.filter((d) => d !== idx) : [...f.days, idx],
+                      }))}
+                        style={{ padding: "6px 12px", fontSize: 11, fontWeight: active ? 700 : 400, fontFamily: "Space Grotesk, sans-serif", cursor: "pointer", border: "1px solid", borderColor: active ? "var(--sos-emerald)" : "var(--sos-border-s)", background: active ? "rgba(114,254,136,0.1)" : "var(--sos-input-bg)", color: active ? "var(--sos-emerald)" : "var(--sos-text-dim)" }}>
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div style={{ fontSize: 11, color: "var(--sos-text-dim)", padding: "8px 10px", background: "var(--sos-bg)", border: "1px solid var(--sos-border-s)" }}>
+                Saves: objective, priorities, notes, {plan.timeBlocks.length} block{plan.timeBlocks.length !== 1 ? "s" : ""}, {plan.tasks.length} task{plan.tasks.length !== 1 ? "s" : ""}. Review data is not included.
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={saveAsRecurring} disabled={savingRecurring}
+                style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--sos-btn-text)", background: savingRecurring ? "var(--sos-btn-disabled-bg)" : "var(--sos-btn-bg)", border: "none", padding: "11px 24px", cursor: savingRecurring ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", flex: 1 }}>
+                {savingRecurring ? "Saving..." : "Save Template"}
+              </button>
+              <button onClick={() => setShowSaveRecurring(false)}
+                style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "11px 20px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Recurring Templates Modal */}
+      {showManageRecurring && (
+        <div className="fixed inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)", zIndex: 100 }}>
+          <div className="p-6" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", width: 440, maxWidth: "92vw" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--sos-text)", fontFamily: "Space Grotesk, sans-serif", marginBottom: 16 }}>
+              Recurring Templates
+            </div>
+            {recurringTemplates.length === 0 ? (
+              <div style={{ fontSize: 12, color: "var(--sos-text-dim)", padding: "16px 0" }}>No recurring templates saved.</div>
+            ) : (
+              <div className="space-y-2">
+                {recurringTemplates.map((t) => (
+                  <div key={t.id} className="flex items-start justify-between gap-3 p-3" style={{ background: "var(--sos-bg)", border: "1px solid var(--sos-border-s)" }}>
+                    <div className="min-w-0">
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--sos-text-body)", marginBottom: 3 }}>{t.name}</div>
+                      <div style={{ fontSize: 10, color: "var(--sos-text-dim)" }}>{t.days.map((d) => DAY_LABELS[d]).join(" / ")}</div>
+                      <div style={{ fontSize: 10, color: "var(--sos-text-dim)", marginTop: 2 }}>
+                        {(t.data.timeBlocks ?? []).length} block{(t.data.timeBlocks ?? []).length !== 1 ? "s" : ""} · {(t.data.tasks ?? []).length} task{(t.data.tasks ?? []).length !== 1 ? "s" : ""}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <button onClick={() => { applyRecurringTemplate(t); setShowManageRecurring(false); }}
+                        style={{ fontSize: 10, color: "var(--sos-blue)", background: "none", border: "1px solid var(--sos-blue-border)", padding: "4px 10px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+                        Apply
+                      </button>
+                      <button onClick={() => deleteRecurringTemplate(t.id)}
+                        style={{ fontSize: 10, color: "var(--sos-error)", background: "none", border: "1px solid rgba(239,68,68,0.3)", padding: "4px 10px", cursor: "pointer" }}>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => { setShowManageRecurring(false); setShowSaveRecurring(true); setRecurringForm({ name: "", days: [] }); }}
+                style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-emerald)", background: "none", border: "1px solid rgba(114,254,136,0.3)", padding: "10px 20px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}>
+                + New Template
+              </button>
+              <button onClick={() => setShowManageRecurring(false)}
+                style={{ fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--sos-text-dim)", background: "none", border: "1px solid var(--sos-ghost-border)", padding: "10px 20px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", marginLeft: "auto" }}>
+                Close
+              </button>
             </div>
           </div>
         </div>
