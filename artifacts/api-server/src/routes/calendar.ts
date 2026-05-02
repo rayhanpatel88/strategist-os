@@ -43,6 +43,24 @@ router.get("/calendar/activity", async (req, res) => {
   res.json(activity);
 });
 
+router.get("/calendar/momentum", async (req, res) => {
+  const userId = (req as any).userId as string;
+  const rows = await db
+    .select({ date: calendarPlansTable.date, data: calendarPlansTable.data })
+    .from(calendarPlansTable)
+    .where(eq(calendarPlansTable.userId, userId))
+    .orderBy(asc(calendarPlansTable.date));
+  const result = rows.map((row) => {
+    const d = row.data as CalendarPlanData;
+    const blocks = d.timeBlocks ?? [];
+    const total = blocks.length;
+    const completed = blocks.filter((b) => b.status === "Complete").length;
+    const score = total > 0 ? Math.round((completed / total) * 100) : null;
+    return { date: row.date, score, completed, total };
+  });
+  res.json(result);
+});
+
 router.get("/calendar/week-review", async (req, res) => {
   const userId = (req as any).userId as string;
   const { start } = req.query;

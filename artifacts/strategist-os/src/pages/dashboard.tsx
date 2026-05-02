@@ -1013,6 +1013,187 @@ function WeeklyFocusWidget({ base }: { base: string }) {
   );
 }
 
+type MomentumEntry = { date: string; score: number | null; completed: number; total: number };
+
+function MomentumSparkline({ base }: { base: string }) {
+  const [data, setData] = useState<MomentumEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`${base}/api/calendar/momentum`)
+      .then((r) => r.json())
+      .then((d: MomentumEntry[]) => setData(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [base]);
+
+  const today = new Date().toISOString().split("T")[0];
+  const days = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - 13 + i);
+    return d.toISOString().split("T")[0];
+  });
+
+  const dataMap = new Map(data.map((d) => [d.date, d]));
+  const points = days.map((day) => ({
+    date: day,
+    isToday: day === today,
+    entry: dataMap.get(day) ?? null,
+  }));
+
+  const validScores = points
+    .filter((p) => p.entry?.score !== null && p.entry?.score !== undefined)
+    .map((p) => p.entry!.score as number);
+
+  const last7Scores = points.slice(7).filter((p) => p.entry?.score !== null && p.entry?.score !== undefined).map((p) => p.entry!.score as number);
+  const prev7Scores = points.slice(0, 7).filter((p) => p.entry?.score !== null && p.entry?.score !== undefined).map((p) => p.entry!.score as number);
+  const avg7 = last7Scores.length > 0 ? Math.round(last7Scores.reduce((a, b) => a + b, 0) / last7Scores.length) : null;
+  const avgPrev7 = prev7Scores.length > 0 ? Math.round(prev7Scores.reduce((a, b) => a + b, 0) / prev7Scores.length) : null;
+  const trend = avg7 !== null && avgPrev7 !== null ? avg7 - avgPrev7 : null;
+
+  const scoreColor = (score: number) =>
+    score >= 75 ? "var(--sos-emerald)" : score >= 40 ? "var(--sos-blue)" : "#f59e0b";
+
+  const W = 560;
+  const H = 70;
+  const padX = 6;
+  const padY = 6;
+  const plotH = H - padY * 2;
+  const n = points.length;
+  const slotW = (W - padX * 2) / n;
+  const barW = Math.max(slotW * 0.55, 4);
+
+  const getX = (i: number) => padX + slotW * i + slotW / 2;
+  const getBarH = (score: number) => Math.max(3, (score / 100) * plotH);
+  const getBarY = (score: number) => H - padY - getBarH(score);
+
+  if (loading) {
+    return (
+      <div className="mb-8 p-5 animate-pulse" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)", height: 128 }} />
+    );
+  }
+
+  return (
+    <div className="mb-8 p-5" style={{ background: "var(--sos-surface)", border: "1px solid var(--sos-border)" }}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="label-caps">Daily Momentum</div>
+        <div className="flex items-center gap-4">
+          {avg7 !== null && (
+            <span style={{ fontSize: 10, color: "var(--sos-text-muted)", letterSpacing: "0.05em" }}>
+              7-day avg:{" "}
+              <span style={{ color: scoreColor(avg7), fontWeight: 700, fontFamily: "Space Grotesk, sans-serif" }}>
+                {avg7}%
+              </span>
+            </span>
+          )}
+          {trend !== null && (
+            <span style={{ fontSize: 10, letterSpacing: "0.05em", color: trend >= 0 ? "var(--sos-emerald)" : "#f87171", fontWeight: 600 }}>
+              {trend >= 0 ? "▲" : "▼"} {Math.abs(trend)}% vs prev week
+            </span>
+          )}
+        </div>
+      </div>
+
+      {validScores.length === 0 ? (
+        <div className="py-6 text-center" style={{ fontSize: 11, color: "var(--sos-text-subtle)", fontStyle: "italic" }}>
+          No block data yet. Mark time blocks as "Complete" in Calendar to track momentum.
+        </div>
+      ) : (
+        <>
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            style={{ width: "100%", height: 80, overflow: "visible", display: "block" }}
+            aria-label="Daily momentum chart"
+          >
+            {/* Baseline grid lines at 0%, 50%, 100% */}
+            {[0, 50, 100].map((v) => {
+              const y = v === 0 ? H - padY : v === 100 ? padY : H - padY - (v / 100) * plotH;
+              return (
+                <line
+                  key={v}
+                  x1={padX} y1={y}
+                  x2={W - padX} y2={y}
+                  stroke="var(--sos-border-s)"
+                  strokeWidth={0.8}
+                  strokeDasharray={v === 0 ? "none" : "3 4"}
+                />
+              );
+            })}
+
+            {/* Bars */}
+            {points.map((p, i) => {
+              const score = p.entry?.score ?? null;
+              const x = getX(i);
+              if (score === null) {
+                return (
+                  <rect
+                    key={p.date}
+                    x={x - barW / 2}
+                    y={H - padY - 2}
+                    width={barW}
+                    height={2}
+                    fill="var(--sos-border)"
+                    opacity={0.4}
+                    rx={1}
+                  />
+                );
+              }
+              const bh = getBarH(score);
+              const by = getBarY(score);
+              const fill = p.isToday ? "var(--sos-emerald)" : scoreColor(score);
+              return (
+                <g key={p.date}>
+                  <rect
+                    x={x - barW / 2}
+                    y={by}
+                    width={barW}
+                    height={bh}
+                    fill={fill}
+                    opacity={p.isToday ? 1 : 0.75}
+                    rx={1}
+                  />
+                  {/* Score label on hover via title */}
+                  <title>{`${p.date}: ${score}% (${p.entry?.completed}/${p.entry?.total} blocks)`}</title>
+                </g>
+              );
+            })}
+
+            {/* Today indicator dot */}
+            {(() => {
+              const todayPoint = points.find((p) => p.isToday);
+              const todayIdx = points.findIndex((p) => p.isToday);
+              if (!todayPoint || todayPoint.entry?.score === null || todayIdx < 0) return null;
+              const x = getX(todayIdx);
+              const score = todayPoint.entry!.score as number;
+              return (
+                <circle
+                  cx={x}
+                  cy={getBarY(score) - 4}
+                  r={3}
+                  fill="var(--sos-emerald)"
+                />
+              );
+            })()}
+          </svg>
+
+          {/* Date range labels */}
+          <div className="flex items-center justify-between mt-1">
+            <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.06em" }}>
+              {new Date(`${days[0]}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+            </span>
+            <span style={{ fontSize: 9, color: "var(--sos-text-dim)", letterSpacing: "0.06em" }}>
+              Blocks completed vs. planned — last 14 days
+            </span>
+            <span style={{ fontSize: 9, color: "var(--sos-emerald)", letterSpacing: "0.06em", fontWeight: 700 }}>
+              Today
+            </span>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const summary = useGetSessionsSummary();
   const sessions = useListSessions();
@@ -1142,6 +1323,9 @@ export default function Dashboard() {
 
         {/* Weekly Focus */}
         <WeeklyFocusWidget base={base} />
+
+        {/* Daily Momentum sparkline */}
+        <MomentumSparkline base={base} />
 
         {/* Telemetry bars */}
         {!summary.isLoading && avgScore !== null && (
