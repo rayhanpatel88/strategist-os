@@ -18,6 +18,8 @@ import Portfolio from "@/pages/portfolio";
 import Calendar from "@/pages/calendar";
 import Landing from "@/pages/landing";
 import Settings from "@/pages/settings";
+import StrategyCard from "@/pages/strategy-card";
+import CommandPalette from "@/components/command-palette";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -98,7 +100,7 @@ function ClerkQueryClientCacheInvalidator() {
   return null;
 }
 
-function Sidebar() {
+function Sidebar({ onSearchOpen }: { onSearchOpen: () => void }) {
   const [location, navigate] = useLocation();
   const { theme, setTheme } = useTheme();
   const { signOut } = useClerk();
@@ -145,6 +147,26 @@ function Sidebar() {
         <span className="status-pip" style={{ background: "var(--sos-emerald)" }} />
         <span style={{ fontSize: 10, color: "var(--sos-text-dim)", letterSpacing: "0.06em", textTransform: "uppercase" }}>Systems ready</span>
       </div>
+
+      {/* Search trigger */}
+      <button
+        onClick={onSearchOpen}
+        className="flex items-center gap-3 w-full transition-all duration-100"
+        style={{
+          padding: "9px 20px",
+          background: "none",
+          border: "none",
+          borderBottom: "1px solid var(--sos-border-s)",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--sos-nav-hover-bg)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
+      >
+        <span className="material-symbols-outlined shrink-0" style={{ color: "var(--sos-text-dim)", fontSize: 15 }}>search</span>
+        <span style={{ fontSize: 11, color: "var(--sos-text-dim)", flex: 1, fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.04em" }}>Search…</span>
+        <kbd style={{ fontSize: 9, color: "var(--sos-text-muted)", background: "var(--sos-surface-low)", border: "1px solid var(--sos-border)", padding: "1px 5px", fontFamily: "Inter, sans-serif", flexShrink: 0 }}>⌘K</kbd>
+      </button>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3">
@@ -275,12 +297,26 @@ function Sidebar() {
 }
 
 function AppLayout({ children }: { children: React.ReactNode }) {
+  const [showSearch, setShowSearch] = useState(false);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setShowSearch((v) => !v);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar />
+      <Sidebar onSearchOpen={() => setShowSearch(true)} />
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>
+      {showSearch && <CommandPalette onClose={() => setShowSearch(false)} />}
     </div>
   );
 }
@@ -562,6 +598,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/calendar" component={() => <ProtectedPage component={Calendar} />} />
             <Route path="/portfolio" component={() => <ProtectedPage component={Portfolio} />} />
             <Route path="/settings" component={() => <ProtectedPage component={Settings} />} />
+            <Route path="/p/:userId" component={StrategyCard} />
             <Route component={NotFound} />
           </Switch>
           <Toaster />

@@ -294,7 +294,70 @@ export default function Settings() {
             )}
           </div>
 
+          {/* Strategy Card */}
+          {isLoaded && user && (
+            <StrategyCardShare userId={user.id} />
+          )}
+
         </div>
+      </div>
+    </div>
+  );
+}
+
+function StrategyCardShare({ userId }: { userId: string }) {
+  const [copied, setCopied] = useState(false);
+  const cardUrl = `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, "")}/p/${userId}`;
+
+  function handleCopy() {
+    navigator.clipboard.writeText(cardUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    });
+  }
+
+  return (
+    <div style={{ paddingTop: 32, borderTop: "1px solid var(--sos-border)", paddingBottom: 32 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.12em", color: "var(--sos-text-dim)", textTransform: "uppercase", marginBottom: 16, paddingBottom: 8, borderBottom: "1px solid var(--sos-border-s)" }}>
+        Strategy Card — Public Profile
+      </div>
+      <div style={{ fontSize: 12, color: "var(--sos-text-secondary)", lineHeight: 1.6, marginBottom: 16 }}>
+        Share your Strategy Card to show clients, investors, or collaborators your Leverage Score, positioning strengths, and strategic focus — without giving them access to your workspace.
+      </div>
+      <div
+        className="flex items-center gap-3"
+        style={{ background: "var(--sos-surface-low)", border: "1px solid var(--sos-border)", padding: "10px 16px", marginBottom: 12 }}
+      >
+        <span style={{ fontSize: 12, color: "var(--sos-text-secondary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontFamily: "Inter, sans-serif" }}>
+          {cardUrl}
+        </span>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleCopy}
+          style={{
+            fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
+            color: copied ? "#0d0e12" : "var(--sos-text)",
+            background: copied ? "var(--sos-emerald)" : "transparent",
+            border: "1px solid var(--sos-border)", padding: "9px 24px", cursor: "pointer",
+            fontFamily: "Space Grotesk, sans-serif", transition: "all 0.15s",
+          }}
+        >
+          {copied ? "Copied!" : "Copy link"}
+        </button>
+        <a
+          href={cardUrl}
+          target="_blank"
+          rel="noreferrer"
+          style={{
+            fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+            color: "var(--sos-text-dim)", textDecoration: "none", fontFamily: "Space Grotesk, sans-serif",
+            display: "flex", alignItems: "center", gap: 6,
+          }}
+        >
+          Preview
+          <span className="material-symbols-outlined" style={{ fontSize: 13 }}>open_in_new</span>
+        </a>
       </div>
     </div>
   );

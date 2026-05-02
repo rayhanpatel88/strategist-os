@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { requireAuth } from "../middlewares/requireAuth";
 import healthRouter from "./health";
+import publicProfileRouter from "./public-profile";
 import sessionsRouter from "./sessions";
 import diagnosisRouter from "./diagnosis";
 import scorecardRouter from "./scorecard";
@@ -12,10 +13,12 @@ import portfolioRouter from "./portfolio";
 import enquiriesRouter from "./enquiries";
 import calendarRouter from "./calendar";
 import settingsRouter from "./settings";
+import searchRouter from "./search";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use(publicProfileRouter);
 
 router.use(requireAuth);
 
@@ -30,5 +33,6 @@ router.use(portfolioRouter);
 router.use(enquiriesRouter);
 router.use(calendarRouter);
 router.use(settingsRouter);
+router.use(searchRouter);
 
 export default router;
