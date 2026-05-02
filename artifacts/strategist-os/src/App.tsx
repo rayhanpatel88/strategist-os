@@ -12,7 +12,6 @@ import Opportunity from "@/pages/opportunity";
 import Workflows from "@/pages/workflows";
 import Planner from "@/pages/planner";
 import Portfolio from "@/pages/portfolio";
-import { useState } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,84 +23,98 @@ const queryClient = new QueryClient({
 });
 
 const navItems = [
-  { path: "/", label: "Command Centre", icon: "⬛" },
-  { path: "/diagnosis", label: "Strategic Diagnosis", icon: "◈" },
-  { path: "/scorecard", label: "Optimisation Scorecard", icon: "◎" },
-  { path: "/prompts", label: "Prompt Arsenal", icon: "▤" },
-  { path: "/opportunity", label: "Opportunity Stack", icon: "◆" },
-  { path: "/workflows", label: "Workflow Designer", icon: "⊞" },
-  { path: "/planner", label: "Execution Planner", icon: "▦" },
-  { path: "/portfolio", label: "Portfolio Mode", icon: "◉" },
+  { path: "/", label: "COMMAND_CENTRE", icon: "grid_view" },
+  { path: "/diagnosis", label: "DIAGNOSIS", icon: "biotech" },
+  { path: "/scorecard", label: "SCORECARD", icon: "analytics" },
+  { path: "/prompts", label: "ARSENAL", icon: "bolt" },
+  { path: "/opportunity", label: "OPPORTUNITIES", icon: "trending_up" },
+  { path: "/workflows", label: "WORKFLOWS", icon: "account_tree" },
+  { path: "/planner", label: "PLANNER", icon: "calendar_month" },
+  { path: "/portfolio", label: "PORTFOLIO", icon: "web_asset" },
 ];
 
-function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+function Sidebar() {
   const [location] = useLocation();
 
   return (
     <aside
-      className={`flex flex-col h-full bg-sidebar border-r border-sidebar-border transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}
+      className="flex flex-col h-full shrink-0"
+      style={{ width: 220, background: "#0d0e12", borderRight: "1px solid rgba(255,255,255,0.07)" }}
     >
-      <div className="flex items-center justify-between px-4 h-16 border-b border-sidebar-border shrink-0">
-        {!collapsed && (
-          <div>
-            <div className="text-sm font-semibold text-foreground tracking-wide">StrategistOS</div>
-            <div className="text-xs text-muted-foreground tracking-wider uppercase">AI Command Centre</div>
-          </div>
-        )}
-        <button
-          onClick={onToggle}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          data-testid="button-toggle-sidebar"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            {collapsed ? (
-              <path d="M9 18l6-6-6-6" />
-            ) : (
-              <path d="M15 18l-6-6 6-6" />
-            )}
-          </svg>
-        </button>
+      {/* Logo */}
+      <div className="px-5 pt-7 pb-6" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="text-white font-semibold text-sm tracking-wide mb-0.5" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
+          StrategistOS
+        </div>
+        <div style={{ fontSize: 10, letterSpacing: "0.12em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", fontWeight: 500 }}>
+          Intelligence Command
+        </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 px-2">
+      {/* System status bar */}
+      <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <span className="status-pip" style={{ background: "#72fe88" }} />
+        <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", textTransform: "uppercase" }}>All systems operational</span>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto py-3">
         {navItems.map((item) => {
           const isActive = location === item.path;
           return (
             <Link key={item.path} href={item.path}>
               <div
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium mb-1 cursor-pointer transition-all duration-150 ${
-                  isActive
-                    ? "bg-primary/15 text-primary border border-primary/20"
-                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-                }`}
+                className="flex items-center gap-3 cursor-pointer transition-all duration-100"
+                style={{
+                  padding: "10px 20px",
+                  borderLeft: isActive ? "2px solid #ffffff" : "2px solid transparent",
+                  background: isActive ? "rgba(255,255,255,0.05)" : "transparent",
+                }}
                 data-testid={`nav-${item.path.replace("/", "") || "dashboard"}`}
+                onMouseEnter={(e) => {
+                  if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                }}
               >
-                <span className="text-xs w-4 shrink-0 flex items-center justify-center">{item.icon}</span>
-                {!collapsed && <span className="truncate">{item.label}</span>}
+                <span
+                  className="material-symbols-outlined shrink-0"
+                  style={{ color: isActive ? "#ffffff" : "rgba(255,255,255,0.35)", fontSize: 16 }}
+                >
+                  {item.icon}
+                </span>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: isActive ? 700 : 500,
+                    letterSpacing: "0.08em",
+                    color: isActive ? "#ffffff" : "rgba(255,255,255,0.38)",
+                    textTransform: "uppercase",
+                    fontFamily: "Space Grotesk, sans-serif",
+                  }}
+                >
+                  {item.label}
+                </span>
               </div>
             </Link>
           );
         })}
       </nav>
 
-      {!collapsed && (
-        <div className="px-4 py-4 border-t border-sidebar-border">
-          <div className="text-xs text-muted-foreground">
-            <div className="font-medium text-foreground/60">Rayhan Patel</div>
-            <div className="text-muted-foreground/70">MSc Data Science · AI Strategist</div>
-          </div>
-        </div>
-      )}
+      {/* Footer */}
+      <div className="px-5 py-5" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: 600, marginBottom: 2 }}>Rayhan Patel</div>
+        <div style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", letterSpacing: "0.05em" }}>MSc Data Science · AI Strategist</div>
+      </div>
     </aside>
   );
 }
 
 function AppLayout({ children }: { children: React.ReactNode }) {
-  const [collapsed, setCollapsed] = useState(false);
-
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+      <Sidebar />
       <main className="flex-1 overflow-y-auto">
         {children}
       </main>

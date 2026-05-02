@@ -68,8 +68,16 @@ Then manually ensure `lib/api-zod/src/index.ts` only exports `./generated/api`.
 - Falls back to richly detailed mock responses for every module
 - All prompts are in `artifacts/api-server/src/lib/ai-prompts.ts`
 
-## Design
-- Dark mode by default (forced via ThemeProvider with `defaultTheme="dark"`)
-- Palette: midnight navy background (`222 47% 7%`), blue accent (`215 80% 58%`)
-- Typography: Inter (sans), JetBrains Mono (code)
-- No emojis used anywhere in the UI
+## Design — Intelligence Dark Mode
+- Dark mode forced via ThemeProvider (`defaultTheme="dark"`)
+- **Palette**: `#121317` background, `#1e1f23` surface-container, `#0d0e12` surface-lowest
+- **Accents**: `#ffffff` primary, `#72fe88` emerald (success/high), `#4b8eff` blue-accent (secondary), `#ffb4ab` error
+- **Typography**: Inter (body), Space Grotesk (data values, monospace, navigation labels)
+- **Shape language**: 0px radius everywhere — all edges are sharp
+- **Label caps**: 11px, uppercase, `letter-spacing: 0.1em` for all labels
+- **Borders**: `rgba(255,255,255,0.07)` hairline borders — no shadows, depth via tonal layers
+- **Inputs**: Bottom-border only (`border-bottom: 1px solid rgba(255,255,255,0.12)`), no box
+- **Sidebar**: `#0d0e12` bg, active nav = `border-left: 2px solid #ffffff` + `bg-white/5`
+- **Nav labels**: `COMMAND_CENTRE`, `DIAGNOSIS`, `ARSENAL`, `OPPORTUNITIES`, `SCORECARD`, `WORKFLOWS`, `PLANNER`, `PORTFOLIO`
+- **Icons**: Google Material Symbols Outlined (loaded via CDN in `index.html`)
+- No emojis anywhere in the UI

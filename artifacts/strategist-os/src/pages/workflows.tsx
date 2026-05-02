@@ -8,11 +8,6 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type Workflow = {
   id: number;
@@ -33,80 +28,107 @@ function WorkflowCard({ wf, onDelete }: { wf: Workflow; onDelete?: (id: number) 
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="bg-card border border-card-border rounded-lg overflow-hidden" data-testid={`card-workflow-${wf.id}`}>
+    <div style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }} data-testid={`card-workflow-${wf.id}`}>
       <button
-        className="w-full px-5 py-4 flex items-center justify-between hover:bg-secondary/30 transition-colors"
+        className="w-full"
         onClick={() => setExpanded(!expanded)}
         data-testid={`button-expand-workflow-${wf.id}`}
+        style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "16px 20px", background: "none", border: "none", cursor: "pointer",
+          transition: "background 0.1s",
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "none"; }}
       >
-        <div className="text-left">
-          <div className="text-sm font-semibold text-foreground">{wf.name}</div>
-          <div className="text-xs text-muted-foreground mt-0.5">{wf.description}</div>
+        <div style={{ textAlign: "left" }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 3 }}>{wf.name}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>{wf.description}</div>
         </div>
         <div className="flex items-center gap-3">
           {wf.isTemplate && (
-            <span className="text-xs bg-primary/15 text-primary px-2 py-0.5 rounded font-medium">Template</span>
+            <span style={{ fontSize: 9, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", color: "#4b8eff", border: "1px solid rgba(75,142,255,0.25)", padding: "3px 8px", fontFamily: "Space Grotesk, sans-serif" }}>
+              Template
+            </span>
           )}
-          <span className="text-muted-foreground text-xs">{expanded ? "▲" : "▼"}</span>
+          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)" }}>{expanded ? "▲" : "▼"}</span>
         </div>
       </button>
 
       {expanded && (
-        <div className="px-5 pb-5 border-t border-card-border pt-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground mb-2">Trigger</div>
-              <p className="text-sm text-foreground">{wf.trigger}</p>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground mb-2">Inputs</div>
-              <ul className="space-y-1">
-                {wf.inputs.map((inp, i) => (
-                  <li key={i} className="text-sm text-foreground flex gap-2">
-                    <span className="text-primary">→</span>{inp}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground mb-2">AI Task</div>
-              <p className="text-sm text-foreground">{wf.aiTask}</p>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground mb-2">Tools</div>
-              <div className="flex flex-wrap gap-1">
-                {wf.tools.map((t) => (
-                  <span key={t} className="bg-secondary text-foreground text-xs px-2 py-0.5 rounded">{t}</span>
-                ))}
+        <div style={{ padding: "0 20px 20px", borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+          <div className="grid grid-cols-2 gap-5 pt-5">
+            {[
+              { label: "Trigger", content: <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{wf.trigger}</p> },
+              {
+                label: "Inputs",
+                content: (
+                  <ul className="space-y-1.5">
+                    {wf.inputs.map((inp, i) => (
+                      <li key={i} className="flex gap-2" style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>
+                        <span style={{ color: "#4b8eff" }}>→</span>{inp}
+                      </li>
+                    ))}
+                  </ul>
+                ),
+              },
+              { label: "AI Task", content: <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{wf.aiTask}</p> },
+              {
+                label: "Tools",
+                content: (
+                  <div className="flex flex-wrap gap-1.5">
+                    {wf.tools.map((t) => (
+                      <span key={t} style={{ fontSize: 10, color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.1)", padding: "3px 8px", fontFamily: "Space Grotesk, sans-serif", letterSpacing: "0.04em" }}>{t}</span>
+                    ))}
+                  </div>
+                ),
+              },
+              { label: "Output", content: <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{wf.output}</p> },
+              { label: "Human Review Step", content: <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", lineHeight: 1.6 }}>{wf.humanReviewStep}</p> },
+            ].map((item) => (
+              <div key={item.label}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>{item.label}</div>
+                {item.content}
               </div>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground mb-2">Output</div>
-              <p className="text-sm text-foreground">{wf.output}</p>
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground mb-2">Human Review Step</div>
-              <p className="text-sm text-foreground">{wf.humanReviewStep}</p>
-            </div>
+            ))}
           </div>
-          <div className="bg-primary/10 border border-primary/20 rounded-md p-4">
-            <div className="text-xs font-semibold text-primary mb-1">Monetisation / Use Case</div>
-            <p className="text-sm text-foreground">{wf.monetisationUseCase}</p>
+
+          <div style={{ background: "rgba(75,142,255,0.05)", border: "1px solid rgba(75,142,255,0.16)", padding: 14, marginTop: 14 }}>
+            <div style={{ fontSize: 10, fontWeight: 600, color: "#4b8eff", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>Monetisation / Use Case</div>
+            <p style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.65 }}>{wf.monetisationUseCase}</p>
           </div>
+
           {onDelete && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDelete(wf.id)}
-              className="text-destructive"
-              data-testid={`button-delete-workflow-${wf.id}`}
-            >
-              Delete Workflow
-            </Button>
+            <div style={{ marginTop: 14 }}>
+              <button
+                onClick={() => onDelete(wf.id)}
+                data-testid={`button-delete-workflow-${wf.id}`}
+                style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,180,171,0.6)", background: "none", border: "1px solid rgba(255,180,171,0.2)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" }}
+              >
+                Delete Workflow
+              </button>
+            </div>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+function HudBtn({ onClick, disabled, children, variant = "primary", "data-testid": dt }: { onClick?: () => void; disabled?: boolean; children: React.ReactNode; variant?: "primary" | "ghost"; "data-testid"?: string }) {
+  if (variant === "ghost") {
+    return (
+      <button onClick={onClick} disabled={disabled} data-testid={dt}
+        style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", background: "none", border: "1px solid rgba(255,255,255,0.12)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", opacity: disabled ? 0.4 : 1 }}>
+        {children}
+      </button>
+    );
+  }
+  return (
+    <button onClick={onClick} disabled={disabled} data-testid={dt}
+      style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#121317", background: disabled ? "rgba(255,255,255,0.5)" : "#ffffff", border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", width: "100%" }}>
+      {children}
+    </button>
   );
 }
 
@@ -159,124 +181,128 @@ export default function Workflows() {
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">AI Agent Workflow Designer</h1>
-          <p className="text-muted-foreground text-sm mt-1">Design, save, and deploy AI agent workflows.</p>
+    <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+      {/* Header */}
+      <div className="flex items-center justify-between px-8 py-4 shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+          AI_Agent_Workflow_Designer
+        </span>
+        <div className="flex items-center gap-3">
+          <HudBtn variant="ghost" onClick={() => setTab("create")} data-testid="button-create-workflow">+ Create Workflow</HudBtn>
+          {/* Tab switcher */}
+          <div className="flex" style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
+            {(["templates", "custom"] as const).map((t, idx) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                data-testid={`tab-workflows-${t}`}
+                style={{
+                  fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
+                  padding: "7px 14px", cursor: "pointer", border: "none",
+                  background: tab === t ? "rgba(255,255,255,0.08)" : "transparent",
+                  color: tab === t ? "#ffffff" : "rgba(255,255,255,0.35)",
+                  fontFamily: "Space Grotesk, sans-serif",
+                  borderRight: idx === 0 ? "1px solid rgba(255,255,255,0.1)" : "none",
+                }}
+              >
+                {t === "templates" ? `Templates (${templates.data?.length ?? 0})` : `Mine (${custom.data?.length ?? 0})`}
+              </button>
+            ))}
+          </div>
         </div>
-        <Button onClick={() => setTab("create")} data-testid="button-create-workflow">
-          Create Workflow
-        </Button>
       </div>
 
-      <div className="flex gap-1 mb-6 border-b border-border">
-        {(["templates", "custom", "create"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-              tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-            data-testid={`tab-workflows-${t}`}
-          >
-            {t === "templates" ? `Templates (${templates.data?.length ?? 0})` : t === "custom" ? `My Workflows (${custom.data?.length ?? 0})` : "Create"}
-          </button>
-        ))}
+      <div className="flex-1 overflow-y-auto px-8 py-7">
+        {tab === "templates" && (
+          <div className="space-y-2 max-w-4xl">
+            {templates.isLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="animate-pulse" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)", height: 64 }} />
+                ))
+              : templates.data?.map((wf) => (
+                  <WorkflowCard key={wf.id} wf={wf as Workflow} />
+                ))}
+          </div>
+        )}
+
+        {tab === "custom" && (
+          <div className="space-y-2 max-w-4xl">
+            {custom.isLoading
+              ? Array.from({ length: 2 }).map((_, i) => (
+                  <div key={i} className="animate-pulse" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)", height: 64 }} />
+                ))
+              : custom.data && custom.data.length > 0
+              ? custom.data.map((wf) => (
+                  <WorkflowCard key={wf.id} wf={wf as Workflow} onDelete={handleDelete} />
+                ))
+              : (
+                  <div className="py-20 text-center">
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>No custom workflows yet.</div>
+                    <button onClick={() => setTab("create")} style={{ fontSize: 12, color: "#4b8eff", background: "none", border: "none", cursor: "pointer" }}>
+                      Create your first workflow →
+                    </button>
+                  </div>
+                )}
+          </div>
+        )}
+
+        {tab === "create" && (
+          <div className="max-w-2xl space-y-6">
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Workflow Name *</div>
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. LinkedIn Content Engine" data-testid="input-workflow-name" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Trigger *</div>
+                <input value={form.trigger} onChange={(e) => setForm({ ...form, trigger: e.target.value })} placeholder="e.g. Weekly schedule, user input" data-testid="input-workflow-trigger" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Description</div>
+              <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What does this workflow do?" data-testid="input-workflow-description" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>AI Task</div>
+              <textarea value={form.aiTask} onChange={(e) => setForm({ ...form, aiTask: e.target.value })} placeholder="What should the AI do?" rows={2} data-testid="input-workflow-ai-task" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Inputs (comma-separated)</div>
+                <input value={form.inputs} onChange={(e) => setForm({ ...form, inputs: e.target.value })} placeholder="Topic, audience, tone" data-testid="input-workflow-inputs" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Tools (comma-separated)</div>
+                <input value={form.tools} onChange={(e) => setForm({ ...form, tools: e.target.value })} placeholder="OpenAI, Zapier, Notion" data-testid="input-workflow-tools" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Output</div>
+              <input value={form.output} onChange={(e) => setForm({ ...form, output: e.target.value })} placeholder="What does the workflow produce?" data-testid="input-workflow-output" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Human Review Step</div>
+              <input value={form.humanReviewStep} onChange={(e) => setForm({ ...form, humanReviewStep: e.target.value })} placeholder="Where does a human need to check the output?" data-testid="input-workflow-review" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }} />
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Monetisation / Use Case</div>
+              <textarea value={form.monetisationUseCase} onChange={(e) => setForm({ ...form, monetisationUseCase: e.target.value })} placeholder="How does this create value or revenue?" rows={2} data-testid="input-workflow-monetisation" style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }} />
+            </div>
+
+            <div className="pt-2">
+              <HudBtn onClick={handleCreate} disabled={create.isPending} data-testid="button-submit-workflow">
+                {create.isPending ? "Creating..." : "Create Workflow"}
+              </HudBtn>
+            </div>
+          </div>
+        )}
       </div>
-
-      {tab === "templates" && (
-        <div className="space-y-3">
-          {templates.isLoading
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-card border border-card-border rounded-lg p-5">
-                  <Skeleton className="h-4 w-48 mb-2" />
-                  <Skeleton className="h-3 w-64" />
-                </div>
-              ))
-            : templates.data?.map((wf) => (
-                <WorkflowCard key={wf.id} wf={wf as Workflow} />
-              ))}
-        </div>
-      )}
-
-      {tab === "custom" && (
-        <div className="space-y-3">
-          {custom.isLoading
-            ? Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="bg-card border border-card-border rounded-lg p-5">
-                  <Skeleton className="h-4 w-48 mb-2" />
-                </div>
-              ))
-            : custom.data && custom.data.length > 0
-            ? custom.data.map((wf) => (
-                <WorkflowCard key={wf.id} wf={wf as Workflow} onDelete={handleDelete} />
-              ))
-            : (
-                <div className="bg-card border border-card-border rounded-lg p-12 text-center">
-                  <div className="text-muted-foreground text-sm">No custom workflows yet.</div>
-                  <button onClick={() => setTab("create")} className="text-primary text-sm mt-2 block cursor-pointer hover:underline">
-                    Create your first workflow
-                  </button>
-                </div>
-              )}
-        </div>
-      )}
-
-      {tab === "create" && (
-        <div className="bg-card border border-card-border rounded-lg p-6 space-y-5 max-w-2xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="wf-name">Workflow Name *</Label>
-              <Input id="wf-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. LinkedIn Content Engine" data-testid="input-workflow-name" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="wf-trigger">Trigger *</Label>
-              <Input id="wf-trigger" value={form.trigger} onChange={(e) => setForm({ ...form, trigger: e.target.value })} placeholder="e.g. Weekly schedule, user input" data-testid="input-workflow-trigger" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="wf-desc">Description</Label>
-            <Input id="wf-desc" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What does this workflow do?" data-testid="input-workflow-description" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="wf-ai-task">AI Task</Label>
-            <Textarea id="wf-ai-task" value={form.aiTask} onChange={(e) => setForm({ ...form, aiTask: e.target.value })} placeholder="What should the AI do?" rows={2} data-testid="input-workflow-ai-task" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="wf-inputs">Inputs (comma-separated)</Label>
-              <Input id="wf-inputs" value={form.inputs} onChange={(e) => setForm({ ...form, inputs: e.target.value })} placeholder="Topic, audience, tone" data-testid="input-workflow-inputs" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="wf-tools">Tools (comma-separated)</Label>
-              <Input id="wf-tools" value={form.tools} onChange={(e) => setForm({ ...form, tools: e.target.value })} placeholder="OpenAI, Zapier, Notion" data-testid="input-workflow-tools" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="wf-output">Output</Label>
-            <Input id="wf-output" value={form.output} onChange={(e) => setForm({ ...form, output: e.target.value })} placeholder="What does the workflow produce?" data-testid="input-workflow-output" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="wf-review">Human Review Step</Label>
-            <Input id="wf-review" value={form.humanReviewStep} onChange={(e) => setForm({ ...form, humanReviewStep: e.target.value })} placeholder="Where does a human need to check the output?" data-testid="input-workflow-review" />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="wf-monetise">Monetisation / Use Case</Label>
-            <Textarea id="wf-monetise" value={form.monetisationUseCase} onChange={(e) => setForm({ ...form, monetisationUseCase: e.target.value })} placeholder="How does this create value or revenue?" rows={2} data-testid="input-workflow-monetisation" />
-          </div>
-
-          <Button onClick={handleCreate} disabled={create.isPending} className="w-full" data-testid="button-submit-workflow">
-            {create.isPending ? "Creating..." : "Create Workflow"}
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

@@ -8,11 +8,6 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 
 const CATEGORIES = [
   { id: "business-strategy", label: "Business Strategy" },
@@ -26,13 +21,21 @@ const CATEGORIES = [
   { id: "phd-research", label: "PhD / Research" },
 ] as const;
 
-type GeneratedPrompt = {
-  title: string;
-  category: string;
-  prompt: string;
-  usage: string;
-  variables: string[];
-};
+type GeneratedPrompt = { title: string; category: string; prompt: string; usage: string; variables: string[] };
+
+function HudBtn({ onClick, disabled, children, variant = "primary", "data-testid": dt }: { onClick?: () => void; disabled?: boolean; children: React.ReactNode; variant?: "primary" | "ghost" | "dim"; "data-testid"?: string }) {
+  const styles: React.CSSProperties =
+    variant === "primary"
+      ? { fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#121317", background: disabled ? "rgba(255,255,255,0.5)" : "#ffffff", border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer", fontFamily: "Space Grotesk, sans-serif", width: "100%", transition: "background 0.1s" }
+      : variant === "ghost"
+      ? { fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", background: "none", border: "1px solid rgba(255,255,255,0.12)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif", opacity: disabled ? 0.4 : 1 }
+      : { fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase", color: "#4b8eff", background: "none", border: "1px solid rgba(75,142,255,0.25)", padding: "7px 14px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif" };
+  return (
+    <button onClick={onClick} disabled={disabled} data-testid={dt} style={styles}>
+      {children}
+    </button>
+  );
+}
 
 export default function Prompts() {
   const [tab, setTab] = useState<"generate" | "saved">("generate");
@@ -86,128 +89,142 @@ export default function Prompts() {
   };
 
   const handleDelete = (id: number) => {
-    del.mutate(
-      { id },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListSavedPromptsQueryKey() });
-          toast({ title: "Prompt removed" });
-        },
-      }
-    );
+    del.mutate({ id }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListSavedPromptsQueryKey() });
+        toast({ title: "Prompt removed" });
+      },
+    });
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Prompt Arsenal</h1>
-        <p className="text-muted-foreground text-sm mt-1">Generate and save premium structured prompts across 9 categories.</p>
-      </div>
-
-      <div className="flex gap-1 mb-6 border-b border-border">
-        {(["generate", "saved"] as const).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
-              tab === t ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-            data-testid={`tab-${t}`}
-          >
-            {t === "generate" ? "Generate" : `Saved (${savedPrompts.data?.length ?? 0})`}
-          </button>
-        ))}
+    <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-8 py-4 shrink-0"
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+      >
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+          Prompt_Arsenal
+        </span>
+        {/* Tab switcher */}
+        <div className="flex" style={{ border: "1px solid rgba(255,255,255,0.1)" }}>
+          {(["generate", "saved"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              data-testid={`tab-${t}`}
+              style={{
+                fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase",
+                padding: "7px 16px", cursor: "pointer", border: "none",
+                background: tab === t ? "rgba(255,255,255,0.08)" : "transparent",
+                color: tab === t ? "#ffffff" : "rgba(255,255,255,0.35)",
+                fontFamily: "Space Grotesk, sans-serif",
+                borderRight: t === "generate" ? "1px solid rgba(255,255,255,0.1)" : "none",
+                transition: "background 0.1s",
+              }}
+            >
+              {t === "generate" ? "Generate" : `Saved (${savedPrompts.data?.length ?? 0})`}
+            </button>
+          ))}
+        </div>
       </div>
 
       {tab === "generate" ? (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          <div className="lg:col-span-2 space-y-5">
-            <div>
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Category</div>
-              <div className="space-y-1">
-                {CATEGORIES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setCategory(cat.id)}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      category === cat.id
-                        ? "bg-primary/15 text-primary font-medium border border-primary/20"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                    }`}
-                    data-testid={`button-category-${cat.id}`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left — category selector */}
+          <div
+            className="flex flex-col shrink-0 overflow-y-auto py-6"
+            style={{ width: 200, borderRight: "1px solid rgba(255,255,255,0.07)", paddingLeft: 24, paddingRight: 16 }}
+          >
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.28)", textTransform: "uppercase", marginBottom: 14 }}>Category</div>
+            <div className="space-y-1">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategory(cat.id)}
+                  data-testid={`button-category-${cat.id}`}
+                  style={{
+                    display: "block", width: "100%", textAlign: "left",
+                    fontSize: 12, padding: "8px 10px",
+                    background: category === cat.id ? "rgba(255,255,255,0.06)" : "transparent",
+                    borderLeft: category === cat.id ? "2px solid #ffffff" : "2px solid transparent",
+                    color: category === cat.id ? "#ffffff" : "rgba(255,255,255,0.38)",
+                    fontWeight: category === cat.id ? 600 : 400,
+                    cursor: "pointer", border: "none",
+                    borderLeftWidth: 2,
+                    borderLeftStyle: "solid",
+                    borderLeftColor: category === cat.id ? "#ffffff" : "transparent",
+                    transition: "all 0.1s",
+                  }}
+                >
+                  {cat.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="lg:col-span-3 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="prompt-context">Context</Label>
-              <Textarea
-                id="prompt-context"
-                value={context}
-                onChange={(e) => setContext(e.target.value)}
-                placeholder="Describe your specific situation, background, or problem..."
-                rows={4}
-                data-testid="input-prompt-context"
-              />
+          {/* Right — form + output */}
+          <div className="flex-1 overflow-y-auto px-8 py-7 space-y-6">
+            <div className="space-y-5 max-w-2xl">
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Context</div>
+                <textarea
+                  id="prompt-context"
+                  value={context}
+                  onChange={(e) => setContext(e.target.value)}
+                  placeholder="Describe your specific situation, background, or problem..."
+                  rows={4}
+                  data-testid="input-prompt-context"
+                  style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }}
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 8 }}>Goal</div>
+                <input
+                  id="prompt-goal"
+                  value={goal}
+                  onChange={(e) => setGoal(e.target.value)}
+                  placeholder="What do you want this prompt to help you achieve?"
+                  data-testid="input-prompt-goal"
+                  style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
+                />
+              </div>
+              <HudBtn onClick={handleGenerate} disabled={generate.isPending} data-testid="button-generate-prompt">
+                {generate.isPending ? "Generating..." : "Generate Premium Prompt"}
+              </HudBtn>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="prompt-goal">Goal</Label>
-              <Input
-                id="prompt-goal"
-                value={goal}
-                onChange={(e) => setGoal(e.target.value)}
-                placeholder="What do you want this prompt to help you achieve?"
-                data-testid="input-prompt-goal"
-              />
-            </div>
-            <Button
-              onClick={handleGenerate}
-              disabled={generate.isPending}
-              className="w-full"
-              data-testid="button-generate-prompt"
-            >
-              {generate.isPending ? "Generating..." : "Generate Premium Prompt"}
-            </Button>
 
             {generated && (
-              <div className="bg-card border border-card-border rounded-lg p-5 space-y-4">
-                <div className="flex items-start justify-between">
+              <div className="max-w-2xl" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)", padding: 24 }}>
+                <div className="flex items-start justify-between mb-5">
                   <div>
-                    <div className="text-sm font-semibold text-foreground">{generated.title}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5 capitalize">{generated.category.replace(/-/g, " ")}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#ffffff", marginBottom: 3 }}>{generated.title}</div>
+                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", textTransform: "capitalize", letterSpacing: "0.04em" }}>{generated.category.replace(/-/g, " ")}</div>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={handleCopy} data-testid="button-copy-prompt">
-                      {copied ? "Copied" : "Copy"}
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={handleSave} disabled={save.isPending} data-testid="button-save-prompt">
-                      Save
-                    </Button>
+                    <HudBtn variant="ghost" onClick={handleCopy} data-testid="button-copy-prompt">{copied ? "Copied" : "Copy"}</HudBtn>
+                    <HudBtn variant="dim" onClick={handleSave} disabled={save.isPending} data-testid="button-save-prompt">Save</HudBtn>
                   </div>
                 </div>
 
-                <div className="bg-secondary/50 rounded-md p-4">
-                  <pre className="text-xs text-foreground whitespace-pre-wrap font-mono leading-relaxed overflow-auto max-h-64">
+                <div style={{ background: "#0d0e12", padding: 16, marginBottom: 16, border: "1px solid rgba(255,255,255,0.05)" }}>
+                  <pre style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", fontFamily: "Space Grotesk, monospace", whiteSpace: "pre-wrap", lineHeight: 1.7, overflow: "auto", maxHeight: 280 }}>
                     {generated.prompt}
                   </pre>
                 </div>
 
-                <div>
-                  <div className="text-xs font-medium text-muted-foreground mb-1">Usage guidance</div>
-                  <p className="text-xs text-foreground">{generated.usage}</p>
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 5 }}>Usage guidance</div>
+                  <p style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.6 }}>{generated.usage}</p>
                 </div>
 
                 {generated.variables.length > 0 && (
                   <div>
-                    <div className="text-xs font-medium text-muted-foreground mb-2">Variables to fill in</div>
+                    <div style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.28)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 8 }}>Variables to fill in</div>
                     <div className="flex flex-wrap gap-2">
                       {generated.variables.map((v) => (
-                        <span key={v} className="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded font-mono">
+                        <span key={v} style={{ background: "rgba(75,142,255,0.1)", border: "1px solid rgba(75,142,255,0.2)", color: "#4b8eff", fontSize: 11, padding: "3px 8px", fontFamily: "Space Grotesk, monospace" }}>
                           [{v}]
                         </span>
                       ))}
@@ -219,52 +236,44 @@ export default function Prompts() {
           </div>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="flex-1 overflow-y-auto px-8 py-7">
           {savedPrompts.isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-card border border-card-border rounded-lg p-5">
-                <Skeleton className="h-4 w-48 mb-2" />
-                <Skeleton className="h-3 w-24" />
-              </div>
+              <div key={i} className="mb-3 p-5 animate-pulse" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)", height: 90 }} />
             ))
           ) : savedPrompts.data && savedPrompts.data.length > 0 ? (
-            savedPrompts.data.map((prompt) => (
-              <div key={prompt.id} className="bg-card border border-card-border rounded-lg p-5" data-testid={`card-saved-prompt-${prompt.id}`}>
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="text-sm font-semibold text-foreground">{prompt.title}</div>
-                    <div className="text-xs text-muted-foreground capitalize mt-0.5">{prompt.category.replace(/-/g, " ")}</div>
+            <div className="space-y-3 max-w-3xl">
+              {savedPrompts.data.map((prompt) => (
+                <div key={prompt.id} style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }} data-testid={`card-saved-prompt-${prompt.id}`}>
+                  <div className="flex items-start justify-between p-5 pb-4">
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 3 }}>{prompt.title}</div>
+                      <div style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", textTransform: "capitalize", letterSpacing: "0.04em" }}>{prompt.category.replace(/-/g, " ")}</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <HudBtn variant="ghost" onClick={() => { navigator.clipboard.writeText(prompt.prompt); toast({ title: "Copied" }); }} data-testid={`button-copy-saved-prompt-${prompt.id}`}>Copy</HudBtn>
+                      <button
+                        onClick={() => handleDelete(prompt.id)}
+                        data-testid={`button-delete-saved-prompt-${prompt.id}`}
+                        style={{ fontSize: 10, color: "rgba(255,180,171,0.6)", background: "none", border: "none", cursor: "pointer", letterSpacing: "0.06em", textTransform: "uppercase" }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => { navigator.clipboard.writeText(prompt.prompt); toast({ title: "Copied" }); }}
-                      data-testid={`button-copy-saved-prompt-${prompt.id}`}
-                    >
-                      Copy
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(prompt.id)}
-                      className="text-destructive"
-                      data-testid={`button-delete-saved-prompt-${prompt.id}`}
-                    >
-                      Delete
-                    </Button>
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "12px 20px" }}>
+                    <pre style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", fontFamily: "Space Grotesk, monospace", overflow: "hidden", maxHeight: 64, whiteSpace: "pre-wrap" }}>
+                      {prompt.prompt.substring(0, 220)}{prompt.prompt.length > 220 ? "..." : ""}
+                    </pre>
                   </div>
                 </div>
-                <pre className="text-xs text-muted-foreground font-mono bg-secondary/50 rounded p-3 overflow-auto max-h-32 whitespace-pre-wrap">
-                  {prompt.prompt.substring(0, 300)}{prompt.prompt.length > 300 ? "..." : ""}
-                </pre>
-              </div>
-            ))
+              ))}
+            </div>
           ) : (
-            <div className="bg-card border border-card-border rounded-lg p-12 text-center">
-              <div className="text-muted-foreground text-sm">No saved prompts yet.</div>
-              <button onClick={() => setTab("generate")} className="text-primary text-sm mt-2 block cursor-pointer hover:underline">
-                Generate your first prompt
+            <div className="py-20 text-center">
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginBottom: 10 }}>No saved prompts yet.</div>
+              <button onClick={() => setTab("generate")} style={{ fontSize: 12, color: "#4b8eff", background: "none", border: "none", cursor: "pointer" }}>
+                Generate your first prompt →
               </button>
             </div>
           )}

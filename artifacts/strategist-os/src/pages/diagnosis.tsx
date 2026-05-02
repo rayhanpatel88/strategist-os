@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useRunDiagnosis, useCreateSession, getListSessionsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 type DiagnosisResult = {
   strategicDiagnosis: string;
@@ -17,17 +13,100 @@ type DiagnosisResult = {
   eliteOperatorNextStep: string;
 };
 
+function PageHeader({ title, sub, right }: { title: string; sub?: string; right?: React.ReactNode }) {
+  return (
+    <div
+      className="flex items-center justify-between px-8 py-4 shrink-0"
+      style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+    >
+      <div>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", color: "#ffffff", textTransform: "uppercase", fontFamily: "Space Grotesk, sans-serif" }}>
+          {title}
+        </span>
+        {sub && <div style={{ fontSize: 10, color: "rgba(255,255,255,0.28)", marginTop: 2, letterSpacing: "0.04em" }}>{sub}</div>}
+      </div>
+      {right}
+    </div>
+  );
+}
+
+function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase" }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+
+function HudInput({ id, value, onChange, placeholder, "data-testid": dt }: { id: string; value: string; onChange: (v: string) => void; placeholder?: string; "data-testid"?: string }) {
+  return (
+    <input
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      data-testid={dt}
+      style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4 }}
+    />
+  );
+}
+
+function HudTextarea({ id, value, onChange, placeholder, rows = 3, "data-testid": dt }: { id: string; value: string; onChange: (v: string) => void; placeholder?: string; rows?: number; "data-testid"?: string }) {
+  return (
+    <textarea
+      id={id}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={rows}
+      data-testid={dt}
+      style={{ width: "100%", fontSize: 13, paddingBottom: 8, paddingTop: 4, resize: "none", lineHeight: 1.6 }}
+    />
+  );
+}
+
+function HudBtn({ onClick, disabled, children, variant = "primary", "data-testid": dt }: { onClick?: () => void; disabled?: boolean; children: React.ReactNode; variant?: "primary" | "ghost"; "data-testid"?: string }) {
+  if (variant === "ghost") {
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        data-testid={dt}
+        style={{
+          fontSize: 11, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase",
+          color: "rgba(255,255,255,0.45)", background: "none", border: "1px solid rgba(255,255,255,0.12)",
+          padding: "8px 16px", cursor: "pointer", fontFamily: "Space Grotesk, sans-serif",
+          opacity: disabled ? 0.4 : 1,
+        }}
+      >
+        {children}
+      </button>
+    );
+  }
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      data-testid={dt}
+      style={{
+        fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
+        color: "#121317", background: disabled ? "rgba(255,255,255,0.5)" : "#ffffff",
+        border: "none", padding: "11px 24px", cursor: disabled ? "not-allowed" : "pointer",
+        fontFamily: "Space Grotesk, sans-serif", width: "100%",
+        transition: "background 0.1s",
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function Diagnosis() {
   const [step, setStep] = useState<"form" | "result">("form");
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [form, setForm] = useState({
-    goal: "",
-    industry: "",
-    assets: "",
-    constraints: "",
-    deadline: "",
-    desiredOutcome: "",
-    bottleneck: "",
+    goal: "", industry: "", assets: "", constraints: "", deadline: "", desiredOutcome: "", bottleneck: "",
   });
 
   const runDiagnosis = useRunDiagnosis();
@@ -40,7 +119,6 @@ export default function Diagnosis() {
       toast({ title: "Required fields missing", description: "Please fill in at least your goal and industry.", variant: "destructive" });
       return;
     }
-
     runDiagnosis.mutate(
       { data: form },
       {
@@ -49,227 +127,157 @@ export default function Diagnosis() {
           setStep("result");
           createSession.mutate(
             { data: { title: form.goal.substring(0, 60), goal: form.goal, industry: form.industry } },
-            {
-              onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() });
-              },
-            }
+            { onSuccess: () => queryClient.invalidateQueries({ queryKey: getListSessionsQueryKey() }) }
           );
         },
-        onError: () => {
-          toast({ title: "Analysis failed", description: "Could not run diagnosis. Please try again.", variant: "destructive" });
-        },
+        onError: () => toast({ title: "Analysis failed", description: "Could not run diagnosis. Please try again.", variant: "destructive" }),
       }
     );
   };
 
   if (step === "result" && result) {
+    const scoreColor = result.leverageScore >= 75 ? "#72fe88" : result.leverageScore >= 50 ? "#4b8eff" : "#ffb4ab";
     return (
-      <div className="p-8 max-w-5xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Strategic Diagnosis</h1>
-            <p className="text-muted-foreground text-sm mt-1">Analysis complete</p>
-          </div>
-          <Button variant="outline" onClick={() => { setStep("form"); setResult(null); }} data-testid="button-new-diagnosis">
-            New Diagnosis
-          </Button>
-        </div>
+      <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+        <PageHeader
+          title="Strategic Diagnosis"
+          sub="Analysis complete"
+          right={
+            <HudBtn variant="ghost" onClick={() => { setStep("form"); setResult(null); }} data-testid="button-new-diagnosis">
+              New Diagnosis
+            </HudBtn>
+          }
+        />
 
-        {/* Leverage Score */}
-        <div className="bg-card border border-card-border rounded-lg p-8 mb-6 flex items-center gap-8">
-          <div className="relative w-28 h-28 shrink-0">
-            <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
-              <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
-              <circle
-                cx="50" cy="50" r="42" fill="none"
-                stroke="hsl(var(--primary))" strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray={`${(result.leverageScore / 100) * 264} 264`}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-foreground">{result.leverageScore}</span>
-              <span className="text-xs text-muted-foreground">/ 100</span>
-            </div>
-          </div>
-          <div className="flex-1">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">Leverage Score</div>
-            <div className="text-lg font-semibold text-foreground mb-3">
-              {result.leverageScore >= 75 ? "High leverage position" : result.leverageScore >= 50 ? "Moderate leverage — clear upside" : "Low leverage — significant improvement available"}
-            </div>
-            <div className="w-full bg-secondary rounded-full h-2">
-              <div
-                className="bg-primary h-2 rounded-full transition-all duration-1000"
-                style={{ width: `${result.leverageScore}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Strategic Diagnosis */}
-        <div className="bg-card border border-card-border rounded-lg p-6 mb-4">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Strategic Diagnosis</div>
-          <p className="text-sm text-foreground leading-relaxed whitespace-pre-line">{result.strategicDiagnosis}</p>
-        </div>
-
-        {/* Bottleneck */}
-        <div className="bg-card border border-card-border rounded-lg p-6 mb-4">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Bottleneck Analysis</div>
-          <p className="text-sm text-foreground leading-relaxed">{result.bottleneckAnalysis}</p>
-        </div>
-
-        {/* ROI Actions */}
-        <div className="bg-card border border-card-border rounded-lg p-6 mb-4">
-          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">3 Highest ROI Actions</div>
-          <div className="space-y-4">
-            {result.roiActions.map((action, i) => (
-              <div key={i} className="flex gap-4" data-testid={`card-roi-action-${i}`}>
-                <div className="text-primary font-bold text-lg w-6 shrink-0">{i + 1}</div>
-                <div className="flex-1">
-                  <div className="text-sm font-semibold text-foreground">{action.action}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{action.impact}</div>
-                  <div className="text-xs text-primary mt-1 font-medium">{action.timeframe}</div>
+        <div className="flex-1 overflow-y-auto px-8 py-7 space-y-4">
+          {/* Leverage score bar */}
+          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="flex items-end justify-between mb-4">
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 6 }}>Leverage Score</div>
+                <div style={{ fontSize: 44, fontWeight: 700, color: scoreColor, fontFamily: "Space Grotesk, sans-serif", lineHeight: 1 }}>
+                  {result.leverageScore}
+                  <span style={{ fontSize: 16, color: "rgba(255,255,255,0.3)", marginLeft: 4 }}>/100</span>
                 </div>
               </div>
-            ))}
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", textAlign: "right", maxWidth: 280 }}>
+                {result.leverageScore >= 75 ? "High leverage position" : result.leverageScore >= 50 ? "Moderate leverage — clear upside" : "Low leverage — significant improvement available"}
+              </div>
+            </div>
+            <div style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
+              <div style={{ height: 3, width: `${result.leverageScore}%`, background: scoreColor, transition: "width 1s ease" }} />
+            </div>
           </div>
-        </div>
 
-        {/* Opportunity & Risk */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-card border border-card-border rounded-lg p-6">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Opportunity Map</div>
-            <ul className="space-y-2">
-              {result.opportunityMap.map((o, i) => (
-                <li key={i} className="text-sm text-foreground flex gap-2">
-                  <span className="text-primary shrink-0 mt-0.5">+</span>
-                  <span>{o}</span>
-                </li>
-              ))}
-            </ul>
+          {/* Strategic Diagnosis */}
+          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 12 }}>Strategic Diagnosis</div>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7, whiteSpace: "pre-line" }}>{result.strategicDiagnosis}</p>
           </div>
-          <div className="bg-card border border-card-border rounded-lg p-6">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Risk Map</div>
-            <ul className="space-y-2">
-              {result.riskMap.map((r, i) => (
-                <li key={i} className="text-sm text-foreground flex gap-2">
-                  <span className="text-destructive shrink-0 mt-0.5">!</span>
-                  <span>{r}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
 
-        {/* Elite Operator */}
-        <div className="bg-primary/10 border border-primary/20 rounded-lg p-6">
-          <div className="text-xs font-semibold text-primary uppercase tracking-widest mb-3">What a Top 0.1% Operator Would Do Next</div>
-          <p className="text-sm text-foreground leading-relaxed">{result.eliteOperatorNextStep}</p>
+          {/* Bottleneck */}
+          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 12 }}>Bottleneck Analysis</div>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>{result.bottleneckAnalysis}</p>
+          </div>
+
+          {/* ROI Actions */}
+          <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 16 }}>3 Highest ROI Actions</div>
+            <div className="space-y-5">
+              {result.roiActions.map((action, i) => (
+                <div key={i} className="flex gap-4" data-testid={`card-roi-action-${i}`}>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: "#4b8eff", width: 24, flexShrink: 0, fontFamily: "Space Grotesk, sans-serif" }}>{i + 1}</div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "#ffffff", marginBottom: 4 }}>{action.action}</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.45)", marginBottom: 3 }}>{action.impact}</div>
+                    <div style={{ fontSize: 11, color: "#72fe88", fontWeight: 600, letterSpacing: "0.04em" }}>{action.timeframe}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Opportunity + Risk */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 14 }}>Opportunity Map</div>
+              <ul className="space-y-3">
+                {result.opportunityMap.map((o, i) => (
+                  <li key={i} className="flex gap-3" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
+                    <span style={{ color: "#72fe88", flexShrink: 0, marginTop: 1 }}>+</span>
+                    {o}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-6" style={{ background: "#1e1f23", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", marginBottom: 14 }}>Risk Map</div>
+              <ul className="space-y-3">
+                {result.riskMap.map((r, i) => (
+                  <li key={i} className="flex gap-3" style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.5 }}>
+                    <span style={{ color: "#ffb4ab", flexShrink: 0, marginTop: 1 }}>!</span>
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Elite operator */}
+          <div className="p-6" style={{ background: "rgba(114,254,136,0.05)", border: "1px solid rgba(114,254,136,0.18)" }}>
+            <div style={{ fontSize: 10, fontWeight: 600, letterSpacing: "0.1em", color: "#72fe88", textTransform: "uppercase", marginBottom: 12 }}>
+              What a Top 0.1% Operator Would Do Next
+            </div>
+            <p style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", lineHeight: 1.7 }}>{result.eliteOperatorNextStep}</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">Strategic Diagnosis Engine</h1>
-        <p className="text-muted-foreground text-sm mt-1">Describe your situation. Get a precise strategic analysis.</p>
-      </div>
+    <div className="flex flex-col h-full" style={{ background: "#121317" }}>
+      <PageHeader title="Strategic Diagnosis" sub="Describe your situation. Get a precise strategic analysis." />
 
-      <div className="bg-card border border-card-border rounded-lg p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="goal">Current Goal *</Label>
-            <Input
-              id="goal"
-              value={form.goal}
-              onChange={(e) => setForm({ ...form, goal: e.target.value })}
-              placeholder="e.g. Land my first consulting client"
-              data-testid="input-goal"
-            />
+      <div className="flex-1 overflow-y-auto">
+        <div className="px-8 py-7 max-w-2xl space-y-7">
+          <div className="grid grid-cols-2 gap-6">
+            <FieldGroup label="Current Goal *">
+              <HudInput id="goal" value={form.goal} onChange={(v) => setForm({ ...form, goal: v })} placeholder="e.g. Land my first consulting client" data-testid="input-goal" />
+            </FieldGroup>
+            <FieldGroup label="Industry / Domain *">
+              <HudInput id="industry" value={form.industry} onChange={(v) => setForm({ ...form, industry: v })} placeholder="e.g. AI / Data Science / Consulting" data-testid="input-industry" />
+            </FieldGroup>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="industry">Industry / Domain *</Label>
-            <Input
-              id="industry"
-              value={form.industry}
-              onChange={(e) => setForm({ ...form, industry: e.target.value })}
-              placeholder="e.g. AI / Data Science / Consulting"
-              data-testid="input-industry"
-            />
+
+          <FieldGroup label="Current Assets">
+            <HudTextarea id="assets" value={form.assets} onChange={(v) => setForm({ ...form, assets: v })} placeholder="Skills, projects, network, credentials, tools..." rows={3} data-testid="input-assets" />
+          </FieldGroup>
+
+          <FieldGroup label="Current Bottleneck">
+            <HudTextarea id="bottleneck" value={form.bottleneck} onChange={(v) => setForm({ ...form, bottleneck: v })} placeholder="What is the main thing blocking you right now?" rows={2} data-testid="input-bottleneck" />
+          </FieldGroup>
+
+          <div className="grid grid-cols-2 gap-6">
+            <FieldGroup label="Constraints">
+              <HudTextarea id="constraints" value={form.constraints} onChange={(v) => setForm({ ...form, constraints: v })} placeholder="Time, money, skills, access..." rows={2} data-testid="input-constraints" />
+            </FieldGroup>
+            <FieldGroup label="Deadline">
+              <HudInput id="deadline" value={form.deadline} onChange={(v) => setForm({ ...form, deadline: v })} placeholder="e.g. 90 days, end of Q2" data-testid="input-deadline" />
+            </FieldGroup>
           </div>
-        </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="assets">Current Assets</Label>
-          <Textarea
-            id="assets"
-            value={form.assets}
-            onChange={(e) => setForm({ ...form, assets: e.target.value })}
-            placeholder="Skills, projects, network, credentials, tools..."
-            rows={3}
-            data-testid="input-assets"
-          />
-        </div>
+          <FieldGroup label="Desired Outcome">
+            <HudTextarea id="desiredOutcome" value={form.desiredOutcome} onChange={(v) => setForm({ ...form, desiredOutcome: v })} placeholder="What does success look like specifically?" rows={2} data-testid="input-desired-outcome" />
+          </FieldGroup>
 
-        <div className="space-y-2">
-          <Label htmlFor="bottleneck">Current Bottleneck</Label>
-          <Textarea
-            id="bottleneck"
-            value={form.bottleneck}
-            onChange={(e) => setForm({ ...form, bottleneck: e.target.value })}
-            placeholder="What is the main thing blocking you right now?"
-            rows={2}
-            data-testid="input-bottleneck"
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="constraints">Constraints</Label>
-            <Textarea
-              id="constraints"
-              value={form.constraints}
-              onChange={(e) => setForm({ ...form, constraints: e.target.value })}
-              placeholder="Time, money, skills, access..."
-              rows={2}
-              data-testid="input-constraints"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="deadline">Deadline</Label>
-            <Input
-              id="deadline"
-              value={form.deadline}
-              onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-              placeholder="e.g. 90 days, end of Q2, 6 months"
-              data-testid="input-deadline"
-            />
+          <div className="pt-2">
+            <HudBtn onClick={handleSubmit} disabled={runDiagnosis.isPending} data-testid="button-run-diagnosis">
+              {runDiagnosis.isPending ? "Analysing..." : "Run Strategic Diagnosis"}
+            </HudBtn>
           </div>
         </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="desiredOutcome">Desired Outcome</Label>
-          <Textarea
-            id="desiredOutcome"
-            value={form.desiredOutcome}
-            onChange={(e) => setForm({ ...form, desiredOutcome: e.target.value })}
-            placeholder="What does success look like specifically?"
-            rows={2}
-            data-testid="input-desired-outcome"
-          />
-        </div>
-
-        <Button
-          onClick={handleSubmit}
-          disabled={runDiagnosis.isPending}
-          className="w-full"
-          data-testid="button-run-diagnosis"
-        >
-          {runDiagnosis.isPending ? "Analysing..." : "Run Strategic Diagnosis"}
-        </Button>
       </div>
     </div>
   );
